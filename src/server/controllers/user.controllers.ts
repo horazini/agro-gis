@@ -99,7 +99,7 @@ export const login = async (
   }
 
   const query =
-    "SELECT tenant_id, usertype_id, id FROM user_account WHERE username = $1";
+    "SELECT tenant_id, usertype_id, id, username, names, surname FROM user_account WHERE username = $1";
   const result = await pool.query(query, [username]);
   if (result.rows.length === 0) {
     return false; // usuario no encontrado
@@ -108,11 +108,13 @@ export const login = async (
     tenant_id: tenantId,
     usertype_id: userTypeId,
     id: userId,
+    names: names,
+    surname: surname,
   } = result.rows[0];
 
   const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "1h" });
 
-  res.json({ token, tenantId, userTypeId, userId });
+  res.json({ token, tenantId, userTypeId, userId, username, names, surname });
 };
 
 // Obtener tipos de usuario

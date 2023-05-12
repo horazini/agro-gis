@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/authSlice";
 
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
+
 import {
   Box,
   CssBaseline,
@@ -13,7 +16,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  ListItem,
   Tooltip,
   Menu,
   MenuItem,
@@ -34,7 +36,6 @@ import {
   Logout as LogoutIcon,
   Group as GroupIcon,
   Inventory as InventoryIcon,
-  Mail as MailIcon,
   Map as MapIcon,
 } from "@mui/icons-material";
 
@@ -162,6 +163,10 @@ export default function NavbarDrawer() {
     await dispatch(logout() as any);
     navigate("/login");
   };
+
+  const { username, surname, names } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   return (
     <Fragment>
@@ -293,8 +298,10 @@ export default function NavbarDrawer() {
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
         <MenuItem onClick={handleUserClose}>
-          <Avatar /> Mi perfil
+          <Avatar />
+          <ListItemText primary={`${names} ${surname}`} secondary={username} />
         </MenuItem>
+
         <Divider />
         <MenuItem onClick={handleSessionClose}>
           <ListItemIcon>

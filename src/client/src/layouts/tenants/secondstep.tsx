@@ -69,8 +69,6 @@ const SecondStep = ({
     names: "",
   });
 
-  const [selectedOption, setSelectedOption] = useState("");
-
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
 
   const handleEditRow = (row: RowData) => {
@@ -89,7 +87,6 @@ const SecondStep = ({
       surname: "",
       names: "",
     });
-    setSelectedOption("");
     setEditingRowId(null);
   };
 

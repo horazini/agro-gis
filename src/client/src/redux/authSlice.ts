@@ -6,17 +6,23 @@ import { apiRequest, setAuthToken, removeAuthToken } from "./api";
 interface AuthState {
   isAuthenticated: boolean;
   error: string | null;
+  userId: number | null;
   tenantId: number | null;
   userTypeId: number | null;
-  userId: number | null;
+  username: string | null;
+  names: string | null;
+  surname: string | null;
 }
 
 const initialState: AuthState = {
   isAuthenticated: false,
   error: null,
+  userId: null,
   tenantId: null,
   userTypeId: null,
-  userId: null,
+  username: null,
+  names: null,
+  surname: null,
 };
 
 export const authSlice = createSlice({
@@ -29,6 +35,9 @@ export const authSlice = createSlice({
         tenantId: number;
         userTypeId: number;
         userId: number;
+        username: string;
+        names: string;
+        surname: string;
       }>
     ) => {
       state.isAuthenticated = true;
@@ -36,10 +45,17 @@ export const authSlice = createSlice({
       state.tenantId = action.payload.tenantId;
       state.userTypeId = action.payload.userTypeId;
       state.userId = action.payload.userId;
+      state.username = action.payload.username;
+      state.names = action.payload.names;
+      state.surname = action.payload.surname;
+
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("tenantId", String(action.payload.tenantId));
       localStorage.setItem("userTypeId", String(action.payload.userTypeId));
       localStorage.setItem("userId", String(action.payload.userId));
+      localStorage.setItem("username", action.payload.username);
+      localStorage.setItem("names", action.payload.names);
+      localStorage.setItem("surname", action.payload.surname);
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.isAuthenticated = false;
@@ -51,10 +67,16 @@ export const authSlice = createSlice({
       state.tenantId = null;
       state.userTypeId = null;
       state.userId = null;
+      state.username = null;
+      state.names = null;
+      state.surname = null;
       localStorage.removeItem("isAuthenticated");
       localStorage.removeItem("tenantId");
       localStorage.removeItem("userTypeId");
       localStorage.removeItem("userId");
+      localStorage.removeItem("username");
+      localStorage.removeItem("names");
+      localStorage.removeItem("surname");
     },
   },
 });
@@ -68,15 +90,21 @@ export const login =
   }): ThunkAction<Promise<void>, RootState, unknown, any> =>
   async (dispatch) => {
     try {
-      const { token, tenantId, userTypeId, userId } = await apiRequest<{
-        token: string;
-        tenantId: number;
-        userTypeId: number;
-        userId: number;
-      }>("POST", "http://localhost:4000/login", formData);
+      const { token, tenantId, userTypeId, userId, username, names, surname } =
+        await apiRequest<{
+          token: string;
+          tenantId: number;
+          userTypeId: number;
+          userId: number;
+          username: string;
+          names: string;
+          surname: string;
+        }>("POST", "http://localhost:4000/login", formData);
       setAuthToken(token);
 
-      dispatch(loginSuccess({ tenantId, userTypeId, userId }));
+      dispatch(
+        loginSuccess({ tenantId, userTypeId, userId, username, names, surname })
+      );
     } catch (error: any) {
       if (!error.response) {
         throw error;

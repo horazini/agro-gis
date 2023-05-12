@@ -9,12 +9,17 @@ const initialState = {
     tenantId: Number(localStorage.getItem("tenantId")),
     userTypeId: Number(localStorage.getItem("userTypeId")),
     userId: Number(localStorage.getItem("userId")),
+    username: localStorage.getItem("username"),
+    names: localStorage.getItem("names"),
+    surname: localStorage.getItem("surname"),
 
-    /* isAuthenticated: false, // Establece al campo 'isAuthenticated' del estado de Redux, el mismo valor que el de 'isAuthenticated' en
+    /* 
+    isAuthenticated: false, // Establece al campo 'isAuthenticated' del estado de Redux, el mismo valor que el de 'isAuthenticated' en
     error: null,
     tenantId: null,
     userTypeId: null,
-    userId: null, */
+    userId: null, 
+    */
   },
 };
 

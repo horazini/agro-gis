@@ -108,37 +108,34 @@ const MyForm = () => {
 
   const handleConfirm = async () => {
     try {
-      const res = await fetch("http://localhost:4000/tenant", {
-        method: "POST",
-        body: JSON.stringify({
+      const tenantData = {
+        tenant: {
           name: orgData.tenantName,
+        },
+        users: userList.map((user: any) => {
+          const usertype = usertypes.find(
+            (type) => type.name === user.usertype
+          );
+          const password_hash = bcrypt.hashSync(user.username, 10);
+
+          return {
+            usertype_id: usertype?.id,
+            mail_address: user.mail_address,
+            username: user.username,
+            names: user.names,
+            surname: user.surname,
+            password_hash,
+          };
         }),
+      };
+
+      const res = await fetch("http://localhost:4000/tenantdata", {
+        method: "POST",
+        body: JSON.stringify(tenantData),
         headers: { "Content-type": "application/json" },
       });
 
-      const data = await res.json();
-      const tenant_id = data.body.tenant.id;
-
-      userList.forEach(async (user: any) => {
-        const usertype = usertypes.find((type) => type.name === user.usertype);
-        const password_hash = bcrypt.hashSync(user.username, 10);
-
-        const body = {
-          tenant_id,
-          usertype_id: usertype?.id,
-          mail_address: user.mail_address,
-          username: user.username,
-          names: user.names,
-          surname: user.surname,
-          password_hash,
-        };
-
-        await fetch("http://localhost:4000/user", {
-          method: "POST",
-          body: JSON.stringify(body),
-          headers: { "Content-type": "application/json" },
-        });
-      });
+      console.log(res);
     } catch (error) {
       console.log(error);
     }

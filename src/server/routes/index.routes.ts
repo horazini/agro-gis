@@ -10,11 +10,11 @@ router.get("/test", (req, res) => res.send("hello world"));
 import {
   getTime,
   getTenants,
-  createTenant,
   updateTenant,
   deleteTenant,
   getTenantById,
   getTenantUsers,
+  createTenantWithUsers,
   getTenantWithUsers,
 } from "../controllers/tenant.controllers";
 
@@ -22,11 +22,12 @@ router.get("/time", getTime);
 
 router.get("/tenants", getTenants);
 router.get("/tenant/:id", getTenantById);
-router.post("/tenant", createTenant);
 router.put("/tenant/:id", updateTenant);
 router.delete("/tenant/:id", deleteTenant);
 
 router.get("/tenantusers/:id", getTenantUsers);
+
+router.post("/tenantdata", createTenantWithUsers);
 router.get("/tenantdata/:id", getTenantWithUsers);
 
 // Users

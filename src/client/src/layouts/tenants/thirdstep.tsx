@@ -53,16 +53,15 @@ const ThirdStep = ({
 
   const handleConfirm = () => {
     setLoading(true);
-
     setTimeout(() => {
       onConfirm();
       setLoading(false);
       setOpen(false);
       setSuccess(true);
       setTimeout(() => {
-        navigate("/tenant/list");
+        navigate("/tenants/list");
       }, 4000);
-    }, 1000);
+    }, 500);
   };
 
   return (

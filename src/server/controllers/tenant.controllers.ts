@@ -60,45 +60,6 @@ export const getTenantUsers = async (
   }
 };
 
-/* export const getTenantWithUsers = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const id = parseInt(req.params.id);
-    const response: QueryResult = await pool.query(
-      `
-      SELECT t.id AS tenant_id, t.name AS tenant_name, u.id AS user_id, u.usertype_id, u.mail_address, u.username, u.names, u.surname
-      FROM tenant t
-      JOIN user_account u ON t.id = u.tenant_id
-      WHERE t.id = $1
-      `,
-      [id]
-    );
-
-    const tenant = {
-      id: response.rows[0].tenant_id,
-      name: response.rows[0].tenant_name,
-    };
-
-    const users = response.rows.map((row) => ({
-      id: row.user_id,
-      usertype_id: row.usertype_id,
-      mail_address: row.mail_address,
-      username: row.username,
-      names: row.names,
-      surname: row.surname,
-    }));
-
-    const result = { tenant, users };
-
-    return res.status(200).json(result);
-  } catch (e) {
-    next(e);
-  }
-}; */
-
 export const getTenantWithUsers = async (
   req: Request,
   res: Response,
@@ -142,29 +103,67 @@ export const getTenantWithUsers = async (
   }
 };
 
-export const createTenant = async (
+export const createTenantWithUsers = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  const client = await pool.connect();
   try {
-    const { name } = req.body;
-    const response: QueryResult = await pool.query(
-      "INSERT INTO tenant (name) VALUES ($1) RETURNING id", // Agregar "RETURNING id" a la consulta SQL
-      [name]
+    await client.query("BEGIN"); // Comienza la transacción
+
+    const tenantData = req.body.tenant;
+    const usersData = req.body.users || [];
+
+    // Insertar nuevo tenant y obtener el ID
+    const tenantInsertQuery = `
+      INSERT INTO tenant (name)
+      VALUES ($1)
+      RETURNING id
+    `;
+    const tenantInsertValues = [tenantData.name];
+    const tenantInsertResponse: QueryResult = await client.query(
+      tenantInsertQuery,
+      tenantInsertValues
     );
-    const id: number = response.rows[0].id; // Obtener el id del nuevo tenant creado
-    return res.status(201).json({
-      message: "New tenant added",
-      body: {
-        tenant: {
-          id,
-          name,
-        },
-      },
-    });
+    const tenantId = tenantInsertResponse.rows[0].id;
+
+    // Insertar usuarios utilizando el ID del tenant
+    for (const userData of usersData) {
+      const {
+        usertype_id,
+        mail_address,
+        username,
+        names,
+        surname,
+        password_hash,
+      } = userData;
+
+      await client.query(
+        `
+        INSERT INTO user_account (tenant_id, usertype_id, mail_address, username, names, surname, password_hash)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `,
+        [
+          tenantId,
+          usertype_id,
+          mail_address,
+          username,
+          names,
+          surname,
+          password_hash,
+        ]
+      );
+    }
+
+    await client.query("COMMIT"); // Confirma la transacción
+
+    return res.status(201).send("Tenant with users added");
   } catch (e) {
+    await client.query("ROLLBACK"); // Deshace la transacción en caso de error
     next(e);
+  } finally {
+    client.release(); // Libera el cliente de la conexión de la pool
   }
 };
 

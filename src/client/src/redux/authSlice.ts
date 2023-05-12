@@ -1,0 +1,99 @@
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ThunkAction } from "redux-thunk";
+import { RootState } from "./store";
+import { apiRequest, setAuthToken, removeAuthToken } from "./api";
+
+interface AuthState {
+  isAuthenticated: boolean;
+  error: string | null;
+  tenantId: number | null;
+  userTypeId: number | null;
+  userId: number | null;
+}
+
+const initialState: AuthState = {
+  isAuthenticated: false,
+  error: null,
+  tenantId: null,
+  userTypeId: null,
+  userId: null,
+};
+
+export const authSlice = createSlice({
+  name: "auth",
+  initialState,
+  reducers: {
+    loginSuccess: (
+      state,
+      action: PayloadAction<{
+        tenantId: number;
+        userTypeId: number;
+        userId: number;
+      }>
+    ) => {
+      state.isAuthenticated = true;
+      state.error = null;
+      state.tenantId = action.payload.tenantId;
+      state.userTypeId = action.payload.userTypeId;
+      state.userId = action.payload.userId;
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("tenantId", String(action.payload.tenantId));
+      localStorage.setItem("userTypeId", String(action.payload.userTypeId));
+      localStorage.setItem("userId", String(action.payload.userId));
+    },
+    loginFailure: (state, action: PayloadAction<string>) => {
+      state.isAuthenticated = false;
+      state.error = action.payload;
+    },
+    logoutSuccess: (state) => {
+      state.isAuthenticated = false;
+      state.error = null;
+      state.tenantId = null;
+      state.userTypeId = null;
+      state.userId = null;
+      localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("tenantId");
+      localStorage.removeItem("userTypeId");
+      localStorage.removeItem("userId");
+    },
+  },
+});
+
+export const { loginSuccess, loginFailure, logoutSuccess } = authSlice.actions;
+
+export const login =
+  (formData: {
+    username: string;
+    password: string;
+  }): ThunkAction<Promise<void>, RootState, unknown, any> =>
+  async (dispatch) => {
+    try {
+      const { token, tenantId, userTypeId, userId } = await apiRequest<{
+        token: string;
+        tenantId: number;
+        userTypeId: number;
+        userId: number;
+      }>("POST", "http://localhost:4000/login", formData);
+      setAuthToken(token);
+
+      dispatch(loginSuccess({ tenantId, userTypeId, userId }));
+    } catch (error: any) {
+      if (!error.response) {
+        throw error;
+      }
+      dispatch(loginFailure(error.message));
+    }
+  };
+
+export const logout =
+  (): ThunkAction<Promise<void>, RootState, unknown, any> =>
+  async (dispatch) => {
+    removeAuthToken();
+    dispatch(logoutSuccess());
+  };
+
+export const selectIsAuthenticated = (state: RootState) =>
+  state.auth.isAuthenticated;
+export const selectError = (state: RootState) => state.auth.error;
+
+export default authSlice.reducer;

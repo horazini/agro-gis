@@ -1,0 +1,143 @@
+import { useEffect, useState } from "react";
+import {
+  LayersControl,
+  MapContainer,
+  Marker,
+  Popup,
+  TileLayer,
+  useMapEvents,
+  GeoJSON,
+  Circle,
+} from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { LatLngExpression } from "leaflet";
+
+import L from "leaflet";
+import { RootState } from "../../redux/store";
+import { useSelector } from "react-redux";
+
+const position: LatLngExpression = [-29, -58];
+
+const LeafIcon: any = L.Icon.extend({
+  options: {
+    iconSize: [25, 40],
+    shadowSize: [50, 64],
+    iconAnchor: [12.5, 40],
+    shadowAnchor: [4, 62],
+    popupAnchor: [-3, -50],
+  },
+});
+var icon = new LeafIcon({
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+});
+
+// Ubicacion actual del usuario
+function LocationMarker() {
+  const [position, setPosition] = useState<LatLngExpression>([0, 0]);
+  const map = useMapEvents({
+    click() {
+      map.locate();
+    },
+    locationfound(e) {
+      setPosition(e.latlng);
+      map.flyTo(e.latlng, map.getZoom());
+    },
+  });
+  return position === null ? null : (
+    <Marker position={position} icon={icon}>
+      <Popup>You are here</Popup>
+    </Marker>
+  );
+}
+
+function LayerControler(): JSX.Element {
+  return (
+    <LayersControl position="topright">
+      <LayersControl.BaseLayer checked name="Esri.WorldImagery">
+        <TileLayer
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+        />
+      </LayersControl.BaseLayer>
+      <LayersControl.BaseLayer name="Open Topo Map">
+        <TileLayer
+          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+          attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        />
+      </LayersControl.BaseLayer>
+      <LayersControl.BaseLayer name="Open Street Map">
+        <TileLayer
+          url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        />
+      </LayersControl.BaseLayer>
+
+      <LayersControl.Overlay name="Marker with popup">
+        <Marker position={position} icon={icon}>
+          <Popup>
+            A pretty CSS3 popup. <br /> Easily customizable.
+          </Popup>
+        </Marker>
+      </LayersControl.Overlay>
+    </LayersControl>
+  );
+}
+
+const MapView = () => {
+  const mystyle = {};
+
+  const [geoData, setGeoData] = useState<any>(null);
+  const [circles, setCircles] = useState<any>(null);
+
+  const { tenantId } = useSelector((state: RootState) => state.auth);
+
+  const loadData = async () => {
+    const response = await fetch(`http://localhost:4000/tenantGeo/${tenantId}`);
+    const data = await response.json();
+    setGeoData(
+      data.features.filter(
+        (feature: any) => feature.geometry.type === "Polygon"
+      )
+    );
+    setCircles(
+      data.features.filter(
+        (feature: any) => feature.properties.subType === "Circle"
+      )
+    );
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "40px 0",
+      }}
+    >
+      <MapContainer center={position} zoom={7}>
+        <LayerControler />
+        {geoData && (
+          <GeoJSON key="my-polygons" style={mystyle} data={geoData} />
+        )}
+
+        {circles &&
+          circles.map((circle: any) => {
+            return (
+              <Circle
+                key={circle.properties.id}
+                center={circle.geometry.coordinates}
+                radius={circle.properties.radius}
+              />
+            );
+          })}
+      </MapContainer>
+    </div>
+  );
+};
+
+export default MapView;

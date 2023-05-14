@@ -51,16 +51,7 @@ const SecondStep = ({
     .filter((item: any, index: number) => index !== 0)
     .map((item: any) => item.name);
 
-  const handleFormChange = (
-    event:
-      | SelectChangeEvent<string>
-      | React.ChangeEvent<{ name: string; value: unknown }>
-  ) => {
-    const { name, value } = event.target;
-    setUsersData({ ...usersData, [name]: value });
-  };
-
-  const [usersData, setUsersData] = useState<RowData>({
+  const [userData, setUserData] = useState<RowData>({
     id: 0,
     username: "",
     usertype: "",
@@ -69,17 +60,26 @@ const SecondStep = ({
     names: "",
   });
 
+  const handleFormChange = (
+    event:
+      | SelectChangeEvent<string>
+      | React.ChangeEvent<{ name: string; value: unknown }>
+  ) => {
+    const { name, value } = event.target;
+    setUserData({ ...userData, [name]: value });
+  };
+
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
 
   const handleEditRow = (row: RowData) => {
-    setUsersData(row);
+    setUserData(row);
     setEditingRowId(row.id);
   };
 
-  const handleSubmitForm = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    handleSubmitUser(usersData, editingRowId);
-    setUsersData({
+  const handleSubmitForm = () => {
+    //event.preventDefault();
+    handleSubmitUser(userData, editingRowId);
+    setUserData({
       id: 0,
       username: "",
       usertype: "",
@@ -88,6 +88,39 @@ const SecondStep = ({
       names: "",
     });
     setEditingRowId(null);
+  };
+
+  const disableSubmit = () => {
+    const { usertype, surname, names, mail_address, username } = userData;
+    return !(usertype && surname && names && mail_address && username);
+  };
+
+  const [emailError, setEmailError] = useState(false);
+  const [usernameError, setUsernameError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleValidation = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValidEmail = emailRegex.test(userData.mail_address);
+
+    const usernameRegex = /^[a-z0-9._]+$/;
+    const isValidUsername = usernameRegex.test(userData.username);
+
+    const isUsernameValidLength = userData.username.length >= 6;
+
+    setEmailError(!isValidEmail);
+    setUsernameError(!isValidUsername || !isUsernameValidLength);
+
+    if (!isUsernameValidLength) {
+      setErrorMessage("El nombre de usuario debe tener al menos 6 caracteres");
+    } else if (!isValidUsername) {
+      setErrorMessage("El nombre de usuario no es válido");
+    } else {
+      setErrorMessage("");
+      if (isValidEmail) {
+        handleSubmitForm();
+      }
+    }
   };
 
   return (
@@ -130,54 +163,63 @@ const SecondStep = ({
                 ))}
               </TableBody>
             </Table>
-            <form onSubmit={handleSubmitForm}>
-              <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
-                <InputLabel id="demo-simple-select-label">
-                  Tipo de usuario
-                </InputLabel>
-                <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  label="Usertype"
-                  name="usertype"
-                  value={usersData.usertype}
-                  onChange={handleFormChange}
-                >
-                  {usertypeslist.map((usertype) => (
-                    <MenuItem key={usertype} value={usertype}>
-                      {usertype}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TextField
-                label="Apellido"
-                name="surname"
-                value={usersData.surname}
+
+            <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
+              <InputLabel id="demo-simple-select-label">
+                Tipo de usuario
+              </InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                label="Usertype"
+                name="usertype"
+                value={userData.usertype}
                 onChange={handleFormChange}
-              />
-              <TextField
-                label="Nombres"
-                name="names"
-                value={usersData.names}
-                onChange={handleFormChange}
-              />
-              <TextField
-                label="Email"
-                name="mail_address"
-                value={usersData.mail_address}
-                onChange={handleFormChange}
-              />
-              <TextField
-                label="Nombre de usuario"
-                name="username"
-                value={usersData.username}
-                onChange={handleFormChange}
-              />
-              <Button type="submit">
-                {editingRowId !== null ? "Actualizar" : "Agregar"}
-              </Button>
-            </form>
+              >
+                {usertypeslist.map((usertype) => (
+                  <MenuItem key={usertype} value={usertype}>
+                    {usertype}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              label="Apellido"
+              name="surname"
+              value={userData.surname}
+              onChange={handleFormChange}
+            />
+            <TextField
+              label="Nombres"
+              name="names"
+              value={userData.names}
+              onChange={handleFormChange}
+            />
+            <TextField
+              label="Email"
+              name="mail_address"
+              value={userData.mail_address}
+              onChange={handleFormChange}
+              error={emailError}
+              helperText={
+                emailError ? "El correo electrónico no es válido" : ""
+              }
+            />
+            <TextField
+              label="Nombre de usuario"
+              name="username"
+              value={userData.username}
+              onChange={handleFormChange}
+              error={usernameError}
+              helperText={errorMessage}
+            />
+            <Button
+              type="submit"
+              onClick={handleValidation}
+              disabled={disableSubmit()} // Habilita o deshabilita el botón según el resultado de la función
+            >
+              {editingRowId !== null ? "Actualizar" : "Agregar"}
+            </Button>
           </TableContainer>
         </Grid>
       </Grid>

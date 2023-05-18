@@ -105,7 +105,6 @@ export const createSpeciesWithStagesAndEvents = async (
     );
     const speciesId = speciesInsertResponse.rows[0].id;
 
-    // Insertar usuarios utilizando el ID del tenant
     for (const stageData of stagesData) {
       const {
         sequence_number,

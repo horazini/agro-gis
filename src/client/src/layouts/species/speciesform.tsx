@@ -423,7 +423,6 @@ function SpeciesForm(): JSX.Element {
           };
         }),
       };
-      console.log(speciesData);
 
       let res;
       /* if (editing) {
@@ -440,9 +439,7 @@ function SpeciesForm(): JSX.Element {
         headers: { "Content-type": "application/json" },
       });
       // }
-      console.log(res);
       setLoading(false);
-      //navigate("/species/list");
     } catch (error) {
       console.log(error);
     }

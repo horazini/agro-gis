@@ -1,6 +1,8 @@
 import { Button, Card, CardContent, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { RootState } from "../../redux/store";
+import { useSelector } from "react-redux";
 
 import {
   Add as AddIcon,
@@ -11,8 +13,12 @@ import {
 function SpeciesList() {
   const [species, setSpecies] = useState<any[]>([]);
 
+  const { tenantId } = useSelector((state: RootState) => state.auth);
+
   const loadSpecies = async () => {
-    const response = await fetch("http://localhost:4000/species");
+    const response = await fetch(
+      `http://localhost:4000/tenantspecies/${tenantId}`
+    );
     const data = await response.json();
     setSpecies(data);
   };

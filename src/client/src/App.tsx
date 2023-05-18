@@ -24,7 +24,8 @@ import TenantForm from "./layouts/tenants/tenantform";
 import TenantDetails from "./layouts/tenants/tenantdetails";
 
 import SpeciesList from "./layouts/species/specieslist";
-import SpeciesForm from "./layouts/species/newspeciesform";
+import SpeciesEditForm from "./layouts/species/newspeciesform";
+import SpeciesForm from "./layouts/species/speciesform2";
 
 import MapView from "./layouts/maps/map";
 import MapView2 from "./layouts/maps/map2";
@@ -40,7 +41,7 @@ function MainLayoutRoutes(): JSX.Element {
       <Route path="/tenants/:id" element={<TenantDetails />} />
       <Route path="/species/list" element={<SpeciesList />} />
       <Route path="/species/new" element={<SpeciesForm />} />
-      <Route path="/species/:id/edit" element={<SpeciesForm />} />
+      <Route path="/species/:id/edit" element={<SpeciesEditForm />} />
       <Route path="/map" element={<MapView />} />
       <Route path="/map2" element={<MapView2 />} />
     </Routes>

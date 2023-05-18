@@ -13,7 +13,6 @@ import {
   updateTenant,
   deleteTenant,
   getTenantById,
-  getTenantUsers,
   createTenantWithUsers,
   getTenantWithUsers,
 } from "../controllers/tenant.controllers";
@@ -25,8 +24,6 @@ router.get("/tenant/:id", getTenantById);
 router.put("/tenant/:id", updateTenant);
 router.delete("/tenant/:id", deleteTenant);
 
-router.get("/tenantusers/:id", getTenantUsers);
-
 router.post("/tenantdata", createTenantWithUsers);
 router.get("/tenantdata/:id", getTenantWithUsers);
 
@@ -36,11 +33,13 @@ import {
   getUsers,
   createUser,
   getUserTypes,
+  getUsersByTenant,
 } from "../controllers/user.controllers";
 
 router.get("/users", getUsers);
 router.post("/user", createUser);
 router.get("/usertypes", getUserTypes);
+router.get("/tenantusers/:id", getUsersByTenant);
 
 // auth
 
@@ -55,15 +54,19 @@ router.get("/user", getUserData);
 
 import {
   getSpecies,
+  getSpeciesByTenant,
   getSpeciesById,
   createSpecies,
   deleteSpecies,
   updateSpecies,
+  createSpeciesWithStagesAndEvents,
 } from "../controllers/species.controllers";
 
 router.get("/species", getSpecies);
 router.get("/species/:id", getSpeciesById);
+router.get("/tenantspecies/:id", getSpeciesByTenant);
 router.post("/species", createSpecies);
+router.post("/speciesdata", createSpeciesWithStagesAndEvents);
 router.put("/species/:id", updateSpecies);
 router.delete("/species/:id", deleteSpecies);
 

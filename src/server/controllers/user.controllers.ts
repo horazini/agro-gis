@@ -23,6 +23,23 @@ export const getUsers = async (
   }
 };
 
+export const getUsersByTenant = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+    const response: QueryResult = await pool.query(
+      "SELECT id, usertype_id, mail_address, username, names, surname FROM user_account WHERE tenant_id = $1",
+      [id]
+    );
+    return res.status(200).json(response.rows);
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const createUser = async (
   req: Request,
   res: Response,

@@ -1,3 +1,8 @@
+import { Fragment, useEffect, useState } from "react";
+import { RootState } from "../../redux/store";
+import { useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+
 import {
   Button,
   Card,
@@ -7,22 +12,24 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Fragment, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 
 function SpeciesForm(): JSX.Element {
   type FormElement = React.FormEvent<HTMLFormElement>;
   const navigate = useNavigate();
   const params = useParams();
 
+  const { tenantId } = useSelector((state: RootState) => state.auth);
+
   interface ISpecies {
     name: string;
     description: string;
+    tenant_id: number;
   }
 
   const [species, setSpecies] = useState<ISpecies>({
     name: "",
     description: "",
+    tenant_id: tenantId || 1,
   });
 
   const [loading, setLoading] = useState(false);
@@ -39,10 +46,10 @@ function SpeciesForm(): JSX.Element {
       setLoading(true);
       if (editing) {
         await fetch(`http://localhost:4000/species/${params.id}`, {
-            method: "PUT",
-            body: JSON.stringify(species),
-            headers: { "Content-type": "application/json" },
-        })
+          method: "PUT",
+          body: JSON.stringify(species),
+          headers: { "Content-type": "application/json" },
+        });
       } else {
         await fetch("http://localhost:4000/species", {
           method: "POST",
@@ -51,7 +58,7 @@ function SpeciesForm(): JSX.Element {
         });
       }
       setLoading(false);
-      navigate("/");
+      navigate("/species/list");
     } catch (error) {
       console.log(error);
     }

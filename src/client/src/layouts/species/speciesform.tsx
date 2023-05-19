@@ -531,8 +531,9 @@ function SpeciesForm(): JSX.Element {
                       <TableCell>Descripción</TableCell>
                       <TableCell>Tiempo estimado</TableCell>
                       <TableCell>Opciones</TableCell>
-                      <TableCell>
+                      <TableCell align="center">
                         Mover fila seleccionada:
+                        <br />
                         <IconButton
                           disabled={!selectedRowId}
                           onClick={handleMoveTopClick}
@@ -611,7 +612,18 @@ function SpeciesForm(): JSX.Element {
                   onChange={handleStageChange}
                   type="number"
                   fullWidth
+                  onKeyPress={(event) => {
+                    if (
+                      event?.key === "-" ||
+                      event?.key === "+" ||
+                      event?.key === "." ||
+                      event?.key === "e"
+                    ) {
+                      event.preventDefault();
+                    }
+                  }}
                   InputProps={{
+                    inputProps: { min: 0 },
                     endAdornment: (
                       <InputAdornment position="end">
                         <Select
@@ -788,7 +800,18 @@ function SpeciesForm(): JSX.Element {
                       ? "El tiempo desde inicio de etapa debe ser menor a la duración de la etapa"
                       : ""
                   }
+                  onKeyPress={(event) => {
+                    if (
+                      event?.key === "-" ||
+                      event?.key === "+" ||
+                      event?.key === "." ||
+                      event?.key === "e"
+                    ) {
+                      event.preventDefault();
+                    }
+                  }}
                   InputProps={{
+                    inputProps: { min: 0 },
                     endAdornment: (
                       <InputAdornment position="end">
                         <Select
@@ -819,7 +842,18 @@ function SpeciesForm(): JSX.Element {
                   onChange={handleEventChange}
                   type="number"
                   fullWidth
+                  onKeyPress={(event) => {
+                    if (
+                      event?.key === "-" ||
+                      event?.key === "+" ||
+                      event?.key === "." ||
+                      event?.key === "e"
+                    ) {
+                      event.preventDefault();
+                    }
+                  }}
                   InputProps={{
+                    inputProps: { min: 0 },
                     endAdornment: (
                       <InputAdornment position="end">
                         <Select

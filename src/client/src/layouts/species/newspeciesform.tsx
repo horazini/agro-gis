@@ -13,6 +13,8 @@ import {
   Typography,
 } from "@mui/material";
 
+import { API } from "../../config";
+
 function SpeciesForm(): JSX.Element {
   type FormElement = React.FormEvent<HTMLFormElement>;
   const navigate = useNavigate();
@@ -37,7 +39,6 @@ function SpeciesForm(): JSX.Element {
 
   const handleChange = (e: { target: { name: string; value: string } }) => {
     setSpecies({ ...species, [e.target.name]: e.target.value });
-    console.log(species.name, species.description);
   };
 
   const handleSubmit = async (e: FormElement) => {
@@ -45,13 +46,13 @@ function SpeciesForm(): JSX.Element {
       e.preventDefault();
       setLoading(true);
       if (editing) {
-        await fetch(`http://localhost:4000/species/${params.id}`, {
+        await fetch(`${API}/species/${params.id}`, {
           method: "PUT",
           body: JSON.stringify(species),
           headers: { "Content-type": "application/json" },
         });
       } else {
-        await fetch("http://localhost:4000/species", {
+        await fetch("${API}/species", {
           method: "POST",
           body: JSON.stringify(species),
           headers: { "Content-type": "application/json" },
@@ -66,7 +67,7 @@ function SpeciesForm(): JSX.Element {
 
   const loadSpecies = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:4000/species/${id}`);
+      const res = await fetch(`${API}/species/${id}`);
       const data = (await res.json())[0];
       setSpecies(data);
       setEditing(true);

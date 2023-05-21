@@ -19,6 +19,8 @@ import ThirdStep from "./thirdstep";
 
 import { RowData } from "./secondstep";
 
+import { API } from "../../config";
+
 const theme = createTheme();
 
 const MyForm = () => {
@@ -52,7 +54,7 @@ const MyForm = () => {
   const [usertypes, setUsertypes] = useState<any[]>([]);
 
   const loadUserTypes = async () => {
-    const response = await fetch("http://localhost:4000/usertypes");
+    const response = await fetch(`${API}/usertypes`);
     const data = await response.json();
     setUsertypes(data);
   };
@@ -129,13 +131,11 @@ const MyForm = () => {
         }),
       };
 
-      const res = await fetch("http://localhost:4000/tenantdata", {
+      const res = await fetch(`${API}/tenantdata`, {
         method: "POST",
         body: JSON.stringify(tenantData),
         headers: { "Content-type": "application/json" },
       });
-
-      console.log(res);
     } catch (error) {
       console.log(error);
     }

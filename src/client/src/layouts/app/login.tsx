@@ -72,9 +72,6 @@ export default function SignIn() {
       navigate("/");
     } catch (error) {
       console.log(error);
-
-      const x: boolean = localStorage.getItem("isAuthenticated") === "true";
-      console.log(x);
     }
     setLoading(false);
   };

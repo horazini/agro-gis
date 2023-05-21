@@ -8,11 +8,13 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 
+import { API } from "../../config";
+
 function TenantsList() {
   const [tenants, setTenants] = useState<any[]>([]);
 
   const loadTenants = async () => {
-    const response = await fetch("http://localhost:4000/tenants");
+    const response = await fetch(`${API}/tenants`);
     const data = await response.json();
     setTenants(data);
   };
@@ -25,7 +27,7 @@ function TenantsList() {
 
   const handleDelete = async (id: any) => {
     /* try {
-      await fetch(`http://localhost:4000/tenants/${id}`, {
+      await fetch(`${API}/tenants/${id}`, {
         method: "DELETE",
       });
       setTenants(tenants.filter((tenant) => tenant.id !== id));

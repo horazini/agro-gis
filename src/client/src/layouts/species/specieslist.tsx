@@ -10,15 +10,15 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 
+import { API } from "../../config";
+
 function SpeciesList() {
   const [species, setSpecies] = useState<any[]>([]);
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const loadSpecies = async () => {
-    const response = await fetch(
-      `http://localhost:4000/tenantspecies/${tenantId}`
-    );
+    const response = await fetch(`${API}/tenantspecies/${tenantId}`);
     const data = await response.json();
     setSpecies(data);
   };
@@ -31,7 +31,7 @@ function SpeciesList() {
 
   const handleDelete = async (id: any) => {
     try {
-      await fetch(`http://localhost:4000/species/${id}`, {
+      await fetch(`${API}/species/${id}`, {
         method: "DELETE",
       });
       setSpecies(species.filter((specie) => specie.id !== id));

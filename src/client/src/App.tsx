@@ -29,6 +29,7 @@ import SpeciesForm from "./layouts/species/speciesform";
 
 import MapView from "./layouts/maps/map";
 import MapView2 from "./layouts/maps/map2";
+import MapView3 from "./layouts/maps/map3";
 
 function MainLayoutRoutes(): JSX.Element {
   return (
@@ -44,6 +45,7 @@ function MainLayoutRoutes(): JSX.Element {
       <Route path="/species/:id/edit" element={<SpeciesEditForm />} />
       <Route path="/map" element={<MapView />} />
       <Route path="/map2" element={<MapView2 />} />
+      <Route path="/map3" element={<MapView3 />} />
     </Routes>
   );
 }

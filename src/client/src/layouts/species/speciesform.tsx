@@ -12,6 +12,8 @@ import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { API } from "../../config";
+
 import {
   Alert,
   AlertTitle,
@@ -146,7 +148,6 @@ function SpeciesForm(): JSX.Element {
 
   const handleStageSubmit = () => {
     //event.preventDefault();
-    console.log(stageData);
     if (editingRowId !== null) {
       setStagesList((prevRows) =>
         prevRows.map((row) => (row.id === editingRowId ? stageData : row))
@@ -283,7 +284,6 @@ function SpeciesForm(): JSX.Element {
   const [timeFromStartError, setTimeFromStartError] = useState(false);
 
   const handleEventValidation = () => {
-    console.log(growthEventData);
     const { ETFromStageStart, ETFromStageStartUnit, referenceStage } =
       growthEventData;
 
@@ -426,14 +426,14 @@ function SpeciesForm(): JSX.Element {
 
       let res;
       /* if (editing) {
-        res = await fetch(`http://localhost:4000/...species/${params.id}`, {
+        res = await fetch(`${API}/...species/${params.id}`, {
           method: "PUT",
           body: JSON.stringify(species),
           headers: { "Content-type": "application/json" },
         });
       } else */
       // {
-      res = await fetch("http://localhost:4000/speciesdata", {
+      res = await fetch(`${API}/speciesdata`, {
         method: "POST",
         body: JSON.stringify(speciesData),
         headers: { "Content-type": "application/json" },
@@ -453,7 +453,7 @@ function SpeciesForm(): JSX.Element {
 
   const loadSpecies = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:4000/species/${id}`);
+      const res = await fetch(`${API}/species/${id}`);
       const data = (await res.json())[0];
       setSpecies(data);
       setEditing(true);
@@ -778,11 +778,15 @@ function SpeciesForm(): JSX.Element {
                     displayEmpty
                     variant="standard"
                   >
-                    {stagesList.map((stage) => (
-                      <MenuItem key={stage.id} value={stage.id}>
-                        {stage.name}
-                      </MenuItem>
-                    ))}
+                    {stagesList.length > 0 ? (
+                      stagesList.map((stage) => (
+                        <MenuItem key={stage.id} value={stage.id}>
+                          {stage.name}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled>{"Ingrese etapas"}</MenuItem>
+                    )}
                   </Select>
                 </FormControl>
 

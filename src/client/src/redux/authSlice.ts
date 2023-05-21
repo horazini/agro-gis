@@ -3,6 +3,8 @@ import { ThunkAction } from "redux-thunk";
 import { RootState } from "./store";
 import { apiRequest, setAuthToken, removeAuthToken } from "./api";
 
+import { API } from "../config";
+
 interface AuthState {
   isAuthenticated: boolean;
   error: string | null;
@@ -99,7 +101,7 @@ export const login =
           username: string;
           names: string;
           surname: string;
-        }>("POST", "http://localhost:4000/login", formData);
+        }>("POST", `${API}/login`, formData);
       setAuthToken(token);
 
       dispatch(

@@ -8,6 +8,7 @@ import {
   useMapEvents,
   GeoJSON,
   Circle,
+  LayerGroup,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { LatLngExpression } from "leaflet";
@@ -15,6 +16,8 @@ import { LatLngExpression } from "leaflet";
 import L from "leaflet";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
+
+import { API } from "../../config";
 
 const position: LatLngExpression = [-29, -58];
 
@@ -92,7 +95,7 @@ const MapView = () => {
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const loadData = async () => {
-    const response = await fetch(`http://localhost:4000/tenantGeo/${tenantId}`);
+    const response = await fetch(`${API}/tenantGeo/${tenantId}`);
     const data = await response.json();
     setGeoData(
       data.features.filter(
@@ -110,31 +113,61 @@ const MapView = () => {
     loadData();
   }, []);
 
+  const PolygonPopup = (
+    feature: { properties: { id: number; description: string } },
+    layer: { bindPopup: (arg0: string) => void }
+  ) => {
+    // Crea una variable con el contenido del pop-up
+    const popupContent = `
+        <div>
+          <h3>ID: ${feature.properties.id}</h3>
+          <p>Descripción: ${feature.properties.description}</p>
+        </div>
+      `;
+    // Asigna el pop-up al layer cuando se hace clic en él
+    layer.bindPopup(popupContent);
+  };
+
   return (
     <div
       style={{
-        display: "flex",
+        //display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        padding: "40px 0",
       }}
     >
+      <h1>Mapa</h1>
       <MapContainer center={position} zoom={7}>
         <LayerControler />
         {geoData && (
-          <GeoJSON key="my-polygons" style={mystyle} data={geoData} />
+          <GeoJSON
+            key="my-polygons"
+            style={mystyle}
+            data={geoData}
+            onEachFeature={PolygonPopup}
+          />
         )}
 
-        {circles &&
-          circles.map((circle: any) => {
-            return (
-              <Circle
-                key={circle.properties.id}
-                center={circle.geometry.coordinates}
-                radius={circle.properties.radius}
-              />
-            );
-          })}
+        <LayerGroup>
+          {circles &&
+            circles.map((circle: any) => {
+              return (
+                <Circle
+                  key={circle.properties.id}
+                  center={circle.geometry.coordinates}
+                  radius={circle.properties.radius}
+                >
+                  <Popup>
+                    <div>
+                      <h3>ID: {circle.properties.id}</h3>
+                      <p>Descripción: {circle.properties.description}</p>
+                      <p>Radio: {circle.properties.radius.toFixed(2)} m.</p>
+                    </div>
+                  </Popup>
+                </Circle>
+              );
+            })}
+        </LayerGroup>
       </MapContainer>
     </div>
   );

@@ -13,6 +13,6 @@ const dbconnect = {
   database: process.env.DB_DATABASE,
 };
 
-export const JWT_SECRET = process.env.JWT_SECRET || 'defaultsecret';
+export const JWT_SECRET = process.env.JWT_SECRET || "defaultsecret";
 
 export default dbconnect;

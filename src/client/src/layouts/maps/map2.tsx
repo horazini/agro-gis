@@ -190,7 +190,7 @@ const PolygonMap = () => {
     <>
       <div className="row">
         <div className="col text-center">
-          <h2>React-leaflet - Crear, editar y eliminar polígonos en el mapa</h2>
+          <h1>Crear, editar y eliminar polígonos y círculos en el mapa</h1>
 
           <div className="col">
             <MapContainer

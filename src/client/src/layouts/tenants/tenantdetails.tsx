@@ -41,6 +41,7 @@ function TenantDetails() {
       const res = await fetch(`${API}/tenantdata/${id}`);
       const data = await res.json();
       setTenantData(data);
+      console.log(data);
     } catch (error) {
       console.log(error);
     }

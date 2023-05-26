@@ -47,9 +47,7 @@ const SecondStep = ({
   onBack,
   onNext,
 }: SecondStepProps) => {
-  const usertypeslist = Object.values(usertypes)
-    .filter((item: any, index: number) => index !== 0)
-    .map((item: any) => item.name);
+  const usertypeslist = Object.values(usertypes).map((item: any) => item.name);
 
   const [userData, setUserData] = useState<RowData>({
     id: 0,
@@ -114,7 +112,9 @@ const SecondStep = ({
     if (!isUsernameValidLength) {
       setErrorMessage("El nombre de usuario debe tener al menos 6 caracteres");
     } else if (!isValidUsername) {
-      setErrorMessage("El nombre de usuario no es válido");
+      setErrorMessage(
+        "El nombre de usuario sólo puede contener letras (a-z), números (0-9), puntos (.) y guiones bajos (_)."
+      );
     } else {
       setErrorMessage("");
       if (isValidEmail) {

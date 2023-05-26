@@ -33,12 +33,14 @@ import {
   getUsers,
   createUser,
   getUserTypes,
+  getTenantUserTypes,
   getUsersByTenant,
 } from "../controllers/user.controllers";
 
 router.get("/users", getUsers);
 router.post("/user", createUser);
 router.get("/usertypes", getUserTypes);
+router.get("/tenantusertypes", getTenantUserTypes);
 router.get("/tenantusers/:id", getUsersByTenant);
 
 // auth

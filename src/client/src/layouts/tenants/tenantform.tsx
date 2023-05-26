@@ -54,7 +54,7 @@ const MyForm = () => {
   const [usertypes, setUsertypes] = useState<any[]>([]);
 
   const loadUserTypes = async () => {
-    const response = await fetch(`${API}/usertypes`);
+    const response = await fetch(`${API}/tenantusertypes`);
     const data = await response.json();
     setUsertypes(data);
   };
@@ -93,9 +93,7 @@ const MyForm = () => {
     setUserList((prevRows) => prevRows.filter((row) => row.id !== id));
   };
 
-  const usertypeslist = Object.values(usertypes)
-    .filter((item: any, index: number) => index !== 0)
-    .map((item: any) => item.name);
+  const usertypeslist = Object.values(usertypes).map((item: any) => item.name);
 
   const usersSummary: {
     usertype: string;

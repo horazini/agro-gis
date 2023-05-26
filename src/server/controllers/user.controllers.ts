@@ -150,3 +150,23 @@ export const getUserTypes = async (
     next(e);
   }
 };
+
+// Obtener tipos de usuario sin el sysadmin
+
+export const getTenantUserTypes = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const response: QueryResult = await pool.query(
+      "SELECT id, name FROM usertype"
+    );
+
+    const filteredRows = response.rows.filter((row) => row.id > 1);
+
+    return res.status(200).json(filteredRows);
+  } catch (e) {
+    next(e);
+  }
+};

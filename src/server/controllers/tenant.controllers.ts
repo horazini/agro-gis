@@ -67,7 +67,7 @@ export const getTenantWithUsers = async (
 
     let users: any[] = [];
 
-    if (response.rows.length > 1) {
+    if (response.rows[0].user_id) {
       users = response.rows.map((row) => ({
         id: row.user_id,
         usertype_id: row.usertype_id,

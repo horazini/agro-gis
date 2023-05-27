@@ -77,6 +77,7 @@ interface IStageData {
   description: string;
   estimatedTime: number | string;
   estimatedTimeUnit: string;
+  db_id: number | null;
 }
 
 interface IGrowthEventData {
@@ -112,8 +113,6 @@ function SpeciesForm(): JSX.Element {
     tenant_id: tenantId || 1,
   });
 
-  const [editing, setEditing] = useState(false);
-
   const handleSpeciesChange = (e: {
     target: { name: string; value: string };
   }) => {
@@ -128,6 +127,7 @@ function SpeciesForm(): JSX.Element {
     description: "",
     estimatedTime: "",
     estimatedTimeUnit: "",
+    db_id: null,
   });
 
   const handleStageChange = (
@@ -170,6 +170,7 @@ function SpeciesForm(): JSX.Element {
       description: "",
       estimatedTime: "",
       estimatedTimeUnit: "",
+      db_id: null,
     });
     setEditingRowId(null);
   };
@@ -397,6 +398,7 @@ function SpeciesForm(): JSX.Element {
         },
         stages: stagesList.map((stage: IStageData) => {
           return {
+            db_id: stage.db_id,
             sequence_number: stage.id,
             name: stage.name,
             description: stage.description,
@@ -424,21 +426,19 @@ function SpeciesForm(): JSX.Element {
         }),
       };
 
-      let res;
-      /* if (editing) {
-        res = await fetch(`${API}/...species/${params.id}`, {
+      if (editing) {
+        await fetch(`${API}/species/${params.id}`, {
           method: "PUT",
-          body: JSON.stringify(species),
+          body: JSON.stringify(speciesData),
           headers: { "Content-type": "application/json" },
         });
-      } else */
-      // {
-      res = await fetch(`${API}/speciesdata`, {
-        method: "POST",
-        body: JSON.stringify(speciesData),
-        headers: { "Content-type": "application/json" },
-      });
-      // }
+      } else {
+        await fetch(`${API}/speciesdata`, {
+          method: "POST",
+          body: JSON.stringify(speciesData),
+          headers: { "Content-type": "application/json" },
+        });
+      }
       setLoading(false);
     } catch (error) {
       console.log(error);
@@ -451,11 +451,16 @@ function SpeciesForm(): JSX.Element {
 
   // Cargar especie existente (caso de edicion)
 
+  const [editing, setEditing] = useState(false);
+
   const loadSpecies = async (id: string) => {
     try {
-      const res = await fetch(`${API}/species/${id}`);
-      const data = (await res.json())[0];
-      setSpecies(data);
+      const res = await fetch(`${API}/speciesdata/${id}`);
+      const data = await res.json();
+      setSpecies(data.species);
+      setStagesList(data.growth_stages);
+      setGrowthEventsList(data.growth_events);
+      console.log(data);
       setEditing(true);
     } catch (error) {
       console.log(error);
@@ -931,7 +936,9 @@ function SpeciesForm(): JSX.Element {
         <DialogTitle id="alert-dialog-title">{"¿Confirmar datos?"}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Se darán de alta a la especie con todas sus fases y tareas.
+            {editing
+              ? "Se actualizará a la especie con todas sus fases y tareas."
+              : "Se dará de alta a la especie con todas sus fases y tareas."}
           </DialogContentText>
         </DialogContent>
         <DialogActions>

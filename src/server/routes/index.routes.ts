@@ -58,6 +58,7 @@ import {
   getSpecies,
   getSpeciesByTenant,
   getSpeciesById,
+  getSpeciesDataById,
   createSpecies,
   deleteSpecies,
   updateSpecies,
@@ -66,6 +67,7 @@ import {
 
 router.get("/species", getSpecies);
 router.get("/species/:id", getSpeciesById);
+router.get("/speciesdata/:id", getSpeciesDataById);
 router.get("/tenantspecies/:id", getSpeciesByTenant);
 router.post("/species", createSpecies);
 router.post("/speciesdata", createSpeciesWithStagesAndEvents);

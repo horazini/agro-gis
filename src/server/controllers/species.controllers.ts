@@ -51,6 +51,100 @@ export const getSpeciesById = async (
   }
 };
 
+export const getSpeciesDataById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    const speciesQuery = `
+      SELECT id, name, description, tenant_id
+      FROM species
+      WHERE id = $1
+    `;
+
+    const stagesQuery = `
+      SELECT id, name, description, estimated_time, sequence_number
+      FROM species_growth_stage
+      WHERE species_id = $1
+      ORDER BY sequence_number
+    `;
+
+    const eventsQuery = `
+      SELECT id, name, description, reference_stage, ET_from_stage_start, time_period
+      FROM species_growth_event
+      WHERE species_id = $1
+    `;
+
+    const speciesResponse: QueryResult = await pool.query(speciesQuery, [id]);
+    const stagesResponse: QueryResult = await pool.query(stagesQuery, [id]);
+    const eventsResponse: QueryResult = await pool.query(eventsQuery, [id]);
+
+    const species = {
+      id: speciesResponse.rows[0].id,
+      name: speciesResponse.rows[0].name,
+      description: speciesResponse.rows[0].description,
+      tenant_id: speciesResponse.rows[0].tenant_id,
+    };
+
+    const growth_stages = stagesResponse.rows.map((row: any) => {
+      const estimatedTimeUnit = Object.keys(row.estimated_time)[0];
+      const estimatedTime = row.estimated_time[estimatedTimeUnit];
+
+      return {
+        id: row.id,
+        db_id: row.id,
+        name: row.name,
+        description: row.description,
+        estimatedTime,
+        estimatedTimeUnit,
+        sequence_number: row.sequence_number,
+      };
+    });
+
+    const growth_events = eventsResponse.rows.map((row: any) => {
+      let ETFromStageStartUnit;
+      let ETFromStageStart;
+
+      let timePeriodUnit;
+      let timePeriod;
+
+      if (row.et_from_stage_start) {
+        ETFromStageStartUnit = Object.keys(row.et_from_stage_start)[0];
+        ETFromStageStart = row.et_from_stage_start[ETFromStageStartUnit];
+      }
+
+      if (row.time_period) {
+        timePeriodUnit = Object.keys(row.time_period)[0];
+        timePeriod = row.time_period[timePeriodUnit];
+      }
+
+      return {
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        referenceStage: row.reference_stage,
+        ETFromStageStart,
+        ETFromStageStartUnit,
+        timePeriod,
+        timePeriodUnit,
+      };
+    });
+
+    const result = {
+      species,
+      growth_stages,
+      growth_events,
+    };
+
+    return res.status(200).json(result);
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const createSpecies = async (
   req: Request,
   res: Response,
@@ -162,16 +256,83 @@ export const updateSpecies = async (
   res: Response,
   next: NextFunction
 ) => {
+  const client = await pool.connect();
   try {
-    const id = parseInt(req.params.id);
-    const { name, description } = req.body;
-    const response: QueryResult = await pool.query(
+    await client.query("BEGIN"); // Comienza la transacción
+    const species_id = parseInt(req.params.id);
+    const { species, stages } = req.body;
+    await pool.query(
       "UPDATE species SET name = $1, description = $2 WHERE id = $3",
-      [name, description, id]
+      [species.name, species.description, species_id]
     );
+
+    console.log(stages);
+    /* for (const stage of stages) {
+      const {
+        sequence_number,
+        name,
+        description,
+        estimated_time,
+        growthEvents,
+      } = stage;
+
+      let { db_id } = stage;
+
+      if (db_id) {
+        const res: QueryResult = await client.query(
+          `
+          UPDATE species_growth_stage SET name = $1, description = $2, estimated_time = $3, sequence_number = $4  WHERE id = $5
+          `,
+          [name, description, estimated_time, sequence_number, db_id]
+        );
+        console.log(res);
+        console.log(res.rows);
+      } else {
+        const stageInsertResponse: QueryResult = await client.query(
+          `
+          INSERT INTO species_growth_stage (species_id, name, description, estimated_time, sequence_number)
+          VALUES ($1, $2, $3, $4, $5)
+          RETURNING id
+          `,
+          [species_id, name, description, estimated_time, sequence_number]
+        );
+        db_id = stageInsertResponse.rows[0].id;
+      }
+
+      for (const growthEvent of growthEvents) {
+        const {
+          name,
+          description,
+          et_from_stage_start,
+          time_period,
+          db_event_id,
+        } = growthEvent;
+
+        if (db_event_id) {
+          await client.query(
+            `
+              UPDATE species_growth_event SET name = $1, description = $2, reference_stage = $3, et_from_stage_start = $4, time_period = $5 WHERE id = $6)
+              `,
+            [
+              name,
+              description,
+              db_id,
+              et_from_stage_start,
+              time_period,
+              db_event_id,
+            ]
+          );
+        } else {
+        }
+      }
+    } */
+
     return res.json("Species ${id} updated succesfully");
   } catch (e) {
+    await client.query("ROLLBACK");
     next(e);
+  } finally {
+    client.release();
   }
 };
 

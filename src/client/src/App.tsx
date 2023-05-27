@@ -42,7 +42,7 @@ function MainLayoutRoutes(): JSX.Element {
       <Route path="/tenants/:id" element={<TenantDetails />} />
       <Route path="/species/list" element={<SpeciesList />} />
       <Route path="/species/new" element={<SpeciesForm />} />
-      <Route path="/species/:id/edit" element={<SpeciesEditForm />} />
+      <Route path="/species/:id/edit" element={<SpeciesForm />} />
       <Route path="/map" element={<MapView />} />
       <Route path="/map2" element={<MapView2 />} />
       <Route path="/map3" element={<MapView3 />} />

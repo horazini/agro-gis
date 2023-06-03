@@ -35,7 +35,7 @@ const PolygonMap = () => {
 
   const circleToGeoJSON = (circle: any) => {
     const { lat, lng } = circle.latlngs;
-    const radius = circle.radius;
+    const radius = circle.radius.toFixed(2);
     const feature = {
       type: "Feature",
       geometry: {
@@ -141,7 +141,7 @@ const PolygonMap = () => {
                   properties: {
                     id: _leaflet_id,
                     subType: "Circle",
-                    radius: editing._shape._mRadius,
+                    radius: editing._shape._mRadius.toFixed(2),
                   },
                 }
               : l

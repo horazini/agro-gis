@@ -36,19 +36,20 @@ var icon = new LeafIcon({
 
 // Ubicacion actual del usuario
 function LocationMarker() {
-  const [position, setPosition] = useState<LatLngExpression>([0, 0]);
+  const [userPosition, setUserPosition] = useState<LatLngExpression>([0, 0]);
+
   const map = useMapEvents({
     click() {
       map.locate();
     },
     locationfound(e) {
-      setPosition(e.latlng);
-      map.flyTo(e.latlng, map.getZoom());
+      setUserPosition(e.latlng);
+      //map.flyTo(e.latlng, map.getZoom());
     },
   });
-  return position === null ? null : (
-    <Marker position={position} icon={icon}>
-      <Popup>You are here</Popup>
+  return userPosition === null ? null : (
+    <Marker position={userPosition} icon={icon}>
+      <Popup>Posición actual</Popup>
     </Marker>
   );
 }
@@ -75,12 +76,8 @@ function LayerControler(): JSX.Element {
         />
       </LayersControl.BaseLayer>
 
-      <LayersControl.Overlay name="Marker with popup">
-        <Marker position={position} icon={icon}>
-          <Popup>
-            A pretty CSS3 popup. <br /> Easily customizable.
-          </Popup>
-        </Marker>
+      <LayersControl.Overlay name="Posición actual">
+        <LocationMarker />
       </LayersControl.Overlay>
     </LayersControl>
   );

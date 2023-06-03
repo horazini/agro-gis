@@ -10,6 +10,10 @@ import { Box } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "./redux/store";
 
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+
 import NavbarDrawer from "./components/navbarDrawer";
 import Footer from "./components/footer";
 
@@ -30,6 +34,7 @@ import SpeciesForm from "./layouts/species/speciesform";
 import MapView from "./layouts/maps/map";
 import MapView2 from "./layouts/maps/map2";
 import MapView3 from "./layouts/maps/map3";
+import MapView4 from "./layouts/maps/map4";
 
 function MainLayoutRoutes(): JSX.Element {
   return (
@@ -46,6 +51,7 @@ function MainLayoutRoutes(): JSX.Element {
       <Route path="/map" element={<MapView />} />
       <Route path="/map2" element={<MapView2 />} />
       <Route path="/map3" element={<MapView3 />} />
+      <Route path="/map4" element={<MapView4 />} />
     </Routes>
   );
 }
@@ -100,14 +106,18 @@ function RouteAuthLogic(): JSX.Element {
 }
 
 function App(): JSX.Element {
+  dayjs.locale("es"); // idioma de la biblioteca de manipulación de fechas
+
   return (
-    <Box sx={{ display: "flex" }}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="*" element={<RouteAuthLogic />} />
-        </Routes>
-      </BrowserRouter>
-    </Box>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box sx={{ display: "flex" }}>
+        <BrowserRouter>
+          <Routes>
+            <Route path="*" element={<RouteAuthLogic />} />
+          </Routes>
+        </BrowserRouter>
+      </Box>
+    </LocalizationProvider>
   );
 }
 

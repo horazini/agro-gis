@@ -18,7 +18,6 @@ function Login() {
   const handleClose = (event: any) => {
     event.preventDefault();
     dispatch(logout() as any);
-    console.log("okas");
   };
 
   return (

@@ -101,7 +101,7 @@ export const createGeo = async (
       const circular_polygon = `ST_Buffer(ST_GeomFromText(${WKT_point}), ${buffer_radius})`;
 
       const queryText = `INSERT INTO landplot(tenant_id, area, circle_center, circle_radius, description) VALUES ($1, ${circular_polygon}, ${WKT_point}, ${radius}, $2)`;
-      const values = [1, description];
+      const values = [tenantId, description];
 
       const response: QueryResult = await pool.query(queryText, values);
       res.status(201).send("Circle added");

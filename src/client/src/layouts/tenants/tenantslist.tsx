@@ -8,14 +8,13 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 
-import { API } from "../../config";
+import { getTenants } from "../../services/services";
 
 function TenantsList() {
   const [tenants, setTenants] = useState<any[]>([]);
 
   const loadTenants = async () => {
-    const response = await fetch(`${API}/tenants`);
-    const data = await response.json();
+    const data = await getTenants();
     setTenants(data);
   };
 
@@ -25,16 +24,7 @@ function TenantsList() {
 
   const navigate = useNavigate();
 
-  const handleDelete = async (id: any) => {
-    /* try {
-      await fetch(`${API}/tenants/${id}`, {
-        method: "DELETE",
-      });
-      setTenants(tenants.filter((tenant) => tenant.id !== id));
-    } catch (error) {
-      console.log(error);
-    } */
-  };
+  const handleDelete = async (id: any) => {};
 
   return (
     <>

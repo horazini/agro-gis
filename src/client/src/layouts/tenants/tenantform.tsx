@@ -19,7 +19,11 @@ import ThirdStep from "./thirdstep";
 
 import { RowData } from "./secondstep";
 
-import { API } from "../../config";
+import {
+  getTenantUsertypes,
+  postTenantData,
+  tenantDataType,
+} from "../../services/services";
 
 const theme = createTheme();
 
@@ -54,8 +58,7 @@ const MyForm = () => {
   const [usertypes, setUsertypes] = useState<any[]>([]);
 
   const loadUserTypes = async () => {
-    const response = await fetch(`${API}/tenantusertypes`);
-    const data = await response.json();
+    const data = await getTenantUsertypes();
     setUsertypes(data);
   };
 
@@ -108,7 +111,7 @@ const MyForm = () => {
 
   const handleConfirm = async () => {
     try {
-      const tenantData = {
+      const tenantData: tenantDataType = {
         tenant: {
           name: orgData.tenantName,
         },
@@ -129,11 +132,7 @@ const MyForm = () => {
         }),
       };
 
-      const res = await fetch(`${API}/tenantdata`, {
-        method: "POST",
-        body: JSON.stringify(tenantData),
-        headers: { "Content-type": "application/json" },
-      });
+      const res = await postTenantData(tenantData);
     } catch (error) {
       console.log(error);
     }

@@ -28,7 +28,6 @@ import L from "leaflet";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 
-import { API } from "../../config";
 import {
   FormControl,
   InputLabel,
@@ -43,6 +42,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { getTenantGeo, getTenantSpecies } from "../../services/services";
 
 interface ICrop {
   landplot: number;
@@ -146,14 +146,12 @@ const MapView = () => {
   const [species, setSpecies] = useState<any[]>([]);
 
   const loadData = async () => {
-    const response = await fetch(`${API}/tenantGeo/${tenantId}`);
-    const data = await response.json();
+    const data = await getTenantGeo(tenantId);
     setGeoData(data);
   };
 
   const loadSpecies = async () => {
-    const response = await fetch(`${API}/tenantspecies/${tenantId}`);
-    const data = await response.json();
+    const data = await getTenantSpecies(tenantId);
     setSpecies(data);
   };
 
@@ -261,11 +259,6 @@ const MapView = () => {
       const body = JSON.stringify(crop);
       console.log(body);
 
-      /* await fetch(`${API}/...`, {
-        method: "POST",
-        body: JSON.stringify(crop),
-        headers: { "Content-type": "application/json" },
-      }); */
       setLoading(false);
     } catch (error) {
       console.log(error);

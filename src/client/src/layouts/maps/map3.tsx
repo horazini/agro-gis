@@ -17,7 +17,7 @@ import L from "leaflet";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 
-import { API } from "../../config";
+import { getTenantGeo } from "../../services/services";
 
 const position: LatLngExpression = [-29, -58];
 
@@ -100,8 +100,7 @@ const MapView = () => {
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const loadData = async () => {
-    const response = await fetch(`${API}/tenantGeo/${tenantId}`);
-    const data = await response.json();
+    const data = await getTenantGeo(tenantId);
     setGeoData(
       data.features.filter(
         (feature: any) => feature.geometry.type === "Polygon"

@@ -12,8 +12,6 @@ import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { API } from "../../config";
-
 import {
   Alert,
   AlertTitle,
@@ -62,6 +60,11 @@ import {
 } from "@mui/icons-material";
 
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import {
+  getSpeciesData,
+  postSpeciesData,
+  putSpeciesData,
+} from "../../services/services";
 
 const theme = createTheme();
 
@@ -427,17 +430,9 @@ function SpeciesForm(): JSX.Element {
       };
 
       if (editing) {
-        await fetch(`${API}/species/${params.id}`, {
-          method: "PUT",
-          body: JSON.stringify(speciesData),
-          headers: { "Content-type": "application/json" },
-        });
+        await putSpeciesData(speciesData, params.id);
       } else {
-        await fetch(`${API}/speciesdata`, {
-          method: "POST",
-          body: JSON.stringify(speciesData),
-          headers: { "Content-type": "application/json" },
-        });
+        await postSpeciesData(speciesData);
       }
       setLoading(false);
     } catch (error) {
@@ -455,8 +450,7 @@ function SpeciesForm(): JSX.Element {
 
   const loadSpecies = async (id: string) => {
     try {
-      const res = await fetch(`${API}/speciesdata/${id}`);
-      const data = await res.json();
+      const data = await getSpeciesData(id);
       setSpecies(data.species);
       setStagesList(data.growth_stages);
       setGrowthEventsList(data.growth_events);

@@ -19,7 +19,7 @@ import { Button } from "@mui/material";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 
-import { API } from "../../config";
+import { postFeature } from "../../services/services";
 
 //import { useRef } from "react";
 //import L, { LatLng, LatLngExpression } from "leaflet";
@@ -172,11 +172,7 @@ const PolygonMap = () => {
       //setLoading(true);
 
       geoJSONFeatures.forEach(async (feature: any) => {
-        await fetch(`${API}/geo`, {
-          method: "POST",
-          body: JSON.stringify(feature),
-          headers: { "Content-type": "application/json" },
-        });
+        await postFeature(feature);
       });
 
       //setLoading(false);

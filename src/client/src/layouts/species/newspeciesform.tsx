@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 
 import { API } from "../../config";
+import { getSpeciesById } from "../../services/services";
 
 function SpeciesForm(): JSX.Element {
   type FormElement = React.FormEvent<HTMLFormElement>;
@@ -67,8 +68,7 @@ function SpeciesForm(): JSX.Element {
 
   const loadSpecies = async (id: string) => {
     try {
-      const res = await fetch(`${API}/species/${id}`);
-      const data = (await res.json())[0];
+      const data = await getSpeciesById(id);
       setSpecies(data);
       setEditing(true);
     } catch (error) {

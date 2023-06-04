@@ -132,7 +132,7 @@ const MyForm = () => {
         }),
       };
 
-      const res = await postTenantData(tenantData);
+      await postTenantData(tenantData);
     } catch (error) {
       console.log(error);
     }

@@ -1,19 +1,7 @@
-import {
-  Alert,
-  AlertTitle,
-  Backdrop,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Typography,
-} from "@mui/material";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Box, Button, Typography } from "@mui/material";
+import React from "react";
+
+import { ConfirmButton } from "../../components/confirmform";
 
 export type ThirdStepProps = {
   formData: {
@@ -36,32 +24,8 @@ const ThirdStep = ({
   onBack,
   onConfirm,
 }: ThirdStepProps) => {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-
-  const navigate = useNavigate();
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleConfirm = () => {
-    setLoading(true);
-    setTimeout(() => {
-      onConfirm();
-      setLoading(false);
-      setOpen(false);
-      setSuccess(true);
-      setTimeout(() => {
-        navigate("/tenants/list");
-      }, 4000);
-    }, 500);
-  };
+  const msg: string =
+    "Se darán de alta al cliente y todos los usuarios cargados.";
 
   return (
     <React.Fragment>
@@ -86,50 +50,13 @@ const ThirdStep = ({
         <Button sx={{ mt: 3, ml: 1 }} onClick={onBack}>
           Regresar
         </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 3, ml: 1 }}
-          onClick={handleClickOpen}
-        >
-          Confirmar datos
-        </Button>
-
-        <Dialog
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogTitle id="alert-dialog-title">
-            {"¿Confirmar datos?"}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="alert-dialog-description">
-              Se darán de alta al cliente y todos los usuarios cargados.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose}>Cancelar</Button>
-            <Button onClick={handleConfirm} autoFocus>
-              Confirmar
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <ConfirmButton
+          msg={msg}
+          onConfirm={onConfirm}
+          navigateDir={"/tenants/list"}
+          disabled={false}
+        />
       </Box>
-
-      <Backdrop open={loading} style={{ zIndex: 9999 }}>
-        <CircularProgress color="inherit" />
-      </Backdrop>
-
-      {success && (
-        <Dialog open={success}>
-          <Alert severity="success" sx={{ width: "100%" }}>
-            <AlertTitle>Datos cargados correctamente!</AlertTitle>
-            Redirigiendo...
-          </Alert>
-        </Dialog>
-      )}
     </React.Fragment>
   );
 };

@@ -8,7 +8,7 @@ function Login() {
 
   const handleSubmit = (event: any) => {
     event.preventDefault();
-    const username = event.target.username.value;
+    //const username = event.target.username.value;
     //const password = event.target.password.value;
     const password = bcrypt.hashSync(event.target.password.value, 10);
     console.log(password);

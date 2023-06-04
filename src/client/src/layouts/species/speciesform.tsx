@@ -1,33 +1,13 @@
-import {
-  Fragment,
-  JSXElementConstructor,
-  ReactElement,
-  ReactFragment,
-  ReactPortal,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import {
-  Alert,
-  AlertTitle,
-  Backdrop,
   Box,
   Button,
-  Card,
-  CardContent,
-  CircularProgress,
   Container,
   CssBaseline,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   FormControl,
   Grid,
   IconButton,
@@ -37,9 +17,6 @@ import {
   Paper,
   Select,
   SelectChangeEvent,
-  Step,
-  StepLabel,
-  Stepper,
   Table,
   TableBody,
   TableCell,
@@ -65,6 +42,7 @@ import {
   postSpeciesData,
   putSpeciesData,
 } from "../../services/services";
+import { CancelButton, ConfirmButton } from "../../components/confirmform";
 
 const theme = createTheme();
 
@@ -95,8 +73,6 @@ interface IGrowthEventData {
 }
 
 function SpeciesForm(): JSX.Element {
-  type FormElement = React.FormEvent<HTMLFormElement>;
-  const navigate = useNavigate();
   const params = useParams();
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
@@ -265,14 +241,8 @@ function SpeciesForm(): JSX.Element {
   };
 
   const disableEventSubmit = () => {
-    const {
-      name,
-      referenceStage,
-      ETFromStageStart,
-      ETFromStageStartUnit,
-      timePeriod,
-      timePeriodUnit,
-    } = growthEventData;
+    const { name, referenceStage, ETFromStageStart, ETFromStageStartUnit } =
+      growthEventData;
     return !(
       name &&
       referenceStage &&
@@ -360,39 +330,8 @@ function SpeciesForm(): JSX.Element {
 
   // Subtim form
 
-  const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [cancel, setCancel] = useState(false);
-  const [success, setSuccess] = useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-  const handleCancelOpen = () => {
-    setCancel(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setCancel(false);
-  };
-
-  const handleConfirm = () => {
-    setLoading(true);
-    setTimeout(() => {
-      handleSubmitForm();
-      setLoading(false);
-      setOpen(false);
-      setSuccess(true);
-      setTimeout(() => {
-        navigate("/species/list");
-      }, 4000);
-    }, 500);
-  };
-
   const handleSubmitForm = async () => {
     try {
-      setLoading(true);
       const speciesData = {
         species: {
           name: species.name,
@@ -434,14 +373,9 @@ function SpeciesForm(): JSX.Element {
       } else {
         await postSpeciesData(speciesData);
       }
-      setLoading(false);
     } catch (error) {
       console.log(error);
     }
-  };
-
-  const handleCancel = () => {
-    navigate("/species/list");
   };
 
   // Cargar especie existente (caso de edicion)
@@ -470,6 +404,10 @@ function SpeciesForm(): JSX.Element {
   const handleOutsideClick = () => {
     setSelectedRowId(null);
   };
+
+  const msg: string = editing
+    ? "Se actualizará a la especie con todas sus fases y tareas."
+    : "Se dará de alta a la especie con todas sus fases y tareas.";
 
   return (
     <ThemeProvider theme={theme}>
@@ -900,81 +838,16 @@ function SpeciesForm(): JSX.Element {
               alignItems: "center",
             }}
           >
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ mt: 3, ml: 1 }}
-              onClick={handleCancelOpen}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ mt: 3, ml: 1 }}
-              onClick={handleClickOpen}
+            <CancelButton navigateDir={"/species/list"} />
+            <ConfirmButton
+              msg={msg}
+              onConfirm={handleSubmitForm}
+              navigateDir={"/species/list"}
               disabled={!species.name}
-            >
-              Confirmar
-            </Button>
+            />
           </Box>
         </Paper>
       </Container>
-
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"¿Confirmar datos?"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {editing
-              ? "Se actualizará a la especie con todas sus fases y tareas."
-              : "Se dará de alta a la especie con todas sus fases y tareas."}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleConfirm} autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Backdrop open={loading} style={{ zIndex: 9999 }}>
-        <CircularProgress color="inherit" />
-      </Backdrop>
-
-      {success && (
-        <Dialog open={success}>
-          <Alert severity="success" sx={{ width: "100%" }}>
-            <AlertTitle>Datos cargados correctamente!</AlertTitle>
-            Redirigiendo...
-          </Alert>
-        </Dialog>
-      )}
-
-      <Dialog
-        open={cancel}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"¿Cancelar carga?"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Los datos ingresados no serán guardados.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Quedarme aquí</Button>
-          <Button onClick={handleCancel} autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
     </ThemeProvider>
   );
 }

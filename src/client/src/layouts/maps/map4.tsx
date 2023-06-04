@@ -1,15 +1,7 @@
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 // import "dayjs/locale/es"; // Importa el idioma que deseas utilizar
 
-import {
-  JSXElementConstructor,
-  Key,
-  ReactElement,
-  ReactFragment,
-  ReactPortal,
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 import {
   LayersControl,
   MapContainer,
@@ -28,21 +20,10 @@ import L from "leaflet";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 
-import {
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from "@mui/material";
+import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { getTenantGeo, getTenantSpecies } from "../../services/services";
+import { ConfirmButton } from "../../components/confirmform";
 
 interface ICrop {
   landplot: number;
@@ -57,18 +38,6 @@ interface RowData {
     description: string;
     radius: null | number;
   };
-}
-
-interface IPolygon {
-  geometry: {
-    coordinates: any;
-    type: string;
-  };
-  properties: {
-    description: string | null;
-    id: number;
-  };
-  type: string;
 }
 
 const position: LatLngExpression = [-29, -58];
@@ -137,8 +106,6 @@ function LayerControler(): JSX.Element {
 
 const MapView = () => {
   const mystyle = {};
-
-  const navigate = useNavigate();
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
@@ -218,48 +185,17 @@ const MapView = () => {
     }));
     const found = geoData.features.find(
       (feature: { properties: { id: number } }) =>
-        feature.properties.id == Number(e.target.value)
+        feature.properties.id === Number(e.target.value)
     );
     setSelectedFeature(found);
   }
 
   // Confirmar datos
 
-  const [open, setOpen] = useState(false);
-  const [cancel, setCancel] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setCancel(false);
-  };
-
-  const handleConfirm = () => {
-    setLoading(true);
-    setTimeout(() => {
-      handleSubmitForm();
-      setLoading(false);
-      setOpen(false);
-      setSuccess(true);
-      setTimeout(() => {
-        navigate("/map4");
-      }, 4000);
-    }, 500);
-  };
-
   const handleSubmitForm = async () => {
     try {
-      setLoading(true);
-
       const body = JSON.stringify(crop);
       console.log(body);
-
-      setLoading(false);
     } catch (error) {
       console.log(error);
     }
@@ -379,37 +315,12 @@ const MapView = () => {
           onChange={handleChangeDate}
         />
       </FormControl>
-
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ mt: 3, ml: 1 }}
-        onClick={handleClickOpen}
-        //disabled={!crop.landplot}
+      <ConfirmButton
+        msg={"Se dará de alta al cultivo en la parcela seleccionada."}
+        onConfirm={handleSubmitForm}
+        navigateDir={"/"}
         disabled={!Object.values(crop).every((value) => !!value)}
-      >
-        Confirmar
-      </Button>
-
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"¿Confirmar datos?"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Se dará de alta al cultivo en la parcela seleccionada.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleConfirm} autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
+      />
     </div>
   );
 };

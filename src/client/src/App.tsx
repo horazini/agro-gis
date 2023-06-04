@@ -28,7 +28,6 @@ import TenantForm from "./layouts/tenants/tenantform";
 import TenantDetails from "./layouts/tenants/tenantdetails";
 
 import SpeciesList from "./layouts/species/specieslist";
-import SpeciesEditForm from "./layouts/species/newspeciesform";
 import SpeciesForm from "./layouts/species/speciesform";
 
 import MapView from "./layouts/maps/map";

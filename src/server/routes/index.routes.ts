@@ -86,4 +86,15 @@ router.get("/geo", getGeo);
 router.get("/tenantGeo/:tenantId", getTenantGeo);
 router.post("/geo", createGeo);
 
+// Crops
+
+import {
+  getCrops,
+  //getTenantCrops,
+  createCrop,
+} from "../controllers/crop.controllers";
+
+router.get("/crop", getCrops);
+router.post("/crop", createCrop);
+
 export default router;

@@ -1,5 +1,4 @@
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-// import "dayjs/locale/es"; // Importa el idioma que deseas utilizar
 
 import { useEffect, useState } from "react";
 import {
@@ -9,35 +8,27 @@ import {
   Popup,
   TileLayer,
   useMapEvents,
-  GeoJSON,
   Circle,
   LayerGroup,
+  Polygon,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { LatLngExpression } from "leaflet";
+import { LatLngExpression, LayerEvent } from "leaflet";
 
 import L from "leaflet";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import { getTenantGeo, getTenantSpecies } from "../../services/services";
 import { ConfirmButton } from "../../components/confirmform";
+import { Feature } from "geojson";
 
 interface ICrop {
   landplot: number;
   species: number;
   tenant_id: number;
   date: string;
-}
-
-interface RowData {
-  properties: {
-    id: number;
-    description: string;
-    radius: null | number;
-  };
 }
 
 const position: LatLngExpression = [-29, -58];
@@ -127,35 +118,9 @@ const MapView = () => {
     loadSpecies();
   }, []);
 
-  //
-
-  const [selectedFeature, setSelectedFeature] = useState<RowData | null>(null);
-
-  const PolygonPopup = (
-    feature: RowData,
-    layer: {
-      bindPopup: (arg0: string) => void;
-      on: (arg0: string, arg1: () => void) => void;
-    }
-  ) => {
-    const handlePopupClick = () => {
-      setCrop((prevCrop) => ({
-        ...prevCrop,
-        landplot: feature.properties.id,
-      }));
-      setSelectedFeature(feature);
-    };
-    const popupContent = `
-      <div>
-        <h3>ID: ${feature.properties.id}</h3>
-        <p>Descripción: ${feature.properties.description}</p>
-      </div>
-    `;
-    layer.bindPopup(popupContent);
-    layer.on("click", handlePopupClick);
-  };
-
   // Manejo de alta de cultivo: parcela, especie y fecha inicial
+
+  const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
 
   const [crop, setCrop] = useState<ICrop>({
     landplot: 0,
@@ -176,16 +141,14 @@ const MapView = () => {
     }));
   }
 
-  function handleLandplotChange(e: {
-    target: { name: string; value: string };
-  }) {
+  function handleLandplotChange(cropId: number) {
     setCrop((prevCrop) => ({
       ...prevCrop,
-      landplot: Number(e.target.value),
+      landplot: cropId,
     }));
-    const found = geoData.features.find(
+    const found: Feature = geoData.features.find(
       (feature: { properties: { id: number } }) =>
-        feature.properties.id === Number(e.target.value)
+        feature.properties.id === cropId
     );
     setSelectedFeature(found);
   }
@@ -201,6 +164,84 @@ const MapView = () => {
     }
   };
 
+  // Comportamiento de las Layers
+
+  const CustomLayer = ({ feature }: any) => {
+    const [highlightedLayerId, setHighlightedLayerId] = useState<number | null>(
+      null
+    );
+    const handleLayerMouseOver = (layerId: number) => {
+      setHighlightedLayerId(layerId);
+    };
+
+    const handleLayerMouseOut = () => {
+      setHighlightedLayerId(null);
+    };
+
+    const isHighlighted = highlightedLayerId === feature.properties.id;
+    const isSelected = crop.landplot === feature.properties.id;
+
+    const pathOptions = {
+      color: isSelected ? "#bf4000" : isHighlighted ? "#33ff33" : "#3388ff",
+      weight: isSelected ? 4 : isHighlighted ? 4 : 3,
+    };
+
+    const handleLayerClick = (event: LayerEvent, feature: any) => {
+      handleLandplotChange(feature.properties?.id);
+    };
+
+    const eventHandlers = {
+      click: (event: LayerEvent) => handleLayerClick(event, feature),
+      mouseover: () => handleLayerMouseOver(feature.properties.id),
+      mouseout: handleLayerMouseOut,
+    };
+
+    const PopUp = (
+      <div>
+        <h3>ID: {feature.properties.id}</h3>
+        <p>Descripción: {feature.properties.description}</p>
+        {feature.properties?.radius && (
+          <p>Radio: {feature.properties.radius} m.</p>
+        )}
+      </div>
+    );
+
+    if (feature.geometry.type === "Polygon") {
+      const coordinates = feature.geometry.coordinates[0].map(
+        ([lng, lat]: any) => [lat, lng]
+      );
+      return (
+        <Polygon
+          key={feature.properties.id}
+          positions={coordinates}
+          pathOptions={pathOptions}
+          eventHandlers={eventHandlers}
+        >
+          <Popup>{PopUp}</Popup>
+        </Polygon>
+      );
+    } else if (
+      feature.geometry.type === "Point" &&
+      feature.properties.subType === "Circle"
+    ) {
+      const [lat, lng] = feature.geometry.coordinates;
+      const radius = feature.properties.radius;
+
+      return (
+        <Circle
+          key={feature.properties.id}
+          center={[lat, lng]}
+          radius={radius}
+          pathOptions={pathOptions}
+          eventHandlers={eventHandlers}
+        >
+          <Popup>{PopUp}</Popup>
+        </Circle>
+      );
+    }
+    return null;
+  };
+
   return (
     <div
       style={{
@@ -212,61 +253,23 @@ const MapView = () => {
       <h1>Mapa</h1>
       <MapContainer center={position} zoom={7}>
         <LayerControler />
-        {geoData && (
-          <>
-            <GeoJSON
-              key="my-polygons"
-              style={mystyle}
-              data={geoData.features.filter(
-                (feature: any) => feature.geometry.type === "Polygon"
-              )}
-              onEachFeature={PolygonPopup}
-            />
-            <LayerGroup>
-              {geoData.features
-                .filter(
-                  (feature: any) => feature.properties.subType === "Circle"
-                )
-                .map((circle: any) => {
-                  const handleCircleClick = () => {
-                    setCrop((prevCrop) => ({
-                      ...prevCrop,
-                      landplot: circle.properties.id,
-                    }));
-                    setSelectedFeature(circle);
-                  };
-
-                  return (
-                    <Circle
-                      key={circle.properties.id}
-                      center={circle.geometry.coordinates}
-                      radius={circle.properties.radius}
-                      eventHandlers={{
-                        click: handleCircleClick,
-                      }}
-                    >
-                      <Popup>
-                        <div>
-                          <h3>ID: {circle.properties.id}</h3>
-                          <p>Descripción: {circle.properties.description}</p>
-                          <p>Radio: {circle.properties.radius.toFixed(2)} m.</p>
-                        </div>
-                      </Popup>
-                    </Circle>
-                  );
-                })}
-            </LayerGroup>
-          </>
-        )}
+        <LayerGroup>
+          {geoData &&
+            geoData.features.map((feature: any) => {
+              return (
+                <CustomLayer key={feature.properties.id} feature={feature} />
+              );
+            })}
+        </LayerGroup>
       </MapContainer>
 
       {(selectedFeature && (
         <div>
           <h2>Información seleccionada:</h2>
-          <p>Parcela N.° {selectedFeature.properties.id}</p>
-          <p>Descripción: {selectedFeature.properties.description}</p>
-          {selectedFeature.properties.radius && (
-            <p>Radio: {selectedFeature.properties.radius.toFixed(2)} m.</p>
+          <p>Parcela N.° {selectedFeature.properties?.id}</p>
+          <p>Descripción: {selectedFeature.properties?.description}</p>
+          {selectedFeature.properties?.radius && (
+            <p>Radio: {selectedFeature.properties?.radius.toFixed(2)} m.</p>
           )}
         </div>
       )) || <h2>Seleccione una parcela</h2>}
@@ -277,7 +280,7 @@ const MapView = () => {
           label="Landplot"
           name="landplot"
           value={crop.landplot.toString()}
-          onChange={handleLandplotChange}
+          onChange={(e) => handleLandplotChange(Number(e.target.value))}
         >
           <MenuItem value="0" disabled>
             Seleccione una parcela
@@ -318,7 +321,7 @@ const MapView = () => {
       <ConfirmButton
         msg={"Se dará de alta al cultivo en la parcela seleccionada."}
         onConfirm={handleSubmitForm}
-        navigateDir={"/"}
+        navigateDir={"/map3"}
         disabled={!Object.values(crop).every((value) => !!value)}
       />
     </div>

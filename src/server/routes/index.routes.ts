@@ -78,12 +78,18 @@ router.delete("/species/:id", deleteSpecies);
 
 import {
   getGeo,
+  getGeoWithCrops,
+  getTenantGeoWithCurrentCrops,
   getTenantGeo,
+  getAvailableTenantGeo,
   createGeo,
 } from "../controllers/geo.controllers";
 
 router.get("/geo", getGeo);
-router.get("/tenantGeo/:tenantId", getTenantGeo);
+router.get("/geodata/:id", getGeoWithCrops);
+router.get("/tenantgeo/:tenantId", getTenantGeo);
+router.get("/tenantgeocurrentdata/:tenantId", getTenantGeoWithCurrentCrops);
+router.get("/availabletenantGeo/:tenantId", getAvailableTenantGeo);
 router.post("/geo", createGeo);
 
 // Crops

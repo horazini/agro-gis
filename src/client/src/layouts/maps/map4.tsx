@@ -1,99 +1,21 @@
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-
 import { useEffect, useState } from "react";
 import {
-  LayersControl,
   MapContainer,
-  Marker,
   Popup,
-  TileLayer,
-  useMapEvents,
   Circle,
   LayerGroup,
   Polygon,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { LatLngExpression, LayerEvent } from "leaflet";
+import { LayerEvent } from "leaflet";
 
-import L from "leaflet";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 
-import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import { getTenantGeo, getTenantSpecies } from "../../services/services";
-import { ConfirmButton } from "../../components/confirmform";
+import { getTenantGeoData, getTenantSpecies } from "../../services/services";
 import { Feature } from "geojson";
 
-interface ICrop {
-  landplot: number;
-  species: number;
-  tenant_id: number;
-  date: string;
-}
-
-const position: LatLngExpression = [-29, -58];
-
-const LeafIcon: any = L.Icon.extend({
-  options: {
-    iconSize: [25, 40],
-    shadowSize: [50, 64],
-    iconAnchor: [12.5, 40],
-    shadowAnchor: [4, 62],
-    popupAnchor: [-3, -50],
-  },
-});
-var icon = new LeafIcon({
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-});
-
-// Ubicacion actual del usuario
-function LocationMarker() {
-  const [userPosition, setUserPosition] = useState<LatLngExpression>([0, 0]);
-
-  const map = useMapEvents({
-    click() {
-      map.locate();
-    },
-    locationfound(e) {
-      setUserPosition(e.latlng);
-      //map.flyTo(e.latlng, map.getZoom());
-    },
-  });
-  return userPosition === null ? null : (
-    <Marker position={userPosition} icon={icon}>
-      <Popup>Posición actual</Popup>
-    </Marker>
-  );
-}
-
-function LayerControler(): JSX.Element {
-  return (
-    <LayersControl position="topright">
-      <LayersControl.BaseLayer checked name="Esri.WorldImagery">
-        <TileLayer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
-        />
-      </LayersControl.BaseLayer>
-      <LayersControl.BaseLayer name="Open Topo Map">
-        <TileLayer
-          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-          attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        />
-      </LayersControl.BaseLayer>
-      <LayersControl.BaseLayer name="Open Street Map">
-        <TileLayer
-          url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        />
-      </LayersControl.BaseLayer>
-
-      <LayersControl.Overlay name="Posición actual">
-        <LocationMarker />
-      </LayersControl.Overlay>
-    </LayersControl>
-  );
-}
+import { position, LayerControler } from "../../components/mapcomponents";
 
 const MapView = () => {
   const mystyle = {};
@@ -104,7 +26,7 @@ const MapView = () => {
   const [species, setSpecies] = useState<any[]>([]);
 
   const loadData = async () => {
-    const data = await getTenantGeo(tenantId);
+    const data = await getTenantGeoData(tenantId);
     setGeoData(data);
   };
 
@@ -122,47 +44,13 @@ const MapView = () => {
 
   const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
 
-  const [crop, setCrop] = useState<ICrop>({
-    landplot: 0,
-    species: 0,
-    tenant_id: tenantId || 1,
-    date: "",
-  });
-
-  const handleFormChange = (e: { target: { name: string; value: string } }) => {
-    setCrop({ ...crop, [e.target.name]: e.target.value });
-  };
-
-  function handleChangeDate(date: any) {
-    const isoDate = date.toISOString(); // Convertir la fecha a formato ISO 8601
-    setCrop((prevCrop) => ({
-      ...prevCrop,
-      date: isoDate,
-    }));
-  }
-
   function handleLandplotChange(cropId: number) {
-    setCrop((prevCrop) => ({
-      ...prevCrop,
-      landplot: cropId,
-    }));
     const found: Feature = geoData.features.find(
       (feature: { properties: { id: number } }) =>
         feature.properties.id === cropId
     );
     setSelectedFeature(found);
   }
-
-  // Confirmar datos
-
-  const handleSubmitForm = async () => {
-    try {
-      const body = JSON.stringify(crop);
-      console.log(body);
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   // Comportamiento de las Layers
 
@@ -179,10 +67,19 @@ const MapView = () => {
     };
 
     const isHighlighted = highlightedLayerId === feature.properties.id;
-    const isSelected = crop.landplot === feature.properties.id;
+    const isSelected =
+      (selectedFeature?.properties?.id ?? null) === feature.properties.id;
+    const isAsd =
+      feature.properties.crop && feature.properties.crop?.finish_date === null;
 
     const pathOptions = {
-      color: isSelected ? "#bf4000" : isHighlighted ? "#33ff33" : "#3388ff",
+      color: isSelected
+        ? "#bf4000"
+        : isAsd
+        ? "red"
+        : isHighlighted
+        ? "#33ff33"
+        : "#3388ff",
       weight: isSelected ? 4 : isHighlighted ? 4 : 3,
     };
 
@@ -224,14 +121,11 @@ const MapView = () => {
       feature.geometry.type === "Point" &&
       feature.properties.subType === "Circle"
     ) {
-      const [lat, lng] = feature.geometry.coordinates;
-      const radius = feature.properties.radius;
-
       return (
         <Circle
           key={feature.properties.id}
-          center={[lat, lng]}
-          radius={radius}
+          center={feature.geometry.coordinates}
+          radius={feature.properties.radius}
           pathOptions={pathOptions}
           eventHandlers={eventHandlers}
         >
@@ -240,6 +134,35 @@ const MapView = () => {
       );
     }
     return null;
+  };
+
+  const Crop = (crop: any) => {
+    const startDate = new Date(crop.start_date).toLocaleDateString("en-GB");
+    const finishDate = new Date(crop.finish_date).toLocaleDateString("en-GB");
+
+    const cropSpecies = species.find(
+      (specie) => specie.id === crop.species_id
+    )?.name;
+
+    return (
+      <div>
+        {(crop.finish_date && (
+          <>
+            <h2>Parcela libre</h2>
+            <h3>Última cosecha:</h3>
+          </>
+        )) || (
+          <>
+            <h2>Parcela ocupada</h2>
+            <h3>Cultivo actual:</h3>
+          </>
+        )}
+        <p>Fecha de plantación: {startDate}</p>
+        {crop.finish_date && <p>Fecha de cosecha: {finishDate}</p>}
+        <p>Especie: {cropSpecies}</p>
+        {crop.description && <p>description: {crop.description}</p>}
+      </div>
+    );
   };
 
   return (
@@ -267,63 +190,21 @@ const MapView = () => {
         <div>
           <h2>Información seleccionada:</h2>
           <p>Parcela N.° {selectedFeature.properties?.id}</p>
-          <p>Descripción: {selectedFeature.properties?.description}</p>
+          {selectedFeature.properties?.description && (
+            <p>Descripción: {selectedFeature.properties?.description}</p>
+          )}
           {selectedFeature.properties?.radius && (
             <p>Radio: {selectedFeature.properties?.radius.toFixed(2)} m.</p>
           )}
+          {(selectedFeature.properties?.crop &&
+            Crop(selectedFeature.properties.crop)) || (
+            <>
+              <h2>Parcela libre</h2>
+              <h3>No se registran cultivos en esta parcela.</h3>
+            </>
+          )}
         </div>
       )) || <h2>Seleccione una parcela</h2>}
-
-      <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
-        <InputLabel>Parcela</InputLabel>
-        <Select
-          label="Landplot"
-          name="landplot"
-          value={crop.landplot.toString()}
-          onChange={(e) => handleLandplotChange(Number(e.target.value))}
-        >
-          <MenuItem value="0" disabled>
-            Seleccione una parcela
-          </MenuItem>
-          {geoData &&
-            geoData.features.map((item: any) => (
-              <MenuItem key={item.properties.id} value={item.properties.id}>
-                Parcela {item.properties.id + " "} {item.properties.description}
-              </MenuItem>
-            ))}
-        </Select>
-      </FormControl>
-      <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
-        <InputLabel>Especie</InputLabel>
-        <Select
-          label="Species"
-          name="species"
-          value={crop.species.toString()}
-          onChange={handleFormChange}
-        >
-          <MenuItem value="0" disabled>
-            Seleccione una especie
-          </MenuItem>
-          {species.map((item) => (
-            <MenuItem key={item.id} value={item.id}>
-              {item.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
-        <DatePicker
-          format="DD/MM/YYYY"
-          label="Fecha"
-          onChange={handleChangeDate}
-        />
-      </FormControl>
-      <ConfirmButton
-        msg={"Se dará de alta al cultivo en la parcela seleccionada."}
-        onConfirm={handleSubmitForm}
-        navigateDir={"/map3"}
-        disabled={!Object.values(crop).every((value) => !!value)}
-      />
     </div>
   );
 };

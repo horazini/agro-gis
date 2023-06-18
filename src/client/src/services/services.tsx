@@ -6,6 +6,12 @@ export const getTenantGeo = async (tenantId: number | null) => {
   return data;
 };
 
+export const getTenantGeoData = async (tenantId: number | null) => {
+  const response = await fetch(`${API}/tenantgeocurrentdata/${tenantId}`);
+  const data = await response.json();
+  return data;
+};
+
 export const getTenantSpecies = async (tenantId: number | null) => {
   const response = await fetch(`${API}/tenantspecies/${tenantId}`);
   const data = await response.json();

@@ -250,20 +250,21 @@ export const createGeo = async (
   next: NextFunction
 ) => {
   try {
-    const geom = req.body.geometry;
-    const { tenantId, description, radius } = req.body.properties;
+    const feature = req.body;
+    const geometry = feature.geometry;
+    const { tenantId, description, radius } = feature.properties;
 
-    if (req.body.geometry.type === "Polygon") {
+    if (feature.geometry.type === "Polygon") {
       const response: QueryResult = await pool.query(
         "INSERT INTO landplot (tenant_id, area, description) VALUES ($1, $2, $3)",
-        [tenantId, geom, description]
+        [tenantId, geometry, description]
       );
       res.status(201).send("Polygon added");
     } else if (
-      req.body.geometry.type === "Point" &&
-      req.body.properties.subType === "Circle"
+      feature.geometry.type === "Point" &&
+      feature.properties.subType === "Circle"
     ) {
-      const WKT_point = `'POINT(${geom.coordinates[0]} ${geom.coordinates[1]})'`;
+      const WKT_point = `'POINT(${geometry.coordinates[0]} ${geometry.coordinates[1]})'`;
       const buffer_radius = radius / 100000;
       const circular_polygon = `ST_Buffer(ST_GeomFromText(${WKT_point}), ${buffer_radius})`;
 
@@ -277,5 +278,49 @@ export const createGeo = async (
     }
   } catch (e) {
     next(e);
+  }
+};
+
+export const createFeatures = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const features = req.body;
+
+    features.forEach(async (feature: any) => {
+      const geometry = feature.geometry;
+      const { tenantId, description, radius } = feature.properties;
+
+      if (feature.geometry.type === "Polygon") {
+        const response: QueryResult = await pool.query(
+          "INSERT INTO landplot (tenant_id, area, description) VALUES ($1, $2, $3)",
+          [tenantId, geometry, description]
+        );
+      } else if (
+        feature.geometry.type === "Point" &&
+        feature.properties.subType === "Circle"
+      ) {
+        const WKT_point = `'POINT(${geometry.coordinates[0]} ${geometry.coordinates[1]})'`;
+        const buffer_radius = radius / 100000;
+        const circular_polygon = `ST_Buffer(ST_GeomFromText(${WKT_point}), ${buffer_radius})`;
+
+        const queryText = `INSERT INTO landplot(tenant_id, area, circle_center, circle_radius, description) VALUES ($1, ${circular_polygon}, ${WKT_point}, ${radius}, $2)`;
+        const values = [tenantId, description];
+
+        const response: QueryResult = await pool.query(queryText, values);
+      }
+    });
+
+    await client.query("COMMIT");
+    return res.status(201).send("Features added");
+  } catch (e) {
+    await client.query("ROLLBACK");
+    next(e);
+  } finally {
+    client.release();
   }
 };

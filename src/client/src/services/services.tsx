@@ -126,6 +126,16 @@ export const postFeature = async (feature: any) => {
   return data;
 };
 
+export const postFeatures = async (features: any) => {
+  const res = await fetch(`${API}/features`, {
+    method: "POST",
+    body: JSON.stringify(features),
+    headers: { "Content-type": "application/json" },
+  });
+  const data = await res.json();
+  return data;
+};
+
 export const postCrop = async (crop: any) => {
   const res = await fetch(`${API}/crop`, {
     method: "POST",

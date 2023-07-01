@@ -69,13 +69,13 @@ const MapView = () => {
     const isHighlighted = highlightedLayerId === feature.properties.id;
     const isSelected =
       (selectedFeature?.properties?.id ?? null) === feature.properties.id;
-    const isAsd =
+    const isOccupied =
       feature.properties.crop && feature.properties.crop?.finish_date === null;
 
     const pathOptions = {
       color: isSelected
         ? "#bf4000"
-        : isAsd
+        : isOccupied
         ? "red"
         : isHighlighted
         ? "#33ff33"

@@ -5,33 +5,41 @@ import {
   TileLayer,
   FeatureGroup,
   LayersControl,
-  Marker,
   Popup,
   useMapEvents,
   GeoJSON,
+  LayerGroup,
+  Circle,
+  Polygon,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+
+import { ConfirmButton } from "../../components/confirmform";
 
 import { EditControl } from "react-leaflet-draw";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
-import { Button } from "@mui/material";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 
-import { postFeature } from "../../services/services";
+import { getTenantGeoData, postFeatures } from "../../services/services";
 
-//import { useRef } from "react";
-//import L, { LatLng, LatLngExpression } from "leaflet";
+import { position, LayerControler } from "../../components/mapcomponents";
 
-const ZOOM_LEVEL = 7;
-//  const mapRef = useRef();    <-- deprecado
-
-const PolygonMap = () => {
-  const [center, setCenter] = useState({ lat: -29, lng: -58 });
-  const [mapLayers, setMapLayers] = useState<any>([]);
+const MapView = () => {
   const [geoJSONFeatures, setGeoJSONFeatures] = useState<any>([]);
   const { tenantId } = useSelector((state: RootState) => state.auth);
+
+  const [geoData, setGeoData] = useState<any>(null);
+
+  const loadData = async () => {
+    const data = await getTenantGeoData(tenantId);
+    setGeoData(data);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const circleToGeoJSON = (circle: any) => {
     const { lat, lng } = circle.latlngs;
@@ -62,18 +70,12 @@ const PolygonMap = () => {
         latlngs: layer.getLatLng(),
         radius: layer.getRadius(),
       };
-      setMapLayers((layers: any) => [...layers, circle]); // Almacena en MapLayers
 
       const feature = circleToGeoJSON(circle);
       setGeoJSONFeatures((features: any) => [...features, feature]); // Almacena en GeoJSON Features
     }
     if (layerType === "polygon") {
       const { _leaflet_id } = layer;
-
-      setMapLayers((layers: any) => [
-        ...layers,
-        { tenantId: tenantId, id: _leaflet_id, latlngs: layer.getLatLngs()[0] },
-      ]);
 
       const polygon = layer.toGeoJSON(); // convierte los polígonos dibujados en objetos GeoJSON.
       polygon.properties = { tenantId: tenantId, id: _leaflet_id }; // agrega una propiedad id a cada objeto GeoJSON para identificar el polígono.
@@ -89,11 +91,6 @@ const PolygonMap = () => {
     Object.values(_layers).forEach(({ _leaflet_id, layer, editing }: any) => {
       if (editing.latlngs) {
         // Acciones para polígonos
-        setMapLayers((layers: any) =>
-          layers.map((l: any) =>
-            l.id === _leaflet_id ? { ...l, latlngs: editing.latlngs[0] } : l
-          )
-        );
 
         setGeoJSONFeatures((layers: any) =>
           layers.map((l: any) =>
@@ -115,17 +112,6 @@ const PolygonMap = () => {
         );
       } else {
         // Acciones para círculos
-        setMapLayers((layers: any) =>
-          layers.map((l: any) =>
-            l.id === _leaflet_id
-              ? {
-                  ...l,
-                  latlngs: editing._shape._latlng,
-                  radius: editing._shape._mRadius,
-                }
-              : l
-          )
-        );
         setGeoJSONFeatures((layers: any) =>
           layers.map((l: any) =>
             l.properties.id === _leaflet_id
@@ -157,29 +143,57 @@ const PolygonMap = () => {
     } = e;
 
     Object.values(_layers).forEach(({ _leaflet_id }: any) => {
-      setMapLayers((layers: any) =>
-        layers.filter((l: any) => l.id !== _leaflet_id)
-      );
       setGeoJSONFeatures((features: any) =>
         features.filter((f: any) => f.properties.id !== _leaflet_id)
       );
     });
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async () => {
     try {
-      e.preventDefault();
-      //setLoading(true);
-
-      geoJSONFeatures.forEach(async (feature: any) => {
-        await postFeature(feature);
-      });
-
-      //setLoading(false);
-      //navigate("/");
+      await postFeatures(geoJSONFeatures);
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const msg: string = "Se registrarán todos los cambios realizados.";
+
+  const CustomLayer = ({ feature }: any) => {
+    const PopUp = (
+      <div>
+        <h3>ID: {feature.properties.id}</h3>
+        <p>Descripción: {feature.properties.description}</p>
+        {feature.properties?.radius && (
+          <p>Radio: {feature.properties.radius} m.</p>
+        )}
+      </div>
+    );
+
+    if (feature.geometry.type === "Polygon") {
+      const coordinates = feature.geometry.coordinates[0].map(
+        ([lng, lat]: any) => [lat, lng]
+      );
+      return (
+        <Polygon key={feature.properties.id} positions={coordinates}>
+          <Popup>{PopUp}</Popup>
+        </Polygon>
+      );
+    } else if (
+      feature.geometry.type === "Point" &&
+      feature.properties.subType === "Circle"
+    ) {
+      return (
+        <Circle
+          key={feature.properties.id}
+          center={feature.geometry.coordinates}
+          radius={feature.properties.radius}
+        >
+          <Popup>{PopUp}</Popup>
+        </Circle>
+      );
+    }
+    return null;
   };
 
   return (
@@ -190,13 +204,14 @@ const PolygonMap = () => {
 
           <div className="col">
             <MapContainer
-              center={center}
-              zoom={ZOOM_LEVEL}
+              center={position}
+              zoom={7}
               //ref={mapRef}        <-- deprecado
             >
               <FeatureGroup>
+                <LayerControler />
                 <EditControl
-                  position="topright"
+                  position="topleft"
                   onCreated={_onCreate}
                   onEdited={_onEdited}
                   onDeleted={_onDeleted}
@@ -204,34 +219,24 @@ const PolygonMap = () => {
                     circlemarker: false,
                     polyline: false,
                     rectangle: false,
-                    //circle: false,
-                    //marker: false,
+                    circle: true,
+                    marker: true,
+                    polygon: true,
                   }}
                 />
               </FeatureGroup>
-
-              <TileLayer
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
-              />
             </MapContainer>
 
-            <pre className="text-left">
-              {JSON.stringify(mapLayers, null, 2)}
-            </pre>
             <pre className="text-left">
               {JSON.stringify(geoJSONFeatures, null, 2)}
             </pre>
 
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              onClick={handleSubmit}
-              //disabled={!species.name}
-            >
-              Guardar
-            </Button>
+            <ConfirmButton
+              msg={msg}
+              onConfirm={handleSubmit}
+              navigateDir={"/map"}
+              disabled={false}
+            />
           </div>
         </div>
       </div>
@@ -239,4 +244,4 @@ const PolygonMap = () => {
   );
 };
 
-export default PolygonMap;
+export default MapView;

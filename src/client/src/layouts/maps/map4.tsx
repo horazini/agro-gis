@@ -1,96 +1,91 @@
-import { useEffect, useState } from "react";
+import * as L from "leaflet";
 import {
-  MapContainer,
-  Popup,
   Circle,
+  FeatureGroup,
   LayerGroup,
+  MapContainer,
   Polygon,
+  Popup,
 } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import { LayerEvent } from "leaflet";
-
-import { RootState } from "../../redux/store";
+import { EditControl } from "react-leaflet-draw";
+import type { FeatureCollection } from "geojson";
+import { useEffect, useRef, useState } from "react";
+import { LayerControler, position } from "../../components/mapcomponents";
+import { getTenantGeoData } from "../../services/services";
 import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
+import { LatLngExpression } from "leaflet";
+import { ConfirmButton } from "../../components/confirmform";
 
-import { getTenantGeoData, getTenantSpecies } from "../../services/services";
-import { Feature } from "geojson";
+type CircleFeature = {
+  type: "Feature";
+  geometry: {
+    type: "Point";
+    coordinates: LatLngExpression;
+  };
+  properties: {
+    id: string;
+    radius: number;
+  };
+};
 
-import { position, LayerControler } from "../../components/mapcomponents";
-
-const MapView = () => {
-  const mystyle = {};
-
+export default function EditControlFC() {
+  const [geojson, setGeojson] = useState<FeatureCollection>();
+  const [occupiedLandplots, setOccupiedLandplots] = useState<any>(null);
   const { tenantId } = useSelector((state: RootState) => state.auth);
-
-  const [geoData, setGeoData] = useState<any>(null);
-  const [species, setSpecies] = useState<any[]>([]);
 
   const loadData = async () => {
     const data = await getTenantGeoData(tenantId);
-    setGeoData(data);
-  };
 
-  const loadSpecies = async () => {
-    const data = await getTenantSpecies(tenantId);
-    setSpecies(data);
+    setGeojson(
+      data.features.filter(
+        (feature: any) => feature.properties.crop?.finish_date !== null
+      )
+    );
+    setOccupiedLandplots(
+      data.features.filter(
+        (feature: any) => feature.properties.crop?.finish_date === null
+      )
+    );
   };
 
   useEffect(() => {
     loadData();
-    loadSpecies();
   }, []);
 
-  // Manejo de alta de cultivo: parcela, especie y fecha inicial
+  const ref = useRef<L.FeatureGroup>(null);
 
-  const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
+  useEffect(() => {
+    if (ref.current?.getLayers().length === 0 && geojson) {
+      L.geoJSON(geojson).eachLayer((layer) => {
+        if (
+          layer instanceof L.Polyline ||
+          layer instanceof L.Polygon ||
+          layer instanceof L.Marker
+        ) {
+          if (layer?.feature?.properties.radius && ref.current) {
+            new L.Circle(layer.feature.geometry.coordinates, {
+              radius: layer.feature?.properties.radius,
+            }).addTo(ref.current);
+          } else {
+            ref.current?.addLayer(layer);
+          }
+        }
+      });
+    }
+  }, [geojson]);
 
-  function handleLandplotChange(cropId: number) {
-    const found: Feature = geoData.features.find(
-      (feature: { properties: { id: number } }) =>
-        feature.properties.id === cropId
-    );
-    setSelectedFeature(found);
-  }
-
-  // Comportamiento de las Layers
+  const handleChange = () => {
+    const geo = ref.current?.toGeoJSON();
+    console.log(geo);
+    if (geo?.type === "FeatureCollection") {
+      setGeojson(geo);
+    }
+  };
 
   const CustomLayer = ({ feature }: any) => {
-    const [highlightedLayerId, setHighlightedLayerId] = useState<number | null>(
-      null
-    );
-    const handleLayerMouseOver = (layerId: number) => {
-      setHighlightedLayerId(layerId);
-    };
-
-    const handleLayerMouseOut = () => {
-      setHighlightedLayerId(null);
-    };
-
-    const isHighlighted = highlightedLayerId === feature.properties.id;
-    const isSelected =
-      (selectedFeature?.properties?.id ?? null) === feature.properties.id;
-    const isOccupied =
-      feature.properties.crop && feature.properties.crop?.finish_date === null;
-
     const pathOptions = {
-      color: isSelected
-        ? "#bf4000"
-        : isOccupied
-        ? "red"
-        : isHighlighted
-        ? "#33ff33"
-        : "#3388ff",
-      weight: isSelected ? 4 : isHighlighted ? 4 : 3,
-    };
-
-    const handleLayerClick = (event: LayerEvent, feature: any) => {
-      handleLandplotChange(feature.properties?.id);
-    };
-
-    const eventHandlers = {
-      click: (event: LayerEvent) => handleLayerClick(event, feature),
-      mouseover: () => handleLayerMouseOver(feature.properties.id),
-      mouseout: handleLayerMouseOut,
+      color: "red",
     };
 
     const PopUp = (
@@ -112,7 +107,6 @@ const MapView = () => {
           key={feature.properties.id}
           positions={coordinates}
           pathOptions={pathOptions}
-          eventHandlers={eventHandlers}
         >
           <Popup>{PopUp}</Popup>
         </Polygon>
@@ -127,7 +121,6 @@ const MapView = () => {
           center={feature.geometry.coordinates}
           radius={feature.properties.radius}
           pathOptions={pathOptions}
-          eventHandlers={eventHandlers}
         >
           <Popup>{PopUp}</Popup>
         </Circle>
@@ -136,77 +129,62 @@ const MapView = () => {
     return null;
   };
 
-  const Crop = (crop: any) => {
-    const startDate = new Date(crop.start_date).toLocaleDateString("en-GB");
-    const finishDate = new Date(crop.finish_date).toLocaleDateString("en-GB");
-
-    const cropSpecies = species.find(
-      (specie) => specie.id === crop.species_id
-    )?.name;
-
-    return (
-      <div>
-        {(crop.finish_date && (
-          <>
-            <h2>Parcela libre</h2>
-            <h3>Última cosecha:</h3>
-          </>
-        )) || (
-          <>
-            <h2>Parcela ocupada</h2>
-            <h3>Cultivo actual:</h3>
-          </>
-        )}
-        <p>Fecha de plantación: {startDate}</p>
-        {crop.finish_date && <p>Fecha de cosecha: {finishDate}</p>}
-        <p>Especie: {cropSpecies}</p>
-        {crop.description && <p>description: {crop.description}</p>}
-      </div>
-    );
+  const handleSubmit = async () => {
+    try {
+      //await postFeatures(geoJSONFeatures);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
-    <div
-      style={{
-        //display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <h1>Mapa</h1>
-      <MapContainer center={position} zoom={7}>
-        <LayerControler />
-        <LayerGroup>
-          {geoData &&
-            geoData.features.map((feature: any) => {
-              return (
-                <CustomLayer key={feature.properties.id} feature={feature} />
-              );
-            })}
-        </LayerGroup>
-      </MapContainer>
+    <div className="row">
+      <div className="col text-center">
+        <h1>Crear, editar y eliminar polígonos y círculos en el mapa</h1>
 
-      {(selectedFeature && (
-        <div>
-          <h2>Información seleccionada:</h2>
-          <p>Parcela N.° {selectedFeature.properties?.id}</p>
-          {selectedFeature.properties?.description && (
-            <p>Descripción: {selectedFeature.properties?.description}</p>
-          )}
-          {selectedFeature.properties?.radius && (
-            <p>Radio: {selectedFeature.properties?.radius.toFixed(2)} m.</p>
-          )}
-          {(selectedFeature.properties?.crop &&
-            Crop(selectedFeature.properties.crop)) || (
-            <>
-              <h2>Parcela libre</h2>
-              <h3>No se registran cultivos en esta parcela.</h3>
-            </>
-          )}
+        <div className="col">
+          <MapContainer center={position} zoom={7}>
+            <FeatureGroup ref={ref}>
+              <LayerControler />
+              <EditControl
+                position="topright"
+                onEdited={handleChange}
+                onCreated={handleChange}
+                onDeleted={handleChange}
+                draw={{
+                  rectangle: false,
+                  circle: true,
+                  polyline: false,
+                  polygon: true,
+                  marker: false,
+                  circlemarker: false,
+                }}
+              />
+            </FeatureGroup>
+
+            <LayerGroup>
+              {occupiedLandplots &&
+                occupiedLandplots.map((feature: any) => {
+                  return (
+                    <CustomLayer
+                      key={feature.properties.id}
+                      feature={feature}
+                    />
+                  );
+                })}
+            </LayerGroup>
+          </MapContainer>
+
+          <pre className="text-left">{JSON.stringify(geojson, null, 2)}</pre>
+
+          <ConfirmButton
+            msg={"Se registrarán todos los cambios realizados."}
+            onConfirm={handleSubmit}
+            navigateDir={"/map"}
+            disabled={false}
+          />
         </div>
-      )) || <h2>Seleccione una parcela</h2>}
+      </div>
     </div>
   );
-};
-
-export default MapView;
+}

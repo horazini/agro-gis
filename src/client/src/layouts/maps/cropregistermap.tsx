@@ -274,7 +274,7 @@ const MapView = () => {
         alignItems: "center",
       }}
     >
-      <h1>Alta de cultivos</h1>
+      <h1>Mapa</h1>
       <MapContainer center={position} zoom={7}>
         <LayerControler />
         <LayerGroup>

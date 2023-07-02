@@ -31,10 +31,10 @@ import SpeciesList from "./layouts/species/specieslist";
 import SpeciesForm from "./layouts/species/speciesform";
 
 import MapView from "./layouts/maps/map";
+import CropRegisterMap from "./layouts/maps/cropregistermap";
 import MapView2 from "./layouts/maps/map2";
 import MapView3 from "./layouts/maps/map3";
 import MapView4 from "./layouts/maps/map4";
-import MapView5 from "./layouts/maps/map5";
 
 function MainLayoutRoutes(): JSX.Element {
   return (
@@ -49,10 +49,10 @@ function MainLayoutRoutes(): JSX.Element {
       <Route path="/species/new" element={<SpeciesForm />} />
       <Route path="/species/:id/edit" element={<SpeciesForm />} />
       <Route path="/map" element={<MapView />} />
+      <Route path="/cropregister" element={<CropRegisterMap />} />
       <Route path="/map2" element={<MapView2 />} />
       <Route path="/map3" element={<MapView3 />} />
-      <Route path="/map4" element={<MapView4 />} />
-      <Route path="/map5" element={<MapView5 />} />
+      <Route path="/map5" element={<MapView4 />} />
     </Routes>
   );
 }

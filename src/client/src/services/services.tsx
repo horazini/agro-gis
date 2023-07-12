@@ -64,12 +64,13 @@ export type tenantDataType = {
 
 export type speciesDataType = {
   species: {
+    id: number | null;
     name: string;
     description: string;
     tenant_id: number;
   };
   stages: {
-    db_id: number | null;
+    id: number | null;
     sequence_number: number;
     name: string;
     description: string;

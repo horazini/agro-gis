@@ -72,15 +72,8 @@ export const getSpeciesDataById = async (
       ORDER BY sequence_number
     `;
 
-    const eventsQuery = `
-      SELECT id, name, description, reference_stage, ET_from_stage_start, time_period
-      FROM species_growth_event
-      WHERE species_id = $1
-    `;
-
     const speciesResponse: QueryResult = await pool.query(speciesQuery, [id]);
     const stagesResponse: QueryResult = await pool.query(stagesQuery, [id]);
-    const eventsResponse: QueryResult = await pool.query(eventsQuery, [id]);
 
     const species = {
       id: speciesResponse.rows[0].id,
@@ -95,48 +88,69 @@ export const getSpeciesDataById = async (
 
       return {
         id: row.id,
-        db_id: row.id,
+        sequence_number: row.sequence_number,
         name: row.name,
         description: row.description,
         estimatedTime,
         estimatedTimeUnit,
-        sequence_number: row.sequence_number,
+        growthEvents: [],
       };
     });
 
-    const growth_events = eventsResponse.rows.map((row: any) => {
-      let ETFromStageStartUnit;
-      let ETFromStageStart;
+    const stages = await Promise.all(
+      growth_stages.map(async (stage: any) => {
+        const eventsQuery = `
+          SELECT id, name, description, ET_from_stage_start, time_period
+          FROM species_growth_event
+          WHERE reference_stage = $1
+        `;
 
-      let timePeriodUnit;
-      let timePeriod;
+        const eventsResponse: QueryResult = await pool.query(eventsQuery, [
+          stage.id,
+        ]);
 
-      if (row.et_from_stage_start) {
-        ETFromStageStartUnit = Object.keys(row.et_from_stage_start)[0];
-        ETFromStageStart = row.et_from_stage_start[ETFromStageStartUnit];
-      }
+        const growthEvents = eventsResponse.rows.map((row: any) => {
+          let ETFromStageStartUnit = "";
+          let ETFromStageStart = "";
 
-      if (row.time_period) {
-        timePeriodUnit = Object.keys(row.time_period)[0];
-        timePeriod = row.time_period[timePeriodUnit];
-      }
+          let timePeriodUnit = "";
+          let timePeriod = "";
+          if (Object.keys(row.et_from_stage_start)[0]) {
+            ETFromStageStartUnit = Object.keys(row.et_from_stage_start)[0];
+            ETFromStageStart = row.et_from_stage_start[ETFromStageStartUnit];
+          } else {
+            ETFromStageStartUnit = "days";
+            ETFromStageStart = "0";
+          }
 
-      return {
-        id: row.id,
-        name: row.name,
-        description: row.description,
-        referenceStage: row.reference_stage,
-        ETFromStageStart,
-        ETFromStageStartUnit,
-        timePeriod,
-        timePeriodUnit,
-      };
-    });
+          if (row.time_period) {
+            timePeriodUnit = Object.keys(row.time_period)[0];
+            timePeriod = row.time_period[timePeriodUnit];
+          }
+
+          return {
+            id: row.id,
+            form_id: row.id,
+            name: row.name,
+            description: row.description,
+            ETFromStageStart,
+            ETFromStageStartUnit,
+            timePeriod,
+            timePeriodUnit,
+            referenceStage: stage.sequence_number,
+          };
+        });
+
+        return {
+          ...stage,
+          growthEvents,
+        };
+      })
+    );
 
     const result = {
       species,
-      growth_stages,
-      growth_events,
+      stages,
     };
 
     return res.status(200).json(result);

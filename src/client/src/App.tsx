@@ -52,7 +52,7 @@ function MainLayoutRoutes(): JSX.Element {
       <Route path="/cropregister" element={<CropRegisterMap />} />
       <Route path="/map2" element={<MapView2 />} />
       <Route path="/map3" element={<MapView3 />} />
-      <Route path="/map5" element={<MapView4 />} />
+      <Route path="/map4" element={<MapView4 />} />
     </Routes>
   );
 }

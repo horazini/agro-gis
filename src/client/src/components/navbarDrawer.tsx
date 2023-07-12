@@ -132,6 +132,11 @@ const itemsList = [
     icon: <MapIcon />,
     to: "/map2",
   },
+  {
+    text: "Alta de cultivos",
+    icon: <MapIcon />,
+    to: "/cropregister",
+  },
 ];
 
 export default function NavbarDrawer() {

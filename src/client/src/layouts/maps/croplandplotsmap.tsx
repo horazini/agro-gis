@@ -12,40 +12,10 @@ import { LayerEvent } from "leaflet";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 
-import {
-  getTenantGeoData,
-  getTenantSpecies,
-  postCrop,
-} from "../../services/services";
+import { getTenantGeoData, getTenantSpecies } from "../../services/services";
 import { Feature } from "geojson";
 
 import { position, LayerControler } from "../../components/mapcomponents";
-import {
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Alert,
-  AlertTitle,
-  Backdrop,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  FormHelperText,
-} from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers";
-import { useNavigate } from "react-router-dom";
-
-interface ICrop {
-  landplot: number;
-  species: number;
-  tenant_id: number;
-  date: string;
-}
 
 const MapView = () => {
   const mystyle = {};
@@ -74,37 +44,8 @@ const MapView = () => {
 
   const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
 
-  function handleLandplotChange(cropId: number) {
-    setCrop((prevCrop) => ({
-      ...prevCrop,
-      landplot: cropId,
-    }));
-    const found: Feature = geoData.features.find(
-      (feature: { properties: { id: number } }) =>
-        feature.properties.id === cropId
-    );
-    setSelectedFeature(found);
-    setLandplotError(false);
-  }
-
-  const [crop, setCrop] = useState<ICrop>({
-    landplot: 0,
-    species: 0,
-    tenant_id: tenantId || 1,
-    date: "",
-  });
-
-  const handleFormChange = (e: { target: { name: string; value: string } }) => {
-    setCrop({ ...crop, [e.target.name]: e.target.value });
-  };
-
-  function handleDateChange(date: any) {
-    const isoDate = date.toISOString(); // Convertir la fecha a formato ISO 8601
-    setCrop((prevCrop) => ({
-      ...prevCrop,
-      date: isoDate,
-    }));
-    console.log("crop:", crop, "selected:", selectedFeature);
+  function handleLandplotChange(feature: Feature) {
+    setSelectedFeature(feature);
   }
 
   // Comportamiento de las Layers
@@ -139,7 +80,7 @@ const MapView = () => {
     };
 
     const handleLayerClick = (event: LayerEvent, feature: any) => {
-      handleLandplotChange(feature.properties?.id);
+      handleLandplotChange(feature);
     };
 
     const eventHandlers = {
@@ -220,53 +161,6 @@ const MapView = () => {
     );
   };
 
-  // Confirmar datos
-
-  const [landplotError, setLandplotError] = useState(false);
-
-  const handleSubmitForm = async () => {
-    try {
-      await postCrop(crop);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-
-  const navigate = useNavigate();
-
-  const handleClickOpen = () => {
-    const isOccupied =
-      selectedFeature?.properties?.crop &&
-      selectedFeature?.properties?.crop?.finish_date === null;
-
-    setLandplotError(isOccupied);
-
-    if (!isOccupied) {
-      setOpen(true);
-    }
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleConfirm = () => {
-    setLoading(true);
-    setTimeout(() => {
-      handleSubmitForm();
-      setLoading(false);
-      setOpen(false);
-      setSuccess(true);
-      setTimeout(() => {
-        navigate("/map");
-      }, 4000);
-    }, 500);
-  };
-
   return (
     <div
       style={{
@@ -274,7 +168,7 @@ const MapView = () => {
         alignItems: "center",
       }}
     >
-      <h1>Alta de cultivos</h1>
+      <h1>Parcelas y cultivos en curso</h1>
       <MapContainer center={position} zoom={7}>
         <LayerControler />
         <LayerGroup>
@@ -306,100 +200,6 @@ const MapView = () => {
           )}
         </div>
       )) || <h2>Seleccione una parcela</h2>}
-
-      <FormControl
-        variant="filled"
-        sx={{ m: 1, minWidth: 220 }}
-        error={landplotError}
-      >
-        <InputLabel>Parcela</InputLabel>
-        <Select
-          label="Landplot"
-          name="landplot"
-          value={crop.landplot.toString()}
-          onChange={(e) => handleLandplotChange(Number(e.target.value))}
-        >
-          <MenuItem value="0" disabled>
-            Seleccione una parcela
-          </MenuItem>
-          {geoData &&
-            geoData.features.map((item: any) => (
-              <MenuItem key={item.properties.id} value={item.properties.id}>
-                Parcela {item.properties.id + " "} {item.properties.description}
-              </MenuItem>
-            ))}
-        </Select>
-        <FormHelperText>
-          {landplotError ? "Parcela actualmente ocupada" : ""}
-        </FormHelperText>
-      </FormControl>
-      <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
-        <InputLabel>Especie</InputLabel>
-        <Select
-          label="Species"
-          name="species"
-          value={crop.species.toString()}
-          onChange={handleFormChange}
-        >
-          <MenuItem value="0" disabled>
-            Seleccione una especie
-          </MenuItem>
-          {species.map((item) => (
-            <MenuItem key={item.id} value={item.id}>
-              {item.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
-        <DatePicker
-          format="DD/MM/YYYY"
-          label="Fecha"
-          onChange={handleDateChange}
-        />
-      </FormControl>
-
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ mt: 3, ml: 1 }}
-        onClick={handleClickOpen}
-        disabled={!Object.values(crop).every((value) => !!value)}
-      >
-        Confirmar datos
-      </Button>
-
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"¿Confirmar datos?"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {"Se dará de alta al cultivo en la parcela seleccionada."}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleConfirm} autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Backdrop open={loading} style={{ zIndex: 9999 }}>
-        <CircularProgress color="inherit" />
-      </Backdrop>
-
-      {success && (
-        <Dialog open={success}>
-          <Alert severity="success" sx={{ width: "100%" }}>
-            <AlertTitle>Datos cargados correctamente!</AlertTitle>
-            Redirigiendo...
-          </Alert>
-        </Dialog>
-      )}
     </div>
   );
 };

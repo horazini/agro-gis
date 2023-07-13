@@ -123,9 +123,9 @@ const itemsList = [
     to: "/species/list",
   },
   {
-    text: "Parcelas",
+    text: "Parcelas y cultivos",
     icon: <MapIcon />,
-    to: "/map",
+    to: "/croplandplots",
   },
   {
     text: "Agregar parcelas",

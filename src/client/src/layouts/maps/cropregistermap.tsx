@@ -140,6 +140,7 @@ const MapView = () => {
 
     const handleLayerClick = (event: LayerEvent, feature: any) => {
       handleLandplotChange(feature.properties?.id);
+      console.log(feature);
     };
 
     const eventHandlers = {

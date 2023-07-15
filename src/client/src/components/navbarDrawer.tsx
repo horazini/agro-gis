@@ -128,9 +128,9 @@ const itemsList = [
     to: "/croplandplots",
   },
   {
-    text: "Agregar parcelas",
+    text: "Administración de parcelas",
     icon: <MapIcon />,
-    to: "/map2",
+    to: "/landplotmanagement",
   },
   {
     text: "Alta de cultivos",

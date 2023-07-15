@@ -244,40 +244,82 @@ export const getTenantGeoWithCurrentCrops = async (
   }
 };
 
-export const createGeo = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const feature = req.body;
-    const geometry = feature.geometry;
-    const { tenantId, description, radius } = feature.properties;
+const insertLandplot = async (feature: any) => {
+  const geometry = feature.geometry;
+  const { tenantId, description, radius } = feature.properties;
 
-    if (feature.geometry.type === "Polygon") {
-      const response: QueryResult = await pool.query(
-        "INSERT INTO landplot (tenant_id, area, description) VALUES ($1, $2, $3)",
-        [tenantId, geometry, description]
-      );
-      res.status(201).send("Polygon added");
-    } else if (
-      feature.geometry.type === "Point" &&
-      feature.properties.subType === "Circle"
-    ) {
-      const WKT_point = `'POINT(${geometry.coordinates[0]} ${geometry.coordinates[1]})'`;
-      const buffer_radius = radius / 100000;
-      const circular_polygon = `ST_Buffer(ST_GeomFromText(${WKT_point}), ${buffer_radius})`;
+  if (feature.geometry.type === "Polygon") {
+    const response: QueryResult = await pool.query(
+      "INSERT INTO landplot (tenant_id, area, description) VALUES ($1, $2, $3)",
+      [tenantId, geometry, description]
+    );
+  } else if (
+    feature.geometry.type === "Point" &&
+    feature.properties.subType === "Circle"
+  ) {
+    const WKT_point = `'POINT(${geometry.coordinates[0]} ${geometry.coordinates[1]})'`;
+    const buffer_radius = radius / 100000;
+    const circular_polygon = `ST_Buffer(ST_GeomFromText(${WKT_point}), ${buffer_radius})`;
 
-      const queryText = `INSERT INTO landplot(tenant_id, area, circle_center, circle_radius, description) VALUES ($1, ${circular_polygon}, ${WKT_point}, ${radius}, $2)`;
-      const values = [tenantId, description];
+    const queryText = `INSERT INTO landplot(tenant_id, area, circle_center, circle_radius, description) VALUES ($1, ${circular_polygon}, ${WKT_point}, ${radius}, $2)`;
+    const values = [tenantId, description];
 
-      const response: QueryResult = await pool.query(queryText, values);
-      res.status(201).send("Circle added");
-    } else {
-      res.status(400).send("Invalid feature type");
-    }
-  } catch (e) {
-    next(e);
+    const response: QueryResult = await pool.query(queryText, values);
+  } else {
+    console.log("Invalid feature type");
+  }
+};
+
+const newInsertLandplot = async (feature: any, tenantId: number) => {
+  const geometry = feature.geometry;
+  const { description, radius } = feature.properties;
+
+  if (feature.geometry.type === "Polygon") {
+    const response: QueryResult = await pool.query(
+      "INSERT INTO landplot (tenant_id, area, description) VALUES ($1, $2, $3)",
+      [tenantId, geometry, description]
+    );
+  } else if (
+    feature.geometry.type === "Point" &&
+    feature.properties.subType === "Circle"
+  ) {
+    const WKT_point = `'POINT(${geometry.coordinates[0]} ${geometry.coordinates[1]})'`;
+    const buffer_radius = radius / 100000;
+    const circular_polygon = `ST_Buffer(ST_GeomFromText(${WKT_point}), ${buffer_radius})`;
+
+    const queryText = `INSERT INTO landplot(tenant_id, area, circle_center, circle_radius, description) VALUES ($1, ${circular_polygon}, ${WKT_point}, ${radius}, $2)`;
+    const values = [tenantId, description];
+
+    const response: QueryResult = await pool.query(queryText, values);
+  } else {
+    console.log("Invalid feature type");
+  }
+};
+
+const updateLandplot = async (feature: any) => {
+  const geometry = feature.geometry;
+  const { id, description, radius } = feature.properties;
+
+  if (feature.geometry.type === "Polygon") {
+    const response: QueryResult = await pool.query(
+      "UPDATE landplot SET area = $1, description = $2 WHERE id = $3",
+      [geometry, description, id]
+    );
+  } else if (
+    feature.geometry.type === "Point" &&
+    feature.properties.subType === "Circle"
+  ) {
+    const WKT_point = `'POINT(${geometry.coordinates[0]} ${geometry.coordinates[1]})'`;
+    const buffer_radius = radius / 100000;
+    const circular_polygon = `ST_Buffer(ST_GeomFromText(${WKT_point}), ${buffer_radius})`;
+
+    const queryText = `UPDATE landplot SET area = ${circular_polygon}, circle_center = ${WKT_point}, circle_radius  = ${radius}, description = $1 WHERE id = $2`;
+
+    const values = [description, id];
+
+    const response: QueryResult = await pool.query(queryText, values);
+  } else {
+    console.log("Invalid feature type");
   }
 };
 
@@ -292,31 +334,55 @@ export const createFeatures = async (
     const features = req.body;
 
     features.forEach(async (feature: any) => {
-      const geometry = feature.geometry;
-      const { tenantId, description, radius } = feature.properties;
-
-      if (feature.geometry.type === "Polygon") {
-        const response: QueryResult = await pool.query(
-          "INSERT INTO landplot (tenant_id, area, description) VALUES ($1, $2, $3)",
-          [tenantId, geometry, description]
-        );
-      } else if (
-        feature.geometry.type === "Point" &&
-        feature.properties.subType === "Circle"
-      ) {
-        const WKT_point = `'POINT(${geometry.coordinates[0]} ${geometry.coordinates[1]})'`;
-        const buffer_radius = radius / 100000;
-        const circular_polygon = `ST_Buffer(ST_GeomFromText(${WKT_point}), ${buffer_radius})`;
-
-        const queryText = `INSERT INTO landplot(tenant_id, area, circle_center, circle_radius, description) VALUES ($1, ${circular_polygon}, ${WKT_point}, ${radius}, $2)`;
-        const values = [tenantId, description];
-
-        const response: QueryResult = await pool.query(queryText, values);
-      }
+      insertLandplot(feature);
     });
 
     await client.query("COMMIT");
     return res.status(201).send("Features added");
+  } catch (e) {
+    await client.query("ROLLBACK");
+    next(e);
+  } finally {
+    client.release();
+  }
+};
+
+export const updateFeatures = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { tenantId, featurecollection } = req.body;
+    console.log("tenantId: " + tenantId);
+
+    featurecollection.forEach(async (feature: any) => {
+      switch (feature.properties.status) {
+        case "deleted": {
+          await pool.query("DELETE FROM landplot WHERE id = $1", [
+            feature.properties.id,
+          ]); // Modify
+          break;
+        }
+        case "modified": {
+          updateLandplot(feature);
+          break;
+        }
+        case "added": {
+          newInsertLandplot(feature, tenantId);
+          break;
+        }
+        default: {
+          console.log("Invalid feature status!");
+          break;
+        }
+      }
+    });
+
+    await client.query("COMMIT");
+    return res.status(201).send("Features updated");
   } catch (e) {
     await client.query("ROLLBACK");
     next(e);

@@ -34,7 +34,7 @@ import CropLandplotsMap from "./layouts/maps/croplandplotsmap";
 import CropRegisterMap from "./layouts/maps/cropregistermap";
 import MapView from "./layouts/maps/map";
 import MapView2 from "./layouts/maps/map2";
-import MapView4 from "./layouts/maps/map4";
+import LandplotManagementMap from "./layouts/maps/landplotmanagementmap";
 
 function MainLayoutRoutes(): JSX.Element {
   return (
@@ -48,11 +48,11 @@ function MainLayoutRoutes(): JSX.Element {
       <Route path="/species/list" element={<SpeciesList />} />
       <Route path="/species/new" element={<SpeciesForm />} />
       <Route path="/species/:id/edit" element={<SpeciesForm />} />
+      <Route path="/landplotmanagement" element={<LandplotManagementMap />} />
       <Route path="/croplandplots" element={<CropLandplotsMap />} />
       <Route path="/cropregister" element={<CropRegisterMap />} />
       <Route path="/map" element={<MapView />} />
       <Route path="/map2" element={<MapView2 />} />
-      <Route path="/map4" element={<MapView4 />} />
     </Routes>
   );
 }

@@ -82,8 +82,8 @@ import {
   getTenantGeoWithCurrentCrops,
   getTenantGeo,
   getAvailableTenantGeo,
-  createGeo,
   createFeatures,
+  updateFeatures,
 } from "../controllers/geo.controllers";
 
 router.get("/geo", getGeo);
@@ -91,8 +91,8 @@ router.get("/geodata/:id", getGeoWithCrops);
 router.get("/tenantgeo/:tenantId", getTenantGeo);
 router.get("/tenantgeocurrentdata/:tenantId", getTenantGeoWithCurrentCrops);
 router.get("/availabletenantGeo/:tenantId", getAvailableTenantGeo);
-router.post("/geo", createGeo);
 router.post("/features", createFeatures);
+router.put("/features", updateFeatures);
 
 // Crops
 

@@ -208,8 +208,8 @@ const MapView = () => {
               zoom={7}
               //ref={mapRef}        <-- deprecado
             >
+              <LayerControler />
               <FeatureGroup>
-                <LayerControler />
                 <EditControl
                   position="topleft"
                   onCreated={_onCreate}

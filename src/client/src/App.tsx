@@ -1,11 +1,8 @@
 import "./App.css";
 
+// Navigation
 import { Route, Routes } from "react-router";
 import { BrowserRouter, Navigate } from "react-router-dom";
-
-import { Container } from "@mui/system";
-import { styled } from "@mui/material/styles";
-import { Box } from "@mui/material";
 
 import { useSelector } from "react-redux";
 import { RootState } from "./redux/store";
@@ -13,7 +10,10 @@ import { RootState } from "./redux/store";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
-
+// Layout Wrapper
+import { Container } from "@mui/system";
+import { styled } from "@mui/material/styles";
+import { Box } from "@mui/material";
 import NavbarDrawer from "./components/navbarDrawer";
 import Footer from "./components/footer";
 
@@ -36,6 +36,8 @@ import MapView from "./layouts/maps/map";
 import MapView2 from "./layouts/maps/map2";
 import LandplotManagementMap from "./layouts/maps/landplotmanagementmap";
 
+import Calendar from "./layouts/tasks/taskcalendar";
+
 function MainLayoutRoutes(): JSX.Element {
   return (
     <Routes>
@@ -53,6 +55,7 @@ function MainLayoutRoutes(): JSX.Element {
       <Route path="/cropregister" element={<CropRegisterMap />} />
       <Route path="/map" element={<MapView />} />
       <Route path="/map2" element={<MapView2 />} />
+      <Route path="/calendar" element={<Calendar />} />
     </Routes>
   );
 }
@@ -110,7 +113,7 @@ function App(): JSX.Element {
   dayjs.locale("es"); // idioma de la biblioteca de manipulación de fechas
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
       <Box sx={{ display: "flex" }}>
         <BrowserRouter>
           <Routes>

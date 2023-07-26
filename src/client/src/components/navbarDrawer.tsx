@@ -37,6 +37,7 @@ import {
   Group as GroupIcon,
   Inventory as InventoryIcon,
   Map as MapIcon,
+  CalendarMonth as CalendarMonthIcon,
 } from "@mui/icons-material";
 
 const drawerWidth = 240;
@@ -110,36 +111,98 @@ const Drawer = styled(MuiDrawer, {
   }),
 }));
 
-const itemsList = [
-  {
-    text: "Clientes",
-    icon: <GroupIcon />,
-    to: "/tenants/list",
-  },
+type itemType = {
+  text: string;
+  icon: JSX.Element;
+  to: string;
+};
 
-  {
-    text: "Especies",
-    icon: <InventoryIcon />,
-    to: "/species/list",
-  },
-  {
-    text: "Parcelas y cultivos",
-    icon: <MapIcon />,
-    to: "/croplandplots",
-  },
-  {
-    text: "Administración de parcelas",
-    icon: <MapIcon />,
-    to: "/landplotmanagement",
-  },
-  {
-    text: "Alta de cultivos",
-    icon: <MapIcon />,
-    to: "/cropregister",
-  },
-];
+const itemListsByUserType: { [key: number]: itemType[] } = {
+  1: [
+    {
+      text: "Clientes",
+      icon: <GroupIcon />,
+      to: "/tenants/list",
+    },
+  ],
+  2: [],
+  3: [
+    {
+      text: "Especies",
+      icon: <InventoryIcon />,
+      to: "/species/list",
+    },
+    {
+      text: "Parcelas y cultivos",
+      icon: <MapIcon />,
+      to: "/croplandplots",
+    },
+    {
+      text: "Administración de parcelas",
+      icon: <MapIcon />,
+      to: "/landplotmanagement",
+    },
+    {
+      text: "Alta de cultivos",
+      icon: <MapIcon />,
+      to: "/cropregister",
+    },
+    {
+      text: "Lista de tareas",
+      icon: <CalendarMonthIcon />,
+      to: "/calendar",
+    },
+  ],
+  4: [
+    {
+      text: "Parcelas y cultivos",
+      icon: <MapIcon />,
+      to: "/croplandplots",
+    },
+    {
+      text: "Administración de parcelas",
+      icon: <MapIcon />,
+      to: "/landplotmanagement",
+    },
+  ],
+  5: [
+    {
+      text: "Especies",
+      icon: <InventoryIcon />,
+      to: "/species/list",
+    },
+  ],
+  6: [
+    {
+      text: "Especies",
+      icon: <InventoryIcon />,
+      to: "/species/list",
+    },
+    {
+      text: "Parcelas y cultivos",
+      icon: <MapIcon />,
+      to: "/croplandplots",
+    },
+    {
+      text: "Alta de cultivos",
+      icon: <MapIcon />,
+      to: "/cropregister",
+    },
+    {
+      text: "Lista de tareas",
+      icon: <CalendarMonthIcon />,
+      to: "/calendar",
+    },
+  ],
+};
 
 export default function NavbarDrawer() {
+  const { username, surname, names, userTypeId } = useSelector(
+    (state: RootState) => state.auth
+  );
+
+  const itemList: itemType[] = itemListsByUserType[userTypeId || 0] || [];
+
   const theme = useTheme();
   const [open, setOpen] = useState(false);
 
@@ -168,10 +231,6 @@ export default function NavbarDrawer() {
     await dispatch(logout() as any);
     navigate("/login");
   };
-
-  const { username, surname, names } = useSelector(
-    (state: RootState) => state.auth
-  );
 
   return (
     <Fragment>
@@ -243,7 +302,7 @@ export default function NavbarDrawer() {
           <Divider />
 
           <List>
-            {itemsList.map((item, index) => {
+            {itemList.map((item, index) => {
               const { text, icon } = item;
               return (
                 <ListItemButton component={Link} to={item.to} key={text}>

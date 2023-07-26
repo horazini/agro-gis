@@ -1,15 +1,19 @@
 import "./App.css";
 
 // Navigation
+import { Fragment } from "react";
 import { Route, Routes } from "react-router";
 import { BrowserRouter, Navigate } from "react-router-dom";
 
+// Auth state
 import { useSelector } from "react-redux";
 import { RootState } from "./redux/store";
 
+// Date handling
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+
 // Layout Wrapper
 import { Container } from "@mui/system";
 import { styled } from "@mui/material/styles";
@@ -17,55 +21,15 @@ import { Box } from "@mui/material";
 import NavbarDrawer from "./components/navbarDrawer";
 import Footer from "./components/footer";
 
+// Routes
 import Login from "./layouts/app/login";
-import Home from "./layouts/app/home";
-import NoMatch from "./layouts/app/nomatch";
-
 import Login2 from "./layouts/app/login2";
-
-import TenantList from "./layouts/tenants/tenantslist";
-import TenantForm from "./layouts/tenants/tenantform";
-import TenantDetails from "./layouts/tenants/tenantdetails";
-
-import SpeciesList from "./layouts/species/specieslist";
-import SpeciesForm from "./layouts/species/speciesform";
-
-import CropLandplotsMap from "./layouts/maps/croplandplotsmap";
-import CropRegisterMap from "./layouts/maps/cropregistermap";
-import MapView from "./layouts/maps/map";
-import MapView2 from "./layouts/maps/map2";
-import LandplotManagementMap from "./layouts/maps/landplotmanagementmap";
-
-import Calendar from "./layouts/tasks/taskcalendar";
-
-function MainLayoutRoutes(): JSX.Element {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Navigate to="/" />} />;
-      <Route path="*" element={<NoMatch />} />
-      <Route path="/tenants/list" element={<TenantList />} />
-      <Route path="/tenants/new" element={<TenantForm />} />
-      <Route path="/tenants/:id" element={<TenantDetails />} />
-      <Route path="/species/list" element={<SpeciesList />} />
-      <Route path="/species/new" element={<SpeciesForm />} />
-      <Route path="/species/:id/edit" element={<SpeciesForm />} />
-      <Route path="/landplotmanagement" element={<LandplotManagementMap />} />
-      <Route path="/croplandplots" element={<CropLandplotsMap />} />
-      <Route path="/cropregister" element={<CropRegisterMap />} />
-      <Route path="/map" element={<MapView />} />
-      <Route path="/map2" element={<MapView2 />} />
-      <Route path="/calendar" element={<Calendar />} />
-    </Routes>
-  );
-}
+import MainLayoutRoutes from "./routes/MainLayoutRoutes";
 
 function RouteAuthLogic(): JSX.Element {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-  //  if (isAuthenticated && userTypeId === 1) { // Para implementar logica de tipos de usuario
 
   if (!isAuthenticated) {
-    // Si no está autenticado, se redirige al usuario al inicio de sesión
     return (
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -83,7 +47,7 @@ function RouteAuthLogic(): JSX.Element {
       ...theme.mixins.toolbar,
     }));
     return (
-      <>
+      <Fragment>
         <NavbarDrawer />
 
         <Box
@@ -104,7 +68,7 @@ function RouteAuthLogic(): JSX.Element {
 
           <Footer />
         </Box>
-      </>
+      </Fragment>
     );
   }
 }

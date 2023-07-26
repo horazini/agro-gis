@@ -20,18 +20,8 @@ import es from "date-fns/locale/es";
 function Taskcalendar() {
   const theme = useTheme();
   const today = new Date();
-  const weeks = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
 
   const [state, setState] = useState<any>({});
-  const [searchResult, setSearchResult] = useState();
-  const [mode, setMode] = useState("month");
-  const [selectedDay, setSelectedDay] = useState(today);
-  const [daysInMonth, setDaysInMonth] = useState(getDaysInMonth(today));
-  const [selectedDate, setSelectedDate] = useState(format(today, "MMMM-yyyy"));
-
-  const isMonthMode = mode.toLowerCase() === "month";
-  const isTimelineMode = mode.toLowerCase() === "timeline";
-
   let dateFnsLocale = es;
 
   const [options] = useState({
@@ -40,6 +30,36 @@ function Taskcalendar() {
     minHeight: 540,
     maxHeight: 540,
   });
+
+  // Mode handle
+
+  const [mode, setMode] = useState("month");
+  const isMonthMode = mode.toLowerCase() === "month";
+  const isTimelineMode = mode.toLowerCase() === "timeline";
+
+  const handleModeChange = (newMode: any) => {
+    setMode(newMode);
+  };
+
+  // Date handle
+
+  const [selectedDay, setSelectedDay] = useState(today);
+  const [daysInMonth, setDaysInMonth] = useState(getDaysInMonth(today));
+  const [selectedDate, setSelectedDate] = useState(format(today, "MMMM-yyyy"));
+
+  const handleDateChange = (day: any, date: any) => {
+    setDaysInMonth(day);
+    setSelectedDay(date);
+    setSelectedDate(format(date, "MMMM-yyyy"));
+  };
+
+  // searchResult handle
+
+  const [searchResult, setSearchResult] = useState();
+
+  const onSearchResult = (item: any) => {
+    setSearchResult(item);
+  };
 
   // hardcoded static events, to replace with a GET fetch from the 'services' file
 
@@ -87,20 +107,6 @@ function Taskcalendar() {
   ];
 
   // Calendar and TimeLine data getters
-
-  const getMonthHeader = () => {
-    return weeks.map((day, i) => ({
-      id: `row-day-header-${i + 1}`,
-      flex: 1,
-      sortable: false,
-      editable: false,
-      align: "center",
-      headerName: day,
-      headerAlign: "center",
-      field: `rowday${i + 1}`,
-      headerClassName: "scheduler-theme--header",
-    }));
-  };
 
   const getMonthRows = () => {
     let rows: any = [],
@@ -207,27 +213,10 @@ function Taskcalendar() {
     }) */
     events;
 
-  // Mode, date and events handlers
-
-  const handleDateChange = (day: any, date: any) => {
-    setDaysInMonth(day);
-    setSelectedDay(date);
-    setSelectedDate(format(date, "MMMM-yyyy"));
-  };
-
-  const handleModeChange = (newMode: any) => {
-    setMode(newMode);
-  };
-
-  const onSearchResult = (item: any) => {
-    setSearchResult(item);
-  };
-
   useEffect(() => {
     if (isMonthMode) {
       setState({
         ...state,
-        columns: getMonthHeader(),
         rows: getMonthRows(),
       });
     }
@@ -260,11 +249,11 @@ function Taskcalendar() {
   return (
     <Paper variant="outlined" elevation={0} sx={{ p: 0 }}>
       <SchedulerToolbar
-        today={today}
         events={events}
         switchMode={mode}
         onModeChange={handleModeChange}
         onSearchResult={onSearchResult}
+        onDateChange={handleDateChange}
       />
       <Grid container spacing={0} alignItems="center" justifyContent="start">
         {isMonthMode && (
@@ -273,8 +262,8 @@ function Taskcalendar() {
               <MonthModeView
                 //date={selectedDate}
                 rows={state?.rows}
-                columns={state?.columns}
                 options={options}
+                searchResult={searchResult}
                 onTaskClick={handleEventClick}
                 onCellClick={handleCellClick}
                 onDateChange={handleDateChange}

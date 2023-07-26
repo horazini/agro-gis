@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { getDaysInMonth, format, parse } from "date-fns";
+import { format, parse, getDaysInMonth } from "date-fns";
+import { es } from "date-fns/locale";
 import {
   Toolbar,
   IconButton,
@@ -35,25 +36,14 @@ const StyledAutoComplete = styled(Autocomplete)(({ theme }) => ({
 }));
 
 function SchedulerToolbar(props: any) {
-  const { events, today, switchMode, onModeChange, onSearchResult } = props;
+  const { events, onSearchResult, switchMode, onModeChange, onDateChange } =
+    props;
 
   const theme = useTheme();
-  const [mode, setMode] = useState(switchMode);
-  const [searchResult, setSearchResult] = useState();
-  const [selectedDate, setSelectedDate] = useState(today || new Date());
-  const [daysInMonth, setDaysInMonth] = useState(getDaysInMonth(selectedDate));
 
-  useEffect(() => {
-    if (mode && onModeChange) {
-      onModeChange(mode);
-    }
-  }, [mode]);
+  // Searchbar
 
-  useEffect(() => {
-    if (switchMode !== mode) {
-      setMode(switchMode);
-    }
-  }, [switchMode]);
+  const [searchResult, setSearchResult] = useState<any>();
 
   useEffect(() => {
     onSearchResult && onSearchResult(searchResult);
@@ -62,20 +52,39 @@ function SchedulerToolbar(props: any) {
   const [value, setValue] = useState("");
   const [inputValue, setInputValue] = useState("");
 
-  function onInputChange(newValue: any) {
-    let newDate = new Date();
-    if (newValue?.date) {
-      newDate = parse(newValue.date, "yyyy-MM-dd", today);
-    }
-    setDaysInMonth(getDaysInMonth(newDate));
-    setSelectedDate(newDate);
-    setSearchResult(newValue);
-  }
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [daysInMonth, setDaysInMonth] = useState(getDaysInMonth(selectedDate));
+
+  useEffect(() => {
+    onDateChange && onDateChange(daysInMonth, selectedDate);
+  }, [daysInMonth, selectedDate]);
 
   const handleOnChange = (event: any, newValue: any) => {
     setValue(newValue);
-    onInputChange(newValue);
+    setSearchResult(newValue);
+
+    let newDate = new Date();
+    if (newValue?.date) {
+      newDate = parse(newValue.date, "yyyy-MM-dd", new Date());
+    }
+
+    setDaysInMonth(getDaysInMonth(newDate));
+    setSelectedDate(newDate);
   };
+
+  // Mode selector
+
+  const [mode, setMode] = useState(switchMode);
+
+  useEffect(() => {
+    if (switchMode !== mode) {
+      setMode(switchMode);
+    }
+  }, [switchMode]);
+
+  useEffect(() => {
+    onModeChange(mode);
+  }, [mode]);
 
   return (
     <Toolbar
@@ -112,15 +121,26 @@ function SchedulerToolbar(props: any) {
               isOptionEqualToValue={(option: any, value: any) =>
                 option.id === value.id
               }
-              onInputChange={(event, newInputValue) => {
+              onInputChange={(event, newInputValue: any) => {
                 setInputValue(newInputValue);
-                onInputChange(newInputValue);
+                setSearchResult(newInputValue);
+
+                let newDate = new Date();
+                if (newInputValue?.date) {
+                  newDate = parse(newInputValue.date, "yyyy-MM-dd", new Date());
+                }
+
+                setDaysInMonth(getDaysInMonth(newDate));
+                setSelectedDate(newDate);
               }}
               renderOption={(props: any, option: any) => (
                 <Box component="li" sx={{ fontSize: 12 }} {...props}>
                   {format(
                     parse(option?.date, "yyyy-MM-dd", new Date()),
-                    "dd-MMMM-yyyy"
+                    "PPP",
+                    {
+                      locale: es,
+                    }
                   )}
                 </Box>
               )}
@@ -179,11 +199,11 @@ function SchedulerToolbar(props: any) {
 }
 
 SchedulerToolbar.propTypes = {
-  today: PropTypes.object.isRequired,
   events: PropTypes.array.isRequired,
   switchMode: PropTypes.string.isRequired,
   onModeChange: PropTypes.func.isRequired,
   onSearchResult: PropTypes.func.isRequired,
+  onDateChange: PropTypes.func.isRequired,
 };
 
 export default SchedulerToolbar;

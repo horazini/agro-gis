@@ -67,7 +67,7 @@ function MonthModeView(props: any) {
   const {
     rows,
     options,
-    columns,
+    searchResult,
     onTaskClick,
     onCellClick,
     onEventsChange,
@@ -86,6 +86,22 @@ function MonthModeView(props: any) {
     //padding: "1px 7px",
     //width: 'fit-content'
   };
+
+  const columns = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"].map(
+    (day, i) => ({
+      id: `row-day-header-${i + 1}`,
+      flex: 1,
+      sortable: false,
+      editable: false,
+      align: "center",
+      headerName: day,
+      headerAlign: "center",
+      field: `rowday${i + 1}`,
+      headerClassName: "scheduler-theme--header",
+    })
+  );
+
+  // Cell and tasks behavior
 
   const onCellDragOver = (e: any) => {
     e.preventDefault();
@@ -170,7 +186,13 @@ function MonthModeView(props: any) {
 
   const renderTask = (tasks: any, rowId: number) => {
     return tasks?.map((task: any, index: any) => {
+      // To show only events of the selected group
+      /* let condition = searchResult
+        ? task?.groupLabel === searchResult?.groupLabel ||
+          task?.user === searchResult?.user
+        : !searchResult; */
       return (
+        // condition &&
         <Paper
           sx={{
             width: "100%",
@@ -202,28 +224,27 @@ function MonthModeView(props: any) {
     onTaskClick && onTaskClick(event, task);
   };
 
+  // Date selector
+
   const [anchorDateEl, setAnchorDateEl] = useState(null);
+  const openDateSelector = Boolean(anchorDateEl);
+  const handleOpenDateSelector = (event: any) => {
+    setAnchorDateEl(event.currentTarget);
+  };
+  const handleCloseDateSelector = () => {
+    setAnchorDateEl(null);
+  };
+
+  // Date selection setting
+
   const [selectedDate, setSelectedDate] = useState(today || new Date());
   const [daysInMonth, setDaysInMonth] = useState(getDaysInMonth(selectedDate));
 
-  const openDateSelector = Boolean(anchorDateEl);
-
-  const handleChangeDate = (method: any) => {
-    if (typeof method !== "function") {
-      return;
-    }
+  const handleChangeDate = (method: Function) => {
     let options: any = { months: 1 };
     let newDate = method(selectedDate, options);
     setDaysInMonth(getDaysInMonth(newDate));
     setSelectedDate(newDate);
-  };
-
-  const handleOpenDateSelector = (event: any) => {
-    setAnchorDateEl(event.currentTarget);
-  };
-
-  const handleCloseDateSelector = () => {
-    setAnchorDateEl(null);
   };
 
   useEffect(() => {
@@ -263,7 +284,7 @@ function MonthModeView(props: any) {
                   sx={{ color: "text.primary" }}
                   aria-expanded={openDateSelector ? "true" : undefined}
                 >
-                  {format(selectedDate, "MMMM-yyyy", {
+                  {format(selectedDate, "MMMM yyyy", {
                     locale: es,
                   })}
                 </Button>
@@ -382,16 +403,15 @@ function MonthModeView(props: any) {
 }
 
 MonthModeView.propTypes = {
-  columns: PropTypes.array,
   rows: PropTypes.array,
   options: PropTypes.object,
   onDateChange: PropTypes.func.isRequired,
+  searchResult: PropTypes.object,
   onTaskClick: PropTypes.func,
   onCellClick: PropTypes.func,
 };
 
 MonthModeView.defaultProps = {
-  columns: [],
   rows: [],
 };
 

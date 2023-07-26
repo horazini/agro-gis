@@ -98,13 +98,16 @@ export default function EditControlFC() {
           }
         }
       });
-    } /* else {
-      featureGroup.current?.getLayers().forEach((layer) => {
+    } else {
+      featureGroup.current?.eachLayer(function (layer) {
         if (layer.feature?.properties?.status === "modified") {
           layer.options.color = "#9933ff";
+          // Workaround que soluciona el error de actualización de color un paso tarde
+          featureGroup.current?.removeLayer(layer);
+          featureGroup.current?.addLayer(layer);
         }
       });
-    } */
+    }
   }, [geojson]);
 
   const circleToGeoJSON = (circleProperties: any, circleLatLng: L.LatLng) => {
@@ -163,7 +166,7 @@ export default function EditControlFC() {
         FeatureToEditId = layer.feature.properties.id;
         status = "modified";
       }
-      //layer.feature.properties.status = status;
+      layer.feature.properties.status = status;
 
       if (layer.editing.latlngs) {
         // Acciones para polígonos
@@ -253,12 +256,13 @@ export default function EditControlFC() {
 
   const CustomLayer = ({ feature }: any) => {
     const pathOptions = {
-      color: "#ff9933",
+      color: "#ff4019",
     };
 
     const PopUp = (
       <div>
-        <h3>ID: {feature.properties.id}</h3>
+        <h3>Parcela ocupada</h3>
+        <p>ID: {feature.properties.id}</p>
         <p>Descripción: {feature.properties.description}</p>
         {feature.properties?.radius && (
           <p>Radio: {feature.properties.radius} m.</p>

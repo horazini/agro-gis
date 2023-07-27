@@ -13,17 +13,30 @@ import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 
 import { getTenantGeoData, getTenantSpecies } from "../../services/services";
-import { Feature } from "geojson";
+import { Feature, FeatureCollection } from "geojson";
 
 import { position, LayerControler } from "../../components/mapcomponents";
 
-const MapView = () => {
-  const mystyle = {};
+type Species = {
+  id: number;
+  name: string;
+  description: string;
+  tenant_id: number;
+};
 
+type Crop = {
+  id: number;
+  species_id: number;
+  description: string | null;
+  start_date: string;
+  finish_date: string | null;
+};
+
+const MapView = () => {
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
-  const [geoData, setGeoData] = useState<any>(null);
-  const [species, setSpecies] = useState<any[]>([]);
+  const [geoData, setGeoData] = useState<FeatureCollection>();
+  const [species, setSpecies] = useState<Species[]>([]);
 
   const loadData = async () => {
     const data = await getTenantGeoData(tenantId);
@@ -51,6 +64,9 @@ const MapView = () => {
   // Comportamiento de las Layers
 
   const CustomLayer = ({ feature }: any) => {
+    const { id, crop, description } = feature.properties;
+    const { type } = feature.geometry;
+
     const [highlightedLayerId, setHighlightedLayerId] = useState<number | null>(
       null
     );
@@ -62,11 +78,9 @@ const MapView = () => {
       setHighlightedLayerId(null);
     };
 
-    const isHighlighted = highlightedLayerId === feature.properties.id;
-    const isSelected =
-      (selectedFeature?.properties?.id ?? null) === feature.properties.id;
-    const isOccupied =
-      feature.properties.crop && feature.properties.crop?.finish_date === null;
+    const isHighlighted = highlightedLayerId === id;
+    const isSelected = (selectedFeature?.properties?.id ?? null) === id;
+    const isOccupied = crop && crop?.finish_date === null;
 
     const pathOptions = {
       color: isSelected
@@ -79,33 +93,33 @@ const MapView = () => {
       weight: isSelected ? 4 : isHighlighted ? 4 : 3,
     };
 
-    const handleLayerClick = (event: LayerEvent, feature: any) => {
+    const handleLayerClick = (event: LayerEvent, feature: Feature) => {
       handleLandplotChange(feature);
     };
 
     const eventHandlers = {
       click: (event: LayerEvent) => handleLayerClick(event, feature),
-      mouseover: () => handleLayerMouseOver(feature.properties.id),
+      mouseover: () => handleLayerMouseOver(id),
       mouseout: handleLayerMouseOut,
     };
 
     const PopUp = (
       <div>
-        <h3>ID: {feature.properties.id}</h3>
-        <p>Descripción: {feature.properties.description}</p>
+        <h3>ID: {id}</h3>
+        <p>Descripción: {description}</p>
         {feature.properties?.radius && (
           <p>Radio: {feature.properties.radius} m.</p>
         )}
       </div>
     );
 
-    if (feature.geometry.type === "Polygon") {
+    if (type === "Polygon") {
       const coordinates = feature.geometry.coordinates[0].map(
-        ([lng, lat]: any) => [lat, lng]
+        ([lng, lat]: number[]) => [lat, lng]
       );
       return (
         <Polygon
-          key={feature.properties.id}
+          key={id}
           positions={coordinates}
           pathOptions={pathOptions}
           eventHandlers={eventHandlers}
@@ -113,13 +127,10 @@ const MapView = () => {
           <Popup>{PopUp}</Popup>
         </Polygon>
       );
-    } else if (
-      feature.geometry.type === "Point" &&
-      feature.properties.subType === "Circle"
-    ) {
+    } else if (type === "Point" && feature.properties.subType === "Circle") {
       return (
         <Circle
-          key={feature.properties.id}
+          key={id}
           center={feature.geometry.coordinates}
           radius={feature.properties.radius}
           pathOptions={pathOptions}
@@ -132,9 +143,11 @@ const MapView = () => {
     return null;
   };
 
-  const cropInfo = (crop: any) => {
+  const cropInfo = (crop: Crop) => {
     const startDate = new Date(crop.start_date).toLocaleDateString("en-GB");
-    const finishDate = new Date(crop.finish_date).toLocaleDateString("en-GB");
+    const finishDate = new Date(crop.finish_date || "").toLocaleDateString(
+      "en-GB"
+    );
 
     const cropSpecies = species.find(
       (specie) => specie.id === crop.species_id
@@ -173,9 +186,9 @@ const MapView = () => {
         <LayerControler />
         <LayerGroup>
           {geoData &&
-            geoData.features.map((feature: any) => {
+            geoData.features.map((feature: Feature) => {
               return (
-                <CustomLayer key={feature.properties.id} feature={feature} />
+                <CustomLayer key={feature.properties?.id} feature={feature} />
               );
             })}
         </LayerGroup>

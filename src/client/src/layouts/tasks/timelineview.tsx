@@ -37,54 +37,45 @@ function TimeLineModeView(props: any) {
   });
 
   return (
-    <Typography
-      sx={{
-        overflowY: "auto",
-        height: options?.height || 540,
-        maxHeight: options?.maxHeight || 540,
-      }}
-    >
-      <Timeline position="alternate">
-        {fileredEvents?.map((task: any, index: any) => {
-          return (
-            <TimelineItem
-              key={`timeline-${index}`}
-              sx={{ cursor: "pointer" }}
-              onClick={(event) => handleTaskClick(event, task)}
+    <Timeline position="alternate">
+      {fileredEvents?.map((task: any, index: any) => {
+        return (
+          <TimelineItem
+            key={`timeline-${index}`}
+            sx={{ cursor: "pointer" }}
+            onClick={(event) => handleTaskClick(event, task)}
+          >
+            <TimelineOppositeContent
+              sx={{ m: "auto 0" }}
+              align="right"
+              variant="body2"
+              color="text.secondary"
             >
-              <TimelineOppositeContent
-                sx={{ m: "auto 0" }}
-                align="right"
-                variant="body2"
-                color="text.secondary"
+              {task?.date &&
+                format(parse(task?.date, "yyyy-MM-dd", new Date()), "PPP", {
+                  locale: es,
+                })}
+            </TimelineOppositeContent>
+            <TimelineSeparator>
+              <TimelineConnector />
+              <TimelineDot
+                color="secondary"
+                sx={{ backgroundColor: task?.color }}
               >
-                {task?.date &&
-                  format(parse(task?.date, "yyyy-MM-dd", new Date()), "PPP", {
-                    locale: es,
-                  })}
-                <br />
-              </TimelineOppositeContent>
-              <TimelineSeparator>
-                <TimelineConnector />
-                <TimelineDot
-                  color="secondary"
-                  sx={{ backgroundColor: task?.color }}
-                >
-                  {task?.icon || <ScheduleIcon />}
-                </TimelineDot>
-                <TimelineConnector />
-              </TimelineSeparator>
-              <TimelineContent sx={{ py: "12px", px: 2 }}>
-                <Typography variant="body1" component="span">
-                  {task?.label}
-                </Typography>
-                <Typography>{task?.groupLabel}</Typography>
-              </TimelineContent>
-            </TimelineItem>
-          );
-        })}
-      </Timeline>
-    </Typography>
+                {task?.icon || <ScheduleIcon />}
+              </TimelineDot>
+              <TimelineConnector />
+            </TimelineSeparator>
+            <TimelineContent sx={{ py: "12px", px: 2 }}>
+              <Typography variant="body1" component="span">
+                {task?.label}
+              </Typography>
+              <Typography>{task?.groupLabel}</Typography>
+            </TimelineContent>
+          </TimelineItem>
+        );
+      })}
+    </Timeline>
   );
 }
 

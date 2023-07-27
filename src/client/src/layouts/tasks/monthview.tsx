@@ -124,7 +124,7 @@ function MonthModeView(props: any) {
 
   const onCellDragEnd = (e: any) => {
     e.preventDefault();
-    if (!state.itemTransfert && !state.transfertTarget) return;
+    if (!state.itemTransfert || !state.transfertTarget) return;
     let transfert = state.itemTransfert;
     let transfertTarget = state.transfertTarget;
     let rowsCopy: any = Array.from(rows);

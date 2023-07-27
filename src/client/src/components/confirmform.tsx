@@ -13,6 +13,8 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { Delete } from "@mui/icons-material";
+
 export type CancelFormProps = {
   navigateDir: string;
 };
@@ -22,6 +24,58 @@ export type ConfirmFormProps = {
   onConfirm: () => void;
   navigateDir: string;
   disabled: boolean;
+};
+
+export type DialogButtonProps = {
+  msg: string;
+  onConfirm: () => void;
+};
+
+export const DialogButton = ({ msg, onConfirm }: DialogButtonProps) => {
+  const [open, setOpen] = useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleConfirm = () => {
+    onConfirm();
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <Button onClick={handleClickOpen}>
+        <Delete sx={{ mr: 1 }} />
+      </Button>
+
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"¿Desea eliminar este elemento?"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            {msg}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancelar</Button>
+          <Button onClick={handleConfirm} autoFocus>
+            Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
 };
 
 export const CancelButton = ({ navigateDir }: CancelFormProps) => {

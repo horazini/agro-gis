@@ -16,8 +16,9 @@ import {
   getTenantGeoData,
   getTenantSpecies,
   postCrop,
+  speciesMainData,
 } from "../../services/services";
-import { Feature } from "geojson";
+import { Feature, GeoJsonObject } from "geojson";
 
 import { position, LayerControler } from "../../components/mapcomponents";
 import {
@@ -52,8 +53,8 @@ const MapView = () => {
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
-  const [geoData, setGeoData] = useState<any>(null);
-  const [species, setSpecies] = useState<any[]>([]);
+  const [geoData, setGeoData] = useState<any>();
+  const [species, setSpecies] = useState<speciesMainData[]>([]);
 
   const loadData = async () => {
     const data = await getTenantGeoData(tenantId);

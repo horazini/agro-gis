@@ -14,12 +14,13 @@ import { useSelector } from "react-redux";
 import { getTenantGeo } from "../../services/services";
 
 import { position, LayerControler } from "../../components/mapcomponents";
+import { GeoJsonObject } from "geojson";
 
 const MapView = () => {
   const mystyle = {};
 
-  const [geoData, setGeoData] = useState<any>(null);
-  const [circles, setCircles] = useState<any>(null);
+  const [geoData, setGeoData] = useState<GeoJsonObject>();
+  const [circles, setCircles] = useState<(typeof Circle)[]>();
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
 

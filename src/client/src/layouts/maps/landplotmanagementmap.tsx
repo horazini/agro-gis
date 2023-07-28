@@ -8,7 +8,7 @@ import {
   Popup,
 } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
-import type { FeatureCollection, Feature } from "geojson";
+import type { FeatureCollection, Feature, GeoJsonObject } from "geojson";
 import { useEffect, useRef, useState } from "react";
 import { LayerControler, position } from "../../components/mapcomponents";
 import { getTenantGeoData, putFeatures } from "../../services/services";
@@ -59,7 +59,7 @@ declare module "leaflet" {
 }
 
 export default function EditControlFC() {
-  const [geojson, setGeojson] = useState<any>();
+  const [geojson, setGeojson] = useState<GeoJsonObject[]>();
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
@@ -162,11 +162,11 @@ export default function EditControlFC() {
     Object.values(_layers).forEach((layer: any) => {
       let FeatureToEditId = layer._leaflet_id;
       let status = "added";
-      if (layer.feature) {
+      if (layer?.feature) {
         FeatureToEditId = layer.feature.properties.id;
         status = "modified";
+        layer.feature.properties.status = status;
       }
-      layer.feature.properties.status = status;
 
       if (layer.editing.latlngs) {
         // Acciones para polígonos
@@ -303,7 +303,7 @@ export default function EditControlFC() {
 
   const handleSubmit = async () => {
     try {
-      const featurecollection = geojson.filter(
+      const featurecollection = geojson?.filter(
         (f: any) => f.properties.status !== undefined
       );
 

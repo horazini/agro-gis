@@ -2,23 +2,28 @@ import { API } from "../config";
 
 // Tenants
 
+export type tenantMainData = {
+  id: number;
+  name: string;
+};
+
 export type tenantDataType = {
   tenant: {
     name: string;
   };
   users: {
-    usertype_id: any;
-    mail_address: any;
-    username: any;
-    names: any;
-    surname: any;
+    usertype_id: number;
+    mail_address: string;
+    username: string;
+    names: string;
+    surname: string;
     password_hash: string;
   }[];
 };
 
 export const getTenants = async () => {
   const response = await fetch(`${API}/tenants`);
-  const data = await response.json();
+  const data: tenantMainData[] = await response.json();
   return data;
 };
 
@@ -47,6 +52,13 @@ export const getTenantUsertypes = async () => {
 };
 
 // Species
+
+export type speciesMainData = {
+  id: number;
+  name: string;
+  description: string;
+  tenant_id: number;
+};
 
 export type speciesDataType = {
   species: {
@@ -84,7 +96,7 @@ export const getSpeciesData = async (id: string) => {
 
 export const getTenantSpecies = async (tenantId: number | null) => {
   const response = await fetch(`${API}/tenantspecies/${tenantId}`);
-  const data = await response.json();
+  const data: speciesMainData[] = await response.json();
   return data;
 };
 

@@ -10,10 +10,10 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 
-import { getTenantSpecies } from "../../services/services";
+import { speciesMainData, getTenantSpecies } from "../../services/services";
 
 function SpeciesList() {
-  const [species, setSpecies] = useState<any[]>([]);
+  const [species, setSpecies] = useState<speciesMainData[]>([]);
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
 

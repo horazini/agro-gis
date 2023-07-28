@@ -97,8 +97,8 @@ export default function MainLayoutRoutes(): JSX.Element {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Navigate to="/" />} />;
-      {allowedRoutes.map((route) => (
-        <Route path={route.path} element={route.element} />
+      {allowedRoutes.map((route, index) => (
+        <Route key={index} path={route.path} element={route.element} />
       ))}
       <Route path="*" element={<NoMatch />} />
     </Routes>

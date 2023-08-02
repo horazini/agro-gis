@@ -69,7 +69,6 @@ export type speciesDataType = {
   };
   stages: {
     id: number | null;
-    sequence_number: number;
     name: string;
     description: string;
     estimated_time: string;
@@ -96,7 +95,7 @@ export const getSpeciesData = async (id: string) => {
 
 export const getTenantSpecies = async (tenantId: number | null) => {
   const response = await fetch(`${API}/tenantspecies/${tenantId}`);
-  const data: speciesMainData[] = await response.json();
+  const data = await response.json();
   return data;
 };
 
@@ -111,12 +110,12 @@ export const postSpeciesData = async (speciesData: speciesDataType) => {
 };
 
 export const putSpeciesData = async (
-  speciesData: speciesDataType,
+  updateData: any,
   speciesId: string | undefined
 ) => {
   const res = await fetch(`${API}/species/${speciesId}`, {
     method: "PUT",
-    body: JSON.stringify(speciesData),
+    body: JSON.stringify(updateData),
     headers: { "Content-type": "application/json" },
   });
   const data = await res.json();

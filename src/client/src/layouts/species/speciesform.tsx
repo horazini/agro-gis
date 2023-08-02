@@ -41,12 +41,17 @@ import {
   getSpeciesData,
   postSpeciesData,
   putSpeciesData,
+  speciesDataType,
 } from "../../services/services";
-import { CancelButton, ConfirmButton } from "../../components/confirmform";
+import {
+  CancelButton,
+  ConfirmButton,
+  DialogButton,
+} from "../../components/customComponents";
 
 const theme = createTheme();
 
-interface ISpecies {
+interface ISpeciesData {
   id: number | null;
   name: string;
   description: string;
@@ -55,28 +60,43 @@ interface ISpecies {
 
 interface IStageData {
   id: number | null;
-  sequence_number: number;
   name: string;
   description: string;
   estimatedTime: number | string;
   estimatedTimeUnit: string;
+  growthEvents: IGrowthEventData[];
 }
 
 interface IGrowthEventData {
   id: number | null;
-  form_id: number;
   name: string;
   description: string;
-  referenceStage: any;
   ETFromStageStart: number | string;
   ETFromStageStartUnit: string;
   timePeriod: number | string | null;
   timePeriodUnit: string;
 }
 
-function SpeciesForm(): JSX.Element {
-  const params = useParams();
+const nullStageData = {
+  id: null,
+  name: "",
+  description: "",
+  estimatedTime: "",
+  estimatedTimeUnit: "",
+  growthEvents: [],
+};
 
+const nullGrowthEventData = {
+  id: null,
+  name: "",
+  description: "",
+  ETFromStageStart: "",
+  ETFromStageStartUnit: "",
+  timePeriod: " ",
+  timePeriodUnit: "",
+};
+
+function SpeciesForm(): JSX.Element {
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const timeUnits = [
@@ -88,7 +108,7 @@ function SpeciesForm(): JSX.Element {
 
   // Datos principales de especie
 
-  const [species, setSpecies] = useState<ISpecies>({
+  const [species, setSpecies] = useState<ISpeciesData>({
     id: null,
     name: "",
     description: "",
@@ -101,16 +121,19 @@ function SpeciesForm(): JSX.Element {
     setSpecies({ ...species, [e.target.name]: e.target.value });
   };
 
+  // Stages and events data
+
+  const clearAllFields = () => {
+    setStageData(nullStageData);
+    setEditingStageRowId(null);
+    setGrowthEventData(nullGrowthEventData);
+    setEditingEventRowId(null);
+    setReferenceStage("");
+  };
+
   // Etapas
 
-  const [stageData, setStageData] = useState<IStageData>({
-    id: null,
-    sequence_number: 0,
-    name: "",
-    description: "",
-    estimatedTime: "",
-    estimatedTimeUnit: "",
-  });
+  const [stageData, setStageData] = useState<IStageData>(nullStageData);
 
   const handleStageChange = (
     event:
@@ -133,113 +156,107 @@ function SpeciesForm(): JSX.Element {
   );
 
   const handleStageSubmit = () => {
-    //event.preventDefault();
     if (editingStageRowId !== null) {
-      setStagesList((prevRows) =>
-        prevRows.map((row) =>
-          row.sequence_number === editingStageRowId ? stageData : row
+      const modifiedStage = stageData;
+      setStagesList(
+        stagesList.map((stage, index) =>
+          index === editingStageRowId ? modifiedStage : stage
         )
       );
     } else {
-      setStagesList((prevRows) => [
-        ...prevRows,
-        {
-          ...stageData,
-          sequence_number:
-            prevRows.length === 0
-              ? 1
-              : Math.max(...prevRows.map((row) => row.sequence_number)) + 1,
-        },
-      ]);
+      setStagesList((prevRows) => [...prevRows, stageData]);
     }
-    setStageData({
-      id: null,
-      sequence_number: 0,
-      name: "",
-      description: "",
-      estimatedTime: "",
-      estimatedTimeUnit: "",
-    });
-    setEditingStageRowId(null);
+
+    clearAllFields();
   };
 
-  const handleEditRow = (row: IStageData) => {
+  const handleEditStage = (row: IStageData, index: number) => {
     setStageData(row);
-    setEditingStageRowId(row.sequence_number);
+    setEditingStageRowId(index);
   };
 
-  const handleDeleteStage = (sequence_number: number) => {
+  const handleDeleteStage = (index: number) => {
+    setSelectedStageIndex(null);
+    if (isEditingForm) {
+      const found = stagesList[index];
+      if (found?.id) {
+        const deletedId = found.id;
+        setDeletedStages((prev) => [...prev, deletedId]);
+      }
+    }
+
     setStagesList((prevRows) =>
-      prevRows.filter((row) => row.sequence_number !== sequence_number)
+      prevRows.filter((row) => prevRows.indexOf(row) !== index)
     );
 
-    setGrowthEventsList((prevRows) =>
-      prevRows.filter((row) => row.referenceStage !== sequence_number)
-    );
+    clearAllFields();
   };
 
   // Swap Rows
 
-  const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
+  const [selectedStageIndex, setSelectedStageIndex] = useState<number | null>(
+    null
+  );
 
   const swapRows = (fromIndex: number, toIndex: number) => {
-    const newRows = [...stagesList];
-    const temp = newRows[fromIndex];
-    newRows[fromIndex] = newRows[toIndex];
-    newRows[toIndex] = temp;
-    setStagesList(newRows);
+    setStagesList(
+      stagesList.map((stage, index) =>
+        index === fromIndex
+          ? stagesList[toIndex]
+          : index === toIndex
+          ? stagesList[fromIndex]
+          : stage
+      )
+    );
   };
 
   const handleMoveUpClick = () => {
-    const selectedIndex = stagesList.findIndex(
-      (row) => row.sequence_number === selectedRowId
-    );
-    if (selectedIndex > 0) {
-      swapRows(selectedIndex, selectedIndex - 1);
+    if (selectedStageIndex && selectedStageIndex > 0) {
+      swapRows(selectedStageIndex, selectedStageIndex - 1);
+      setSelectedStageIndex(selectedStageIndex - 1);
     }
   };
 
   const handleMoveDownClick = () => {
-    const selectedIndex = stagesList.findIndex(
-      (row) => row.sequence_number === selectedRowId
-    );
-    if (selectedIndex < stagesList.length - 1) {
-      swapRows(selectedIndex, selectedIndex + 1);
+    if (
+      selectedStageIndex !== null &&
+      selectedStageIndex < stagesList.length - 1
+    ) {
+      swapRows(selectedStageIndex, selectedStageIndex + 1);
+      setSelectedStageIndex(selectedStageIndex + 1);
     }
   };
 
   const handleMoveTopClick = () => {
-    const selectedIndex = stagesList.findIndex(
-      (row) => row.sequence_number === selectedRowId
-    );
-    if (selectedIndex > 0) {
-      swapRows(selectedIndex, 0);
+    if (selectedStageIndex !== null && selectedStageIndex >= 0) {
+      const newStageslist = stagesList;
+      const element = newStageslist.splice(selectedStageIndex, 1)[0]; // Remove the element from the original position
+      newStageslist.unshift(element); // Add the element at the beginning
+      setStagesList(newStageslist);
+      setSelectedStageIndex(0);
     }
   };
 
   const handleMoveBottomClick = () => {
-    const selectedIndex = stagesList.findIndex(
-      (row) => row.sequence_number === selectedRowId
-    );
-    const lastIndex = stagesList.length - 1;
-    if (selectedIndex < lastIndex) {
-      swapRows(selectedIndex, lastIndex);
+    if (selectedStageIndex !== null && selectedStageIndex < stagesList.length) {
+      const newStageslist = stagesList;
+      const element = newStageslist.splice(selectedStageIndex, 1)[0]; // Remove the element from the original position
+      newStageslist.push(element); // Add the element at the end
+      setStagesList(newStageslist);
+      setSelectedStageIndex(stagesList.length - 1);
     }
   };
 
   // Tareas
 
-  const [growthEventData, setGrowthEventData] = useState<IGrowthEventData>({
-    id: null,
-    form_id: 0,
-    name: "",
-    description: "",
-    referenceStage: "",
-    ETFromStageStart: "",
-    ETFromStageStartUnit: "",
-    timePeriod: " ",
-    timePeriodUnit: "",
-  });
+  const [editingEventRowId, setEditingEventRowId] = useState<number[] | null>(
+    null
+  );
+  const [referenceStage, setReferenceStage] = useState<number | string>("");
+  const [timeFromStartError, setTimeFromStartError] = useState(false);
+
+  const [growthEventData, setGrowthEventData] =
+    useState<IGrowthEventData>(nullGrowthEventData);
 
   const handleEventChange = (
     event:
@@ -250,38 +267,34 @@ function SpeciesForm(): JSX.Element {
     setGrowthEventData({ ...growthEventData, [name]: value });
   };
 
+  const handleEditEvent = (row: IGrowthEventData, rowIndex: number[]) => {
+    setGrowthEventData(row);
+    setReferenceStage(rowIndex[0]);
+    setEditingEventRowId(rowIndex);
+  };
+
   const disableEventSubmit = () => {
-    const { name, referenceStage, ETFromStageStart, ETFromStageStartUnit } =
-      growthEventData;
+    const { name, ETFromStageStart, ETFromStageStartUnit } = growthEventData;
     return !(
       name &&
-      referenceStage &&
+      referenceStage !== "" &&
       ETFromStageStart &&
       ETFromStageStartUnit
     );
   };
 
-  const [growthEventsList, setGrowthEventsList] = useState<IGrowthEventData[]>(
-    []
-  );
-
-  const [timeFromStartError, setTimeFromStartError] = useState(false);
-
   const handleEventValidation = () => {
-    const { ETFromStageStart, ETFromStageStartUnit, referenceStage } =
-      growthEventData;
+    const { ETFromStageStart, ETFromStageStartUnit } = growthEventData;
 
     const ETFromStageStartUnitIndex = timeUnits.findIndex(
       (unit) => unit.key === ETFromStageStartUnit
     );
 
-    const StageET = stagesList.find(
-      (stage) => stage.sequence_number === referenceStage
-    )?.estimatedTime;
+    if (typeof referenceStage === "string") return;
 
-    const StageETUnit = stagesList.find(
-      (stage) => stage.sequence_number === referenceStage
-    )?.estimatedTimeUnit;
+    const StageET = stagesList[referenceStage].estimatedTime;
+
+    const StageETUnit = stagesList[referenceStage].estimatedTimeUnit;
     const estimatedTimeUnitIndex = timeUnits.findIndex(
       (unit) => unit.key === StageETUnit
     );
@@ -298,110 +311,96 @@ function SpeciesForm(): JSX.Element {
     }
   };
 
-  const [editingEventRowId, setEditingEventRowId] = useState<number | null>(
-    null
-  );
-
   const handleEventSubmit = () => {
+    if (typeof referenceStage === "string") return;
+
     if (editingEventRowId !== null) {
-      setGrowthEventsList((prevRows) =>
-        prevRows.map((row) =>
-          row.form_id === editingEventRowId ? growthEventData : row
-        )
+      const newStageList = stagesList;
+      newStageList[editingEventRowId[0]].growthEvents.splice(
+        editingEventRowId[1],
+        1
       );
+      newStageList[referenceStage].growthEvents.push(growthEventData);
+      setStagesList(newStageList);
     } else {
-      setGrowthEventsList((prevRows) => [
-        ...prevRows,
-        {
-          ...growthEventData,
-          form_id:
-            prevRows.length === 0
-              ? 1
-              : Math.max(...prevRows.map((row) => row.form_id)) + 1,
-        },
-      ]);
+      setStagesList((prevStagesList) => {
+        return prevStagesList.map((stage, index) => {
+          if (index === referenceStage) {
+            return {
+              ...stage,
+              growthEvents: [...stage.growthEvents, growthEventData],
+            };
+          }
+          return stage;
+        });
+      });
     }
 
-    setGrowthEventData({
-      id: null,
-      form_id: 0,
-      name: "",
-      description: "",
-      referenceStage: "",
-      ETFromStageStart: "",
-      ETFromStageStartUnit: "",
-      timePeriod: "",
-      timePeriodUnit: "",
+    clearAllFields();
+  };
+
+  const handleDeleteEvent = (stageIndex: number, eventIndex: number) => {
+    if (isEditingForm) {
+      const found = stagesList[stageIndex].growthEvents[eventIndex];
+      if (found?.id) {
+        const deletedId = found.id;
+        setDeletedEvents((prev) => [...prev, deletedId]);
+      }
+    }
+
+    setStagesList((prev) => {
+      return prev.map((stage, index) => {
+        if (index === stageIndex) {
+          const newGrowthEvents = [...stage.growthEvents];
+          newGrowthEvents.splice(eventIndex, 1);
+          return {
+            ...stage,
+            growthEvents: newGrowthEvents,
+          };
+        }
+        return stage;
+      });
     });
-    setEditingEventRowId(null);
-  };
 
-  const handleEditEvent = (row: IGrowthEventData) => {
-    setGrowthEventData(row);
-    setEditingEventRowId(row.form_id);
-  };
-
-  const handleDeleteEvent = (form_id: number) => {
-    setGrowthEventsList((prevRows) =>
-      prevRows.filter((row) => row.form_id !== form_id)
-    );
+    clearAllFields();
   };
 
   // Subtim form
 
   const handleSubmitForm = async () => {
     try {
-      const speciesData = {
-        species: {
-          id: species.id,
-          name: species.name,
-          description: species.description,
-          tenant_id: species.tenant_id,
-        },
+      const speciesData: speciesDataType = {
+        species,
         stages: stagesList.map((stage: IStageData) => {
           return {
-            id: stage.id,
-            sequence_number: stage.sequence_number,
-            name: stage.name,
-            description: stage.description,
-            estimatedTime: stage.estimatedTime,
-            estimatedTimeUnit: stage.estimatedTimeUnit,
-            //estimated_time: stage.estimatedTime + " " + stage.estimatedTimeUnit,
-            growthEvents: growthEventsList
-              .filter((event) => event.referenceStage == stage.sequence_number)
-              .map((event: IGrowthEventData) => {
-                let time_period;
-                if (
-                  (event.timePeriod === "" && event.timePeriodUnit === "") ||
-                  (event.timePeriod !== "" && event.timePeriodUnit !== "")
-                ) {
-                  time_period = event.timePeriod + " " + event.timePeriodUnit;
-                }
+            ...stage,
+            estimated_time: stage.estimatedTime + " " + stage.estimatedTimeUnit,
+            growthEvents: stage.growthEvents.map((event: IGrowthEventData) => {
+              let time_period;
+              if (event.timePeriod !== "" && event.timePeriodUnit !== "") {
+                time_period = event.timePeriod + " " + event.timePeriodUnit;
+              }
 
-                return {
-                  id: event.id,
-                  form_id: event.id,
-                  name: event.name,
-                  description: event.description,
-                  /* et_from_stage_start:
-                    event.ETFromStageStart + " " + event.ETFromStageStartUnit,
-                  time_period, */
-                  ETFromStageStart: event.ETFromStageStart,
-                  ETFromStageStartUnit: event.ETFromStageStartUnit,
-                  timePeriod: event.timePeriod,
-                  timePeriodUnit: event.timePeriodUnit,
-                  referenceStage: event.referenceStage,
-                };
-              }),
+              return {
+                ...event,
+                et_from_stage_start:
+                  event.ETFromStageStart + " " + event.ETFromStageStartUnit,
+                time_period,
+              };
+            }),
           };
         }),
       };
 
-      if (editing) {
-        console.log("new speciesData:", speciesData);
-        //await putSpeciesData(speciesData, params.id);
+      if (isEditingForm) {
+        const updateData = {
+          deletedEvents,
+          deletedStages,
+          speciesData,
+        };
+        await putSpeciesData(updateData, params.id);
       } else {
-        //await postSpeciesData(speciesData);
+        await postSpeciesData(speciesData);
       }
     } catch (error) {
       console.log(error);
@@ -410,24 +409,19 @@ function SpeciesForm(): JSX.Element {
 
   // Cargar especie existente (caso de edicion)
 
-  const [editing, setEditing] = useState(false);
+  const params = useParams();
+
+  const [isEditingForm, setIsEditingForm] = useState(false);
+
+  const [deletedStages, setDeletedStages] = useState<number[]>([]);
+  const [deletedEvents, setDeletedEvents] = useState<number[]>([]);
 
   const loadSpecies = async (id: string) => {
     try {
       const data = await getSpeciesData(id);
       setSpecies(data.species);
       setStagesList(data.stages);
-
-      const growthEvents: any = [];
-      data.stages.forEach((stage: any) => {
-        stage.growthEvents.forEach((event: any) => {
-          growthEvents.push(event);
-        });
-      });
-      setGrowthEventsList(growthEvents);
-
-      console.log("original speciesData:", data);
-      setEditing(true);
+      setIsEditingForm(true);
     } catch (error) {
       console.log(error);
     }
@@ -439,11 +433,13 @@ function SpeciesForm(): JSX.Element {
     }
   }, [params.id]);
 
+  // ---
+
   const handleOutsideClick = () => {
-    setSelectedRowId(null);
+    setSelectedStageIndex(null);
   };
 
-  const msg: string = editing
+  const msg: string = isEditingForm
     ? "Se actualizará a la especie con todas sus fases y tareas."
     : "Se dará de alta a la especie con todas sus fases y tareas.";
 
@@ -456,47 +452,44 @@ function SpeciesForm(): JSX.Element {
           sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }}
         >
           <Typography component="h1" variant="h4" align="center">
-            {editing ? "Editar especie" : "Agregar nueva especie"}
+            {isEditingForm ? "Editar especie" : "Agregar nueva especie"}
           </Typography>
 
-          <>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  inputProps={{ maxLength: 100 }}
-                  id="name"
-                  name="name"
-                  label="Nombre de la especie"
-                  fullWidth
-                  variant="standard"
-                  value={species.name || ""}
-                  onChange={handleSpeciesChange}
-                />
-              </Grid>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <TextField
+                required
+                inputProps={{ maxLength: 100 }}
+                id="name"
+                name="name"
+                label="Nombre de la especie"
+                fullWidth
+                variant="standard"
+                value={species.name || ""}
+                onChange={handleSpeciesChange}
+              />
             </Grid>
-            <br />
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  inputProps={{ maxLength: 50 }}
-                  id="description"
-                  name="description"
-                  label="Descripción"
-                  fullWidth
-                  variant="standard"
-                  value={species.description || ""}
-                  onChange={handleSpeciesChange}
-                />
-              </Grid>
+          </Grid>
+          <br />
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                inputProps={{ maxLength: 50 }}
+                id="description"
+                name="description"
+                label="Descripción"
+                fullWidth
+                variant="standard"
+                value={species.description || ""}
+                onChange={handleSpeciesChange}
+              />
             </Grid>
-            <br />
-          </>
+          </Grid>
+          <br />
 
           <Typography variant="h6" gutterBottom>
             Etapas de crecimiento
           </Typography>
-
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <TableContainer component={Paper}>
@@ -518,7 +511,10 @@ function SpeciesForm(): JSX.Element {
                           },
 
                           { icon: <UpIcon />, onClick: handleMoveUpClick },
-                          { icon: <DownIcon />, onClick: handleMoveDownClick },
+                          {
+                            icon: <DownIcon />,
+                            onClick: handleMoveDownClick,
+                          },
                           {
                             icon: <DoubleDownIcon />,
                             onClick: handleMoveBottomClick,
@@ -527,7 +523,7 @@ function SpeciesForm(): JSX.Element {
                           const { icon, onClick } = item;
                           return (
                             <IconButton
-                              disabled={!selectedRowId}
+                              disabled={selectedStageIndex === null}
                               onClick={onClick}
                               key={index}
                             >
@@ -539,13 +535,13 @@ function SpeciesForm(): JSX.Element {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {stagesList.map((row) => (
+                    {stagesList.map((row, index) => (
                       <TableRow
-                        key={row.sequence_number}
-                        selected={row.sequence_number === selectedRowId}
-                        onClick={() => setSelectedRowId(row.sequence_number)}
+                        key={index}
+                        selected={index === selectedStageIndex}
+                        onClick={() => setSelectedStageIndex(index)}
                       >
-                        <TableCell>{stagesList.indexOf(row) + 1}</TableCell>
+                        <TableCell>{index + 1}</TableCell>
                         <TableCell>{row.name}</TableCell>
                         <TableCell>{row.description}</TableCell>
                         <TableCell>
@@ -557,16 +553,17 @@ function SpeciesForm(): JSX.Element {
                           }
                         </TableCell>
                         <TableCell>
-                          <Button onClick={() => handleEditRow(row)}>
+                          <Button onClick={() => handleEditStage(row, index)}>
                             <EditIcon sx={{ mr: 1 }} />
                           </Button>
-                          <Button
-                            onClick={() =>
-                              handleDeleteStage(row.sequence_number)
+                          <DialogButton
+                            icon={<DeleteIcon sx={{ mr: 1 }} />}
+                            dialogTitle={"¿Desea eliminar este elemento?"}
+                            dialogSubtitle={
+                              "Se eliminarán tambien sus tareas asignadas."
                             }
-                          >
-                            <DeleteIcon sx={{ mr: 1 }} />
-                          </Button>
+                            onConfirm={() => handleDeleteStage(index)}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -657,219 +654,225 @@ function SpeciesForm(): JSX.Element {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {growthEventsList
-                      .sort((a, b) => {
-                        const stageA = stagesList.findIndex(
-                          (stage) => stage.sequence_number === a.referenceStage
-                        );
-                        const stageB = stagesList.findIndex(
-                          (stage) => stage.sequence_number === b.referenceStage
-                        );
-                        if (stageA !== stageB) {
-                          return stageA - stageB;
-                        } else {
-                          const unitA = timeUnits.findIndex(
-                            (unit) => unit.key === a.ETFromStageStartUnit
-                          );
-                          const unitB = timeUnits.findIndex(
-                            (unit) => unit.key === b.ETFromStageStartUnit
-                          );
-
-                          if (unitA !== unitB) {
-                            return unitA - unitB;
-                          } else {
-                            return (
-                              Number(a.ETFromStageStart) -
-                              Number(b.ETFromStageStart)
+                    {stagesList.length > 0 ? (
+                      stagesList.map((stage, stageIndex) =>
+                        stage.growthEvents
+                          .sort((a, b) => {
+                            const unitA = timeUnits.findIndex(
+                              (unit) => unit.key === a.ETFromStageStartUnit
                             );
-                          }
-                        }
-                      })
-                      .map((row) => (
-                        <TableRow key={row.form_id}>
-                          <TableCell>{row.name}</TableCell>
-                          <TableCell>
-                            {
-                              stagesList.find(
-                                (stage) =>
-                                  stage.sequence_number === row.referenceStage
-                              )?.name
+                            const unitB = timeUnits.findIndex(
+                              (unit) => unit.key === b.ETFromStageStartUnit
+                            );
+
+                            if (unitA !== unitB) {
+                              return unitA - unitB;
+                            } else {
+                              return (
+                                Number(a.ETFromStageStart) -
+                                Number(b.ETFromStageStart)
+                              );
                             }
-                          </TableCell>
-                          <TableCell>
-                            {row.ETFromStageStart}{" "}
-                            {
-                              timeUnits.find(
-                                (unit) => unit.key === row.ETFromStageStartUnit
-                              )?.label
-                            }
-                          </TableCell>
-                          <TableCell>
-                            {(row.timePeriod === "" &&
-                              row.timePeriodUnit === "") ||
-                            (row.timePeriod !== "" &&
-                              row.timePeriodUnit !== "") ? (
-                              <>
-                                {row.timePeriod}{" "}
+                          })
+                          .map((event, eventIndex) => (
+                            <TableRow key={eventIndex}>
+                              <TableCell>{event.name}</TableCell>
+                              <TableCell>{stage.name}</TableCell>
+                              <TableCell>
+                                {event.ETFromStageStart}{" "}
                                 {
                                   timeUnits.find(
-                                    (unit) => unit.key === row.timePeriodUnit
+                                    (unit) =>
+                                      unit.key === event.ETFromStageStartUnit
                                   )?.label
                                 }
-                              </>
-                            ) : null}
-                          </TableCell>
+                              </TableCell>
+                              <TableCell>
+                                {(event.timePeriod === "" &&
+                                  event.timePeriodUnit === "") ||
+                                (event.timePeriod !== "" &&
+                                  event.timePeriodUnit !== "") ? (
+                                  <>
+                                    {event.timePeriod}{" "}
+                                    {
+                                      timeUnits.find(
+                                        (unit) =>
+                                          unit.key === event.timePeriodUnit
+                                      )?.label
+                                    }
+                                  </>
+                                ) : null}
+                              </TableCell>
 
-                          <TableCell>
-                            <Button onClick={() => handleEditEvent(row)}>
-                              <EditIcon sx={{ mr: 1 }} />
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteEvent(row.form_id)}
-                            >
-                              <DeleteIcon sx={{ mr: 1 }} />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                              <TableCell>
+                                <Button
+                                  onClick={() =>
+                                    handleEditEvent(event, [
+                                      stageIndex,
+                                      eventIndex,
+                                    ])
+                                  }
+                                >
+                                  <EditIcon sx={{ mr: 1 }} />
+                                </Button>
+                                <DialogButton
+                                  icon={<DeleteIcon sx={{ mr: 1 }} />}
+                                  dialogTitle={"¿Desea eliminar este elemento?"}
+                                  dialogSubtitle={
+                                    "Se eliminará de la lista de tareas."
+                                  }
+                                  onConfirm={() =>
+                                    handleDeleteEvent(stageIndex, eventIndex)
+                                  }
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))
+                      )
+                    ) : (
+                      <TableRow>
+                        <TableCell>{"Ingrese etapas"}</TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
-                <TextField
-                  required
-                  label="Nombre"
-                  name="name"
-                  value={growthEventData.name}
-                  onChange={handleEventChange}
-                />
-                <TextField
-                  label="Descripción"
-                  name="description"
-                  value={growthEventData.description}
-                  onChange={handleEventChange}
-                />
-
-                <FormControl
-                  required
-                  variant="filled"
-                  sx={{ m: 1, minWidth: 220 }}
-                >
-                  <InputLabel>Etapa</InputLabel>
-
-                  <Select
-                    name="referenceStage"
-                    value={growthEventData.referenceStage || ""}
+                <Box>
+                  <TextField
+                    required
+                    label="Nombre"
+                    name="name"
+                    value={growthEventData.name}
                     onChange={handleEventChange}
-                    displayEmpty
-                    variant="standard"
+                  />
+                  <TextField
+                    label="Descripción"
+                    name="description"
+                    value={growthEventData.description}
+                    onChange={handleEventChange}
+                  />
+
+                  <FormControl
+                    required
+                    variant="filled"
+                    sx={{ m: 1, minWidth: 220 }}
                   >
-                    {stagesList.length > 0 ? (
-                      stagesList.map((stage) => (
-                        <MenuItem
-                          key={stage.sequence_number}
-                          value={stage.sequence_number}
-                        >
-                          {stage.name}
-                        </MenuItem>
-                      ))
-                    ) : (
-                      <MenuItem disabled>{"Ingrese etapas"}</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
+                    <InputLabel>Etapa</InputLabel>
 
-                <TextField
-                  required
-                  label="Tiempo desde el inicio de la etapa"
-                  name="ETFromStageStart"
-                  value={growthEventData.ETFromStageStart}
-                  onChange={handleEventChange}
-                  type="number"
-                  fullWidth
-                  error={timeFromStartError}
-                  helperText={
-                    timeFromStartError
-                      ? "El tiempo desde inicio de etapa debe ser menor a la duración de la misma"
-                      : ""
-                  }
-                  onKeyPress={(event) => {
-                    if (
-                      event?.key === "-" ||
-                      event?.key === "+" ||
-                      event?.key === "." ||
-                      event?.key === "e"
-                    ) {
-                      event.preventDefault();
-                    }
-                  }}
-                  InputProps={{
-                    inputProps: { min: 0 },
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <Select
-                          name="ETFromStageStartUnit"
-                          value={growthEventData.ETFromStageStartUnit}
-                          onChange={handleEventChange}
-                          displayEmpty
-                          variant="standard"
-                        >
-                          <MenuItem value="" disabled>
-                            Seleccione una unidad
+                    <Select
+                      name="referenceStage"
+                      value={referenceStage}
+                      onChange={(event) =>
+                        setReferenceStage(event.target.value)
+                      }
+                      displayEmpty
+                      variant="standard"
+                    >
+                      {stagesList.length > 0 ? (
+                        stagesList.map((stage, index) => (
+                          <MenuItem key={index} value={index}>
+                            {stage.name}
                           </MenuItem>
-                          {timeUnits.map((unit) => (
-                            <MenuItem key={unit.key} value={unit.key}>
-                              {unit.label}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
+                        ))
+                      ) : (
+                        <MenuItem disabled>{"Ingrese etapas"}</MenuItem>
+                      )}
+                    </Select>
+                  </FormControl>
 
-                <TextField
-                  label="Periodo de repetición"
-                  name="timePeriod"
-                  value={growthEventData.timePeriod}
-                  onChange={handleEventChange}
-                  type="number"
-                  fullWidth
-                  onKeyPress={(event) => {
-                    if (
-                      event?.key === "-" ||
-                      event?.key === "+" ||
-                      event?.key === "." ||
-                      event?.key === "e"
-                    ) {
-                      event.preventDefault();
+                  <TextField
+                    required
+                    label="Tiempo desde el inicio de la etapa"
+                    name="ETFromStageStart"
+                    value={growthEventData.ETFromStageStart}
+                    onChange={handleEventChange}
+                    type="number"
+                    fullWidth
+                    error={timeFromStartError}
+                    helperText={
+                      timeFromStartError
+                        ? "El tiempo desde inicio de etapa debe ser menor a la duración de la misma"
+                        : ""
                     }
-                  }}
-                  InputProps={{
-                    inputProps: { min: 0 },
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <Select
-                          name="timePeriodUnit"
-                          value={growthEventData.timePeriodUnit}
-                          onChange={handleEventChange}
-                          displayEmpty
-                          variant="standard"
-                        >
-                          <MenuItem value="" disabled>
-                            Seleccione una unidad
-                          </MenuItem>
-                          <MenuItem value="">
-                            No es una tarea periódica
-                          </MenuItem>
-                          {timeUnits.map((unit) => (
-                            <MenuItem key={unit.key} value={unit.key}>
-                              {unit.label}
+                    onKeyPress={(event) => {
+                      if (
+                        event?.key === "-" ||
+                        event?.key === "+" ||
+                        event?.key === "." ||
+                        event?.key === "e"
+                      ) {
+                        event.preventDefault();
+                      }
+                    }}
+                    InputProps={{
+                      inputProps: { min: 0 },
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Select
+                            name="ETFromStageStartUnit"
+                            value={growthEventData.ETFromStageStartUnit}
+                            onChange={handleEventChange}
+                            displayEmpty
+                            variant="standard"
+                          >
+                            <MenuItem value="" disabled>
+                              Seleccione una unidad
                             </MenuItem>
-                          ))}
-                        </Select>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
+                            {timeUnits.map((unit) => (
+                              <MenuItem key={unit.key} value={unit.key}>
+                                {unit.label}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  <TextField
+                    label="Periodo de repetición"
+                    name="timePeriod"
+                    value={growthEventData.timePeriod}
+                    onChange={handleEventChange}
+                    type="number"
+                    fullWidth
+                    onKeyPress={(event) => {
+                      if (
+                        event?.key === "-" ||
+                        event?.key === "+" ||
+                        event?.key === "." ||
+                        event?.key === "e"
+                      ) {
+                        event.preventDefault();
+                      }
+                    }}
+                    InputProps={{
+                      inputProps: { min: 1 },
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Select
+                            name="timePeriodUnit"
+                            value={growthEventData.timePeriodUnit}
+                            onChange={handleEventChange}
+                            displayEmpty
+                            variant="standard"
+                          >
+                            <MenuItem value="" disabled>
+                              Seleccione una unidad
+                            </MenuItem>
+                            <MenuItem value="">
+                              No es una tarea periódica
+                            </MenuItem>
+                            {timeUnits.map((unit) => (
+                              <MenuItem key={unit.key} value={unit.key}>
+                                {unit.label}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Box>
                 <Button
                   type="submit"
                   onClick={handleEventValidation}

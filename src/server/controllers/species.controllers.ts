@@ -83,8 +83,8 @@ export const getSpeciesDataById = async (
     };
 
     const growth_stages = stagesResponse.rows.map((row: any) => {
-      const estimatedTimeUnit = Object.keys(row.estimated_time)[0];
-      const estimatedTime = row.estimated_time[estimatedTimeUnit];
+      const estimatedTimeUnit = Object.keys(row.estimated_time)[0] || "days";
+      const estimatedTime = row.estimated_time[estimatedTimeUnit] || 0;
 
       return {
         id: row.id,
@@ -130,14 +130,12 @@ export const getSpeciesDataById = async (
 
           return {
             id: row.id,
-            form_id: row.id,
             name: row.name,
             description: row.description,
             ETFromStageStart,
             ETFromStageStartUnit,
             timePeriod,
             timePeriodUnit,
-            referenceStage: stage.sequence_number,
           };
         });
 
@@ -197,30 +195,21 @@ export const createSpeciesWithStagesAndEvents = async (
     const stagesData = req.body.stages || [];
 
     // Insertar nueva especie y obtener el ID
-    const speciesInsertQuery = `
+    const speciesInsertResponse: QueryResult = await client.query(
+      `
       INSERT INTO species (name, description, tenant_id)
       VALUES ($1, $2, $3)
       RETURNING id
-    `;
-    const speciesInsertValues = [
-      speciesData.name,
-      speciesData.description,
-      speciesData.tenant_id,
-    ];
-    const speciesInsertResponse: QueryResult = await client.query(
-      speciesInsertQuery,
-      speciesInsertValues
+    `,
+      [speciesData.name, speciesData.description, speciesData.tenant_id]
     );
     const speciesId = speciesInsertResponse.rows[0].id;
 
-    for (const stageData of stagesData) {
-      const {
-        sequence_number,
-        name,
-        description,
-        estimated_time,
-        growthEvents,
-      } = stageData;
+    console.log("speciesInsertResponse: ", speciesInsertResponse);
+    console.log("speciesId: ", speciesId);
+
+    for (const [index, stageData] of stagesData.entries()) {
+      const { name, description, estimated_time, growthEvents } = stageData;
 
       const stageInsertResponse: QueryResult = await client.query(
         `
@@ -228,7 +217,7 @@ export const createSpeciesWithStagesAndEvents = async (
         VALUES ($1, $2, $3, $4, $5)
         RETURNING id
         `,
-        [speciesId, name, description, estimated_time, sequence_number]
+        [speciesId, name, description, estimated_time, index]
       );
       const stageId = stageInsertResponse.rows[0].id;
 
@@ -272,35 +261,47 @@ export const updateSpecies = async (
 ) => {
   const client = await pool.connect();
   try {
-    await client.query("BEGIN"); // Comienza la transacción
+    await client.query("BEGIN");
     const species_id = parseInt(req.params.id);
-    const { species, stages } = req.body;
-    await pool.query(
+    const { deletedEvents, deletedStages, speciesData } = req.body;
+    const { species, stages } = speciesData;
+
+    // Events and stages DELETE
+    for (const eventId of deletedEvents) {
+      await client.query("DELETE FROM species_growth_event WHERE id = $1", [
+        eventId,
+      ]);
+    }
+
+    for (const stageId of deletedStages) {
+      await client.query(
+        "DELETE FROM species_growth_event WHERE reference_stage = $1",
+        [stageId]
+      );
+      await client.query("DELETE FROM species_growth_stage WHERE id = $1", [
+        stageId,
+      ]);
+    }
+
+    // Species main data update
+    await client.query(
       "UPDATE species SET name = $1, description = $2 WHERE id = $3",
       [species.name, species.description, species_id]
     );
 
-    console.log(stages);
-    /* for (const stage of stages) {
-      const {
-        sequence_number,
-        name,
-        description,
-        estimated_time,
-        growthEvents,
-      } = stage;
+    // Stages INSERT and UPDATE
+    for (const [index, stageData] of stages.entries()) {
+      const { name, description, estimated_time, growthEvents } = stageData;
 
-      let { db_id } = stage;
+      let stage_db_id = stageData.id;
 
-      if (db_id) {
+      if (stage_db_id) {
         const res: QueryResult = await client.query(
           `
           UPDATE species_growth_stage SET name = $1, description = $2, estimated_time = $3, sequence_number = $4  WHERE id = $5
           `,
-          [name, description, estimated_time, sequence_number, db_id]
+          [name, description, estimated_time, index, stage_db_id]
         );
-        console.log(res);
-        console.log(res.rows);
       } else {
         const stageInsertResponse: QueryResult = await client.query(
           `
@@ -308,41 +309,57 @@ export const updateSpecies = async (
           VALUES ($1, $2, $3, $4, $5)
           RETURNING id
           `,
-          [species_id, name, description, estimated_time, sequence_number]
+          [species_id, name, description, estimated_time, index]
         );
-        db_id = stageInsertResponse.rows[0].id;
+        stage_db_id = stageInsertResponse.rows[0].id;
       }
 
+      // Events INSERT and UPDATE
       for (const growthEvent of growthEvents) {
-        const {
-          name,
-          description,
-          et_from_stage_start,
-          time_period,
-          db_event_id,
-        } = growthEvent;
+        const { name, description, et_from_stage_start, time_period } =
+          growthEvent;
 
-        if (db_event_id) {
+        let event_db_id = growthEvent.id;
+
+        if (event_db_id) {
           await client.query(
             `
-              UPDATE species_growth_event SET name = $1, description = $2, reference_stage = $3, et_from_stage_start = $4, time_period = $5 WHERE id = $6)
+              UPDATE species_growth_event SET name = $1, description = $2, reference_stage = $3, et_from_stage_start = $4, time_period = $5 WHERE id = $6
               `,
             [
               name,
               description,
-              db_id,
+              stage_db_id,
               et_from_stage_start,
               time_period,
-              db_event_id,
+              event_db_id,
             ]
           );
         } else {
+          console.log("Inserting!");
+          await client.query(
+            `
+            INSERT INTO species_growth_event (species_id, name, description, reference_stage, et_from_stage_start, time_period)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            `,
+            [
+              species_id,
+              name,
+              description,
+              stage_db_id,
+              et_from_stage_start,
+              time_period,
+            ]
+          );
         }
       }
-    } */
+    }
+
+    await client.query("COMMIT");
 
     return res.json("Species ${id} updated succesfully");
   } catch (e) {
+    console.log(e);
     await client.query("ROLLBACK");
     next(e);
   } finally {

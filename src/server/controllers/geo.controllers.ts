@@ -361,9 +361,9 @@ export const updateFeatures = async (
     featurecollection.forEach(async (feature: any) => {
       switch (feature.properties.status) {
         case "deleted": {
-          await pool.query("DELETE FROM landplot WHERE id = $1", [
+          await client.query("DELETE FROM landplot WHERE id = $1", [
             feature.properties.id,
-          ]); // Modify
+          ]); // Modify to logical deletion
           break;
         }
         case "modified": {

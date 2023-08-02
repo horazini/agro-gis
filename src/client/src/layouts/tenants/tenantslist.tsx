@@ -1,17 +1,27 @@
-import { Button, Card, CardContent, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Collapse,
+  IconButton,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-} from "@mui/icons-material";
+  FormatListBulleted,
+  Add,
+  KeyboardArrowDown,
+  KeyboardArrowUp,
+} from "@mui/icons-material/";
 
-import { getTenants } from "../../services/services";
+import { tenantMainData, getTenants } from "../../services/services";
 
 function TenantsList() {
-  const [tenants, setTenants] = useState<any[]>([]);
+  const [tenants, setTenants] = useState<tenantMainData[]>([]);
 
   const loadTenants = async () => {
     const data = await getTenants();
@@ -24,10 +34,13 @@ function TenantsList() {
 
   const navigate = useNavigate();
 
-  const handleDelete = async (id: any) => {};
+  const handleDelete = async (id: number) => {
+    // Do something
+  };
 
+  const [open, setOpen] = useState(-1);
   return (
-    <>
+    <Fragment>
       <div
         style={{
           display: "flex",
@@ -38,54 +51,56 @@ function TenantsList() {
         <h1>Lista de clientes</h1>
 
         <Button variant="outlined" onClick={() => navigate("/tenants/new")}>
-          <AddIcon sx={{ mr: 1 }} />
+          <Add sx={{ mr: 1 }} />
           Crear nuevo cliente
         </Button>
       </div>
 
       {tenants
-        .filter((tenant) => tenant.id !== 1) // filtra al tenant systadmin
+        .filter((tenant) => tenant.id !== 1) // filters systadmin 'tenant'
         .map((tenant) => (
           <Card key={tenant.id} style={{ marginBottom: ".7rem" }}>
             <CardContent
               style={{ display: "flex", justifyContent: "space-between" }}
             >
-              <div>
-                <Typography>{tenant["name"]}</Typography>
-              </div>
+              <Box>
+                <Typography>{tenant.name}</Typography>
+              </Box>
 
-              <div>
-                <Button
-                  variant="contained"
-                  color="inherit"
-                  onClick={() => navigate(`/tenants/${tenant.id}`)}
-                  endIcon={<EditIcon />}
-                >
-                  Ver
-                </Button>
-                <Button
-                  variant="contained"
-                  color="inherit"
-                  style={{ marginLeft: ".5rem" }}
-                  //onClick={() => navigate(`/tenants/${tenant.id}/edit`)}
-                  endIcon={<EditIcon />}
-                >
-                  Editar
-                </Button>
+              <Box>
                 <Button
                   variant="contained"
                   color="warning"
+                  onClick={() => navigate(`/tenants/${tenant.id}`)}
                   style={{ marginLeft: ".5rem" }}
-                  onClick={() => handleDelete(tenant.id)}
-                  endIcon={<DeleteIcon />}
+                  startIcon={<FormatListBulleted />}
                 >
-                  Eliminar
+                  Ver detalles
                 </Button>
-              </div>
+
+                <IconButton
+                  aria-label="expand row"
+                  size="small"
+                  onClick={() => setOpen(open === tenant.id ? -1 : tenant.id)}
+                  style={{ marginLeft: ".5rem" }}
+                >
+                  {open === tenant.id ? (
+                    <KeyboardArrowUp />
+                  ) : (
+                    <KeyboardArrowDown />
+                  )}
+                </IconButton>
+              </Box>
             </CardContent>
+
+            <Collapse in={open === tenant.id} timeout="auto" unmountOnExit>
+              <CardContent>
+                <Typography>Info</Typography>
+              </CardContent>
+            </Collapse>
           </Card>
         ))}
-    </>
+    </Fragment>
   );
 }
 

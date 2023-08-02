@@ -1,11 +1,22 @@
-import { Button, Card, CardContent, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Collapse,
+  IconButton,
+  Typography,
+} from "@mui/material";
+import { Fragment, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  FormatListBulleted,
+  KeyboardArrowDown,
+  KeyboardArrowUp,
 } from "@mui/icons-material";
 
 import { getTenantData } from "../../services/services";
@@ -51,66 +62,53 @@ function TenantDetails() {
     }
   }, [params.id]);
 
+  const [open, setOpen] = useState(-1);
   return (
-    <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h1>{tenantData.tenant.name}</h1>
+    <Fragment>
+      <h1>{tenantData.tenant.name}</h1>
 
-        {/* <Button variant="outlined" onClick={() => navigate("/tenants/new")}>
-          <AddIcon sx={{ mr: 1 }} />
-          Crear nuevo cliente
-        </Button> */}
-      </div>
-
+      <h2>Usuarios</h2>
       {tenantData.users.map((user) => (
         <Card key={user.id} style={{ marginBottom: ".7rem" }}>
           <CardContent
             style={{ display: "flex", justifyContent: "space-between" }}
           >
-            <div>
+            <Box>
               <Typography>
                 {user.surname}, {user.names}
               </Typography>
-            </div>
+            </Box>
 
-            <div>
-              <Button
-                variant="contained"
-                color="inherit"
-                /* onClick={() => navigate(`/tenants/${tenant.id}`)} */
-                endIcon={<EditIcon />}
-              >
-                Ver
-              </Button>
-              <Button
-                variant="contained"
-                color="inherit"
-                style={{ marginLeft: ".5rem" }}
-                //onClick={() => navigate(`/tenants/${tenant.id}/edit`)}
-                endIcon={<EditIcon />}
-              >
-                Editar
-              </Button>
+            <Box>
               <Button
                 variant="contained"
                 color="warning"
+                onClick={() => navigate(`/tenants/${user.id}`)}
                 style={{ marginLeft: ".5rem" }}
-                /* onClick={() => handleDelete(tenant.id)} */
-                endIcon={<DeleteIcon />}
+                startIcon={<FormatListBulleted />}
               >
-                Eliminar
+                Ver detalles
               </Button>
-            </div>
+
+              <IconButton
+                aria-label="expand row"
+                size="small"
+                onClick={() => setOpen(open === user.id ? -1 : user.id)}
+                style={{ marginLeft: ".5rem" }}
+              >
+                {open === user.id ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+              </IconButton>
+            </Box>
           </CardContent>
+
+          <Collapse in={open === user.id} timeout="auto" unmountOnExit>
+            <CardContent>
+              <Typography>Info</Typography>
+            </CardContent>
+          </Collapse>
         </Card>
       ))}
-    </>
+    </Fragment>
   );
 }
 

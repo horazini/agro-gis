@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 
 import {
   MapContainer,
@@ -14,7 +14,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-import { ConfirmButton } from "../../components/confirmform";
+import { ConfirmButton } from "../../components/customComponents";
 
 import { EditControl } from "react-leaflet-draw";
 import "leaflet/dist/leaflet.css";
@@ -197,7 +197,7 @@ const MapView = () => {
   };
 
   return (
-    <>
+    <Fragment>
       <div className="row">
         <div className="col text-center">
           <h1>Crear, editar y eliminar polígonos y círculos en el mapa</h1>
@@ -240,7 +240,7 @@ const MapView = () => {
           </div>
         </div>
       </div>
-    </>
+    </Fragment>
   );
 };
 

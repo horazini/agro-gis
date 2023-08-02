@@ -1,7 +1,7 @@
 import { Box, Button, Typography } from "@mui/material";
 import React from "react";
 
-import { ConfirmButton } from "../../components/confirmform";
+import { ConfirmButton } from "../../components/customComponents";
 
 export type ThirdStepProps = {
   formData: {

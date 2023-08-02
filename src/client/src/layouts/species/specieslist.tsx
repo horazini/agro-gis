@@ -1,5 +1,5 @@
-import { Button, Card, CardContent, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { Box, Button, Card, CardContent, Typography } from "@mui/material";
+import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
@@ -36,8 +36,8 @@ function SpeciesList() {
   };
 
   return (
-    <>
-      <div
+    <Fragment>
+      <Box
         style={{
           display: "flex",
           justifyContent: "space-between",
@@ -49,18 +49,18 @@ function SpeciesList() {
           <AddIcon sx={{ mr: 1 }} />
           Agregar nueva especie
         </Button>
-      </div>
+      </Box>
       {species.map((specie) => (
         <Card key={specie.id} style={{ marginBottom: ".7rem" }}>
           <CardContent
             style={{ display: "flex", justifyContent: "space-between" }}
           >
-            <div>
+            <Box>
               <Typography>{specie["name"]}</Typography>
               <Typography>{specie["description"]}</Typography>
-            </div>
+            </Box>
 
-            <div>
+            <Box>
               <Button
                 variant="contained"
                 color="inherit"
@@ -78,11 +78,11 @@ function SpeciesList() {
               >
                 Eliminar
               </Button>
-            </div>
+            </Box>
           </CardContent>
         </Card>
       ))}
-    </>
+    </Fragment>
   );
 }
 

@@ -15,7 +15,7 @@ import { getTenantGeoData, putFeatures } from "../../services/services";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { LatLngExpression } from "leaflet";
-import { ConfirmButton } from "../../components/confirmform";
+import { ConfirmButton } from "../../components/customComponents";
 
 import {
   Box,

@@ -10,10 +10,8 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { Delete } from "@mui/icons-material";
 
 export type CancelFormProps = {
   navigateDir: string;
@@ -27,11 +25,20 @@ export type ConfirmFormProps = {
 };
 
 export type DialogButtonProps = {
-  msg: string;
+  icon?: JSX.Element;
+  buttonText?: string;
+  dialogTitle: string;
+  dialogSubtitle: string;
   onConfirm: () => void;
 };
 
-export const DialogButton = ({ msg, onConfirm }: DialogButtonProps) => {
+export const DialogButton = ({
+  icon,
+  buttonText,
+  dialogTitle,
+  dialogSubtitle,
+  onConfirm,
+}: DialogButtonProps) => {
   const [open, setOpen] = useState(false);
 
   const handleClickOpen = () => {
@@ -48,9 +55,9 @@ export const DialogButton = ({ msg, onConfirm }: DialogButtonProps) => {
   };
 
   return (
-    <>
+    <Fragment>
       <Button onClick={handleClickOpen}>
-        <Delete sx={{ mr: 1 }} />
+        {icon} {buttonText}
       </Button>
 
       <Dialog
@@ -59,12 +66,10 @@ export const DialogButton = ({ msg, onConfirm }: DialogButtonProps) => {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">
-          {"¿Desea eliminar este elemento?"}
-        </DialogTitle>
+        <DialogTitle id="alert-dialog-title">{dialogTitle}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            {msg}
+            {dialogSubtitle}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -74,7 +79,7 @@ export const DialogButton = ({ msg, onConfirm }: DialogButtonProps) => {
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </Fragment>
   );
 };
 
@@ -96,7 +101,7 @@ export const CancelButton = ({ navigateDir }: CancelFormProps) => {
   };
 
   return (
-    <>
+    <Fragment>
       <Button
         variant="contained"
         color="primary"
@@ -125,7 +130,7 @@ export const CancelButton = ({ navigateDir }: CancelFormProps) => {
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </Fragment>
   );
 };
 
@@ -163,7 +168,7 @@ export const ConfirmButton = ({
   };
 
   return (
-    <>
+    <Fragment>
       <Button
         variant="contained"
         color="primary"
@@ -205,6 +210,6 @@ export const ConfirmButton = ({
           </Alert>
         </Dialog>
       )}
-    </>
+    </Fragment>
   );
 };

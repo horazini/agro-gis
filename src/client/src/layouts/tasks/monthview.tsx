@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import PropTypes from "prop-types";
 import { useTheme, styled, alpha } from "@mui/material/styles";
 import {
@@ -252,7 +252,7 @@ function MonthModeView(props: any) {
   }, [daysInMonth, selectedDate]);
 
   return (
-    <>
+    <Fragment>
       <Toolbar
         variant="dense"
         sx={{
@@ -398,7 +398,7 @@ function MonthModeView(props: any) {
           </TableBody>
         </Table>
       </TableContainer>
-    </>
+    </Fragment>
   );
 }
 

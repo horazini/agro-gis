@@ -1,13 +1,10 @@
 import {
   Container,
-  CssBaseline,
   Paper,
   Step,
   StepLabel,
   Stepper,
-  ThemeProvider,
   Typography,
-  createTheme,
 } from "@mui/material";
 import React, { useEffect } from "react";
 import { useState } from "react";
@@ -24,8 +21,6 @@ import {
   postTenantData,
   tenantDataType,
 } from "../../services/services";
-
-const theme = createTheme();
 
 const MyForm = () => {
   // Pasos del formulario
@@ -176,31 +171,28 @@ const MyForm = () => {
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Container component="main" maxWidth="lg" sx={{ mb: 4 }}>
-        <Paper
-          variant="outlined"
-          sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }}
-        >
-          <Typography component="h1" variant="h4" align="center">
-            Nuevo cliente
-          </Typography>
-          <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
-            <Step>
-              <StepLabel>Organización</StepLabel>
-            </Step>
-            <Step>
-              <StepLabel>Usuarios</StepLabel>
-            </Step>
-            <Step>
-              <StepLabel>Confirmar datos</StepLabel>
-            </Step>
-          </Stepper>
-          {renderStepContent(activeStep)}
-        </Paper>
-      </Container>
-    </ThemeProvider>
+    <Container component="main" maxWidth="lg" sx={{ mb: 4 }}>
+      <Paper
+        variant="outlined"
+        sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }}
+      >
+        <Typography component="h1" variant="h4" align="center">
+          Nuevo cliente
+        </Typography>
+        <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
+          <Step>
+            <StepLabel>Organización</StepLabel>
+          </Step>
+          <Step>
+            <StepLabel>Usuarios</StepLabel>
+          </Step>
+          <Step>
+            <StepLabel>Confirmar datos</StepLabel>
+          </Step>
+        </Stepper>
+        {renderStepContent(activeStep)}
+      </Paper>
+    </Container>
   );
 };
 

@@ -1,6 +1,5 @@
 import * as React from "react";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
 import {
   Typography,
   Box,
@@ -9,7 +8,6 @@ import {
   Paper,
   Container,
   Avatar,
-  CssBaseline,
   Button,
   Checkbox,
   FormControlLabel,
@@ -41,17 +39,6 @@ function Copyright(props: any) {
   );
 }
 
-const theme = createTheme({
-  palette: {
-    background: {
-      default: "#f2f2f2",
-    },
-    secondary: {
-      main: "#ff8419",
-    },
-  },
-});
-
 export default function SignIn() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -77,86 +64,78 @@ export default function SignIn() {
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <Container component="main" maxWidth="sm">
-        <CssBaseline />
-        <Paper
-          sx={{
-            p: 3,
-            paddingLeft: 5,
-            paddingRight: 5,
-            marginTop: 8,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            boxShadow: 2,
-          }}
-        >
-          <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            Acceder
-          </Typography>
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            noValidate
-            sx={{ mt: 1 }}
-          >
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="user"
-              label="Usuario"
-              name="user"
-              autoComplete="user"
-              autoFocus
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Contraseña"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-            />
-            <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Recordarme"
-            />
+    <Container component="main" maxWidth="sm">
+      <Paper
+        sx={{
+          p: 3,
+          paddingLeft: 5,
+          paddingRight: 5,
+          marginTop: 8,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          boxShadow: 2,
+        }}
+      >
+        <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
+          <LockOutlinedIcon />
+        </Avatar>
+        <Typography component="h1" variant="h5">
+          Acceder
+        </Typography>
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="user"
+            label="Usuario"
+            name="user"
+            autoComplete="user"
+            autoFocus
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Contraseña"
+            type="password"
+            id="password"
+            autoComplete="current-password"
+          />
+          <FormControlLabel
+            control={<Checkbox value="remember" color="primary" />}
+            label="Recordarme"
+          />
 
-            <Box
-              component="span"
-              m={1}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              paddingTop={3}
+          <Box
+            component="span"
+            m={1}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            paddingTop={3}
+          >
+            <Button fullWidth variant="text" sx={{ mt: 3, mb: 2 }}>
+              Olvidé mi contraseña
+            </Button>
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2 }}
             >
-              <Button fullWidth variant="text" sx={{ mt: 3, mb: 2 }}>
-                Olvidé mi contraseña
-              </Button>
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2 }}
-              >
-                {loading ? (
-                  <CircularProgress color="inherit" size={24} />
-                ) : (
-                  "Iniciar sesión"
-                )}
-              </Button>
-            </Box>
+              {loading ? (
+                <CircularProgress color="inherit" size={24} />
+              ) : (
+                "Iniciar sesión"
+              )}
+            </Button>
           </Box>
-          <Copyright sx={{ mt: 8, mb: 4 }} />
-        </Paper>
-      </Container>
-    </ThemeProvider>
+        </Box>
+        <Copyright sx={{ mt: 8, mb: 4 }} />
+      </Paper>
+    </Container>
   );
 }

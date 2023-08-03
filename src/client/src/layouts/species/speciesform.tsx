@@ -7,7 +7,6 @@ import {
   Box,
   Button,
   Container,
-  CssBaseline,
   FormControl,
   Grid,
   IconButton,
@@ -24,9 +23,7 @@ import {
   TableHead,
   TableRow,
   TextField,
-  ThemeProvider,
   Typography,
-  createTheme,
 } from "@mui/material";
 
 import {
@@ -48,8 +45,6 @@ import {
   ConfirmButton,
   DialogButton,
 } from "../../components/customComponents";
-
-const theme = createTheme();
 
 interface ISpeciesData {
   id: number | null;
@@ -444,152 +439,351 @@ function SpeciesForm(): JSX.Element {
     : "Se dará de alta a la especie con todas sus fases y tareas.";
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Container component="main" maxWidth="lg" sx={{ mb: 4 }}>
-        <Paper
-          variant="outlined"
-          sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }}
-        >
-          <Typography component="h1" variant="h4" align="center">
-            {isEditingForm ? "Editar especie" : "Agregar nueva especie"}
-          </Typography>
+    <Container component="main" maxWidth="lg" sx={{ mb: 4 }}>
+      <Paper
+        variant="outlined"
+        sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }}
+      >
+        <Typography component="h1" variant="h4" align="center">
+          {isEditingForm ? "Editar especie" : "Agregar nueva especie"}
+        </Typography>
 
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                required
-                inputProps={{ maxLength: 100 }}
-                id="name"
-                name="name"
-                label="Nombre de la especie"
-                fullWidth
-                variant="standard"
-                value={species.name || ""}
-                onChange={handleSpeciesChange}
-              />
-            </Grid>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <TextField
+              required
+              inputProps={{ maxLength: 100 }}
+              id="name"
+              name="name"
+              label="Nombre de la especie"
+              fullWidth
+              variant="standard"
+              value={species.name || ""}
+              onChange={handleSpeciesChange}
+            />
           </Grid>
-          <br />
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                inputProps={{ maxLength: 50 }}
-                id="description"
-                name="description"
-                label="Descripción"
-                fullWidth
-                variant="standard"
-                value={species.description || ""}
-                onChange={handleSpeciesChange}
-              />
-            </Grid>
+        </Grid>
+        <br />
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              inputProps={{ maxLength: 50 }}
+              id="description"
+              name="description"
+              label="Descripción"
+              fullWidth
+              variant="standard"
+              value={species.description || ""}
+              onChange={handleSpeciesChange}
+            />
           </Grid>
-          <br />
+        </Grid>
+        <br />
 
-          <Typography variant="h6" gutterBottom>
-            Etapas de crecimiento
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell> </TableCell>
-                      <TableCell>Etapa</TableCell>
-                      <TableCell>Descripción</TableCell>
-                      <TableCell>Tiempo estimado</TableCell>
-                      <TableCell>Opciones</TableCell>
-                      <TableCell align="center">
-                        Mover fila seleccionada:
-                        <br />
-                        {[
-                          {
-                            icon: <DoubleUpIcon />,
-                            onClick: handleMoveTopClick,
-                          },
+        <Typography variant="h6" gutterBottom>
+          Etapas de crecimiento
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell> </TableCell>
+                    <TableCell>Etapa</TableCell>
+                    <TableCell>Descripción</TableCell>
+                    <TableCell>Tiempo estimado</TableCell>
+                    <TableCell>Opciones</TableCell>
+                    <TableCell align="center">
+                      Mover fila seleccionada:
+                      <br />
+                      {[
+                        {
+                          icon: <DoubleUpIcon />,
+                          onClick: handleMoveTopClick,
+                        },
 
-                          { icon: <UpIcon />, onClick: handleMoveUpClick },
-                          {
-                            icon: <DownIcon />,
-                            onClick: handleMoveDownClick,
-                          },
-                          {
-                            icon: <DoubleDownIcon />,
-                            onClick: handleMoveBottomClick,
-                          },
-                        ].map((item, index) => {
-                          const { icon, onClick } = item;
-                          return (
-                            <IconButton
-                              disabled={selectedStageIndex === null}
-                              onClick={onClick}
-                              key={index}
-                            >
-                              {icon}
-                            </IconButton>
-                          );
-                        })}
+                        { icon: <UpIcon />, onClick: handleMoveUpClick },
+                        {
+                          icon: <DownIcon />,
+                          onClick: handleMoveDownClick,
+                        },
+                        {
+                          icon: <DoubleDownIcon />,
+                          onClick: handleMoveBottomClick,
+                        },
+                      ].map((item, index) => {
+                        const { icon, onClick } = item;
+                        return (
+                          <IconButton
+                            disabled={selectedStageIndex === null}
+                            onClick={onClick}
+                            key={index}
+                          >
+                            {icon}
+                          </IconButton>
+                        );
+                      })}
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {stagesList.map((row, index) => (
+                    <TableRow
+                      key={index}
+                      selected={index === selectedStageIndex}
+                      onClick={() => setSelectedStageIndex(index)}
+                    >
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell>{row.description}</TableCell>
+                      <TableCell>
+                        {row.estimatedTime}{" "}
+                        {
+                          timeUnits.find(
+                            (unit) => unit.key === row.estimatedTimeUnit
+                          )?.label
+                        }
+                      </TableCell>
+                      <TableCell>
+                        <Button onClick={() => handleEditStage(row, index)}>
+                          <EditIcon sx={{ mr: 1 }} />
+                        </Button>
+                        <DialogButton
+                          icon={<DeleteIcon sx={{ mr: 1 }} />}
+                          dialogTitle={"¿Desea eliminar este elemento?"}
+                          dialogSubtitle={
+                            "Se eliminarán tambien sus tareas asignadas."
+                          }
+                          onConfirm={() => handleDeleteStage(index)}
+                        />
                       </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {stagesList.map((row, index) => (
-                      <TableRow
-                        key={index}
-                        selected={index === selectedStageIndex}
-                        onClick={() => setSelectedStageIndex(index)}
+                  ))}
+                </TableBody>
+              </Table>
+              <TextField
+                required
+                label="Nombre"
+                name="name"
+                value={stageData.name}
+                onChange={handleStageChange}
+              />
+              <TextField
+                label="Descripción"
+                name="description"
+                value={stageData.description}
+                onChange={handleStageChange}
+              />
+              <TextField
+                required
+                label="Tiempo estimado"
+                name="estimatedTime"
+                value={stageData.estimatedTime}
+                onChange={handleStageChange}
+                type="number"
+                fullWidth
+                onKeyPress={(event) => {
+                  if (
+                    event?.key === "-" ||
+                    event?.key === "+" ||
+                    event?.key === "." ||
+                    event?.key === "e"
+                  ) {
+                    event.preventDefault();
+                  }
+                }}
+                InputProps={{
+                  inputProps: { min: 0 },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Select
+                        value={stageData.estimatedTimeUnit}
+                        onChange={handleStageChange}
+                        name="estimatedTimeUnit"
+                        displayEmpty
+                        variant="standard"
                       >
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{row.name}</TableCell>
-                        <TableCell>{row.description}</TableCell>
-                        <TableCell>
-                          {row.estimatedTime}{" "}
-                          {
-                            timeUnits.find(
-                              (unit) => unit.key === row.estimatedTimeUnit
-                            )?.label
+                        <MenuItem value="" disabled>
+                          Seleccione una unidad
+                        </MenuItem>
+                        {timeUnits.map((unit) => (
+                          <MenuItem key={unit.key} value={unit.key}>
+                            {unit.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Button
+                type="submit"
+                onClick={handleStageSubmit}
+                disabled={disableStageSubmit()}
+              >
+                {editingStageRowId !== null ? "Actualizar" : "Agregar"}
+              </Button>
+            </TableContainer>
+          </Grid>
+        </Grid>
+        <br />
+
+        <Typography variant="h6" gutterBottom>
+          Tareas agrícolas
+        </Typography>
+
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Tarea</TableCell>
+                    <TableCell>Etapa</TableCell>
+                    <TableCell>Tiempo desde inicio de etapa</TableCell>
+                    <TableCell>Periodo de repetición</TableCell>
+                    <TableCell>Opciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {stagesList.length > 0 ? (
+                    stagesList.map((stage, stageIndex) =>
+                      stage.growthEvents
+                        .sort((a, b) => {
+                          const unitA = timeUnits.findIndex(
+                            (unit) => unit.key === a.ETFromStageStartUnit
+                          );
+                          const unitB = timeUnits.findIndex(
+                            (unit) => unit.key === b.ETFromStageStartUnit
+                          );
+
+                          if (unitA !== unitB) {
+                            return unitA - unitB;
+                          } else {
+                            return (
+                              Number(a.ETFromStageStart) -
+                              Number(b.ETFromStageStart)
+                            );
                           }
-                        </TableCell>
-                        <TableCell>
-                          <Button onClick={() => handleEditStage(row, index)}>
-                            <EditIcon sx={{ mr: 1 }} />
-                          </Button>
-                          <DialogButton
-                            icon={<DeleteIcon sx={{ mr: 1 }} />}
-                            dialogTitle={"¿Desea eliminar este elemento?"}
-                            dialogSubtitle={
-                              "Se eliminarán tambien sus tareas asignadas."
-                            }
-                            onConfirm={() => handleDeleteStage(index)}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        })
+                        .map((event, eventIndex) => (
+                          <TableRow key={eventIndex}>
+                            <TableCell>{event.name}</TableCell>
+                            <TableCell>{stage.name}</TableCell>
+                            <TableCell>
+                              {event.ETFromStageStart}{" "}
+                              {
+                                timeUnits.find(
+                                  (unit) =>
+                                    unit.key === event.ETFromStageStartUnit
+                                )?.label
+                              }
+                            </TableCell>
+                            <TableCell>
+                              {(event.timePeriod === "" &&
+                                event.timePeriodUnit === "") ||
+                              (event.timePeriod !== "" &&
+                                event.timePeriodUnit !== "") ? (
+                                <>
+                                  {event.timePeriod}{" "}
+                                  {
+                                    timeUnits.find(
+                                      (unit) =>
+                                        unit.key === event.timePeriodUnit
+                                    )?.label
+                                  }
+                                </>
+                              ) : null}
+                            </TableCell>
+
+                            <TableCell>
+                              <Button
+                                onClick={() =>
+                                  handleEditEvent(event, [
+                                    stageIndex,
+                                    eventIndex,
+                                  ])
+                                }
+                              >
+                                <EditIcon sx={{ mr: 1 }} />
+                              </Button>
+                              <DialogButton
+                                icon={<DeleteIcon sx={{ mr: 1 }} />}
+                                dialogTitle={"¿Desea eliminar este elemento?"}
+                                dialogSubtitle={
+                                  "Se eliminará de la lista de tareas."
+                                }
+                                onConfirm={() =>
+                                  handleDeleteEvent(stageIndex, eventIndex)
+                                }
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                    )
+                  ) : (
+                    <TableRow>
+                      <TableCell>{"Ingrese etapas"}</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              <Box>
                 <TextField
                   required
                   label="Nombre"
                   name="name"
-                  value={stageData.name}
-                  onChange={handleStageChange}
+                  value={growthEventData.name}
+                  onChange={handleEventChange}
                 />
                 <TextField
                   label="Descripción"
                   name="description"
-                  value={stageData.description}
-                  onChange={handleStageChange}
+                  value={growthEventData.description}
+                  onChange={handleEventChange}
                 />
+
+                <FormControl
+                  required
+                  variant="filled"
+                  sx={{ m: 1, minWidth: 220 }}
+                >
+                  <InputLabel>Etapa</InputLabel>
+
+                  <Select
+                    name="referenceStage"
+                    value={referenceStage}
+                    onChange={(event) => setReferenceStage(event.target.value)}
+                    displayEmpty
+                    variant="standard"
+                  >
+                    {stagesList.length > 0 ? (
+                      stagesList.map((stage, index) => (
+                        <MenuItem key={index} value={index}>
+                          {stage.name}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled>{"Ingrese etapas"}</MenuItem>
+                    )}
+                  </Select>
+                </FormControl>
+
                 <TextField
                   required
-                  label="Tiempo estimado"
-                  name="estimatedTime"
-                  value={stageData.estimatedTime}
-                  onChange={handleStageChange}
+                  label="Tiempo desde el inicio de la etapa"
+                  name="ETFromStageStart"
+                  value={growthEventData.ETFromStageStart}
+                  onChange={handleEventChange}
                   type="number"
                   fullWidth
+                  error={timeFromStartError}
+                  helperText={
+                    timeFromStartError
+                      ? "El tiempo desde inicio de etapa debe ser menor a la duración de la misma"
+                      : ""
+                  }
                   onKeyPress={(event) => {
                     if (
                       event?.key === "-" ||
@@ -605,9 +799,9 @@ function SpeciesForm(): JSX.Element {
                     endAdornment: (
                       <InputAdornment position="end">
                         <Select
-                          value={stageData.estimatedTimeUnit}
-                          onChange={handleStageChange}
-                          name="estimatedTimeUnit"
+                          name="ETFromStageStartUnit"
+                          value={growthEventData.ETFromStageStartUnit}
+                          onChange={handleEventChange}
                           displayEmpty
                           variant="standard"
                         >
@@ -624,284 +818,80 @@ function SpeciesForm(): JSX.Element {
                     ),
                   }}
                 />
-                <Button
-                  type="submit"
-                  onClick={handleStageSubmit}
-                  disabled={disableStageSubmit()}
-                >
-                  {editingStageRowId !== null ? "Actualizar" : "Agregar"}
-                </Button>
-              </TableContainer>
-            </Grid>
-          </Grid>
-          <br />
 
-          <Typography variant="h6" gutterBottom>
-            Tareas agrícolas
-          </Typography>
-
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Tarea</TableCell>
-                      <TableCell>Etapa</TableCell>
-                      <TableCell>Tiempo desde inicio de etapa</TableCell>
-                      <TableCell>Periodo de repetición</TableCell>
-                      <TableCell>Opciones</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {stagesList.length > 0 ? (
-                      stagesList.map((stage, stageIndex) =>
-                        stage.growthEvents
-                          .sort((a, b) => {
-                            const unitA = timeUnits.findIndex(
-                              (unit) => unit.key === a.ETFromStageStartUnit
-                            );
-                            const unitB = timeUnits.findIndex(
-                              (unit) => unit.key === b.ETFromStageStartUnit
-                            );
-
-                            if (unitA !== unitB) {
-                              return unitA - unitB;
-                            } else {
-                              return (
-                                Number(a.ETFromStageStart) -
-                                Number(b.ETFromStageStart)
-                              );
-                            }
-                          })
-                          .map((event, eventIndex) => (
-                            <TableRow key={eventIndex}>
-                              <TableCell>{event.name}</TableCell>
-                              <TableCell>{stage.name}</TableCell>
-                              <TableCell>
-                                {event.ETFromStageStart}{" "}
-                                {
-                                  timeUnits.find(
-                                    (unit) =>
-                                      unit.key === event.ETFromStageStartUnit
-                                  )?.label
-                                }
-                              </TableCell>
-                              <TableCell>
-                                {(event.timePeriod === "" &&
-                                  event.timePeriodUnit === "") ||
-                                (event.timePeriod !== "" &&
-                                  event.timePeriodUnit !== "") ? (
-                                  <>
-                                    {event.timePeriod}{" "}
-                                    {
-                                      timeUnits.find(
-                                        (unit) =>
-                                          unit.key === event.timePeriodUnit
-                                      )?.label
-                                    }
-                                  </>
-                                ) : null}
-                              </TableCell>
-
-                              <TableCell>
-                                <Button
-                                  onClick={() =>
-                                    handleEditEvent(event, [
-                                      stageIndex,
-                                      eventIndex,
-                                    ])
-                                  }
-                                >
-                                  <EditIcon sx={{ mr: 1 }} />
-                                </Button>
-                                <DialogButton
-                                  icon={<DeleteIcon sx={{ mr: 1 }} />}
-                                  dialogTitle={"¿Desea eliminar este elemento?"}
-                                  dialogSubtitle={
-                                    "Se eliminará de la lista de tareas."
-                                  }
-                                  onConfirm={() =>
-                                    handleDeleteEvent(stageIndex, eventIndex)
-                                  }
-                                />
-                              </TableCell>
-                            </TableRow>
-                          ))
-                      )
-                    ) : (
-                      <TableRow>
-                        <TableCell>{"Ingrese etapas"}</TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-                <Box>
-                  <TextField
-                    required
-                    label="Nombre"
-                    name="name"
-                    value={growthEventData.name}
-                    onChange={handleEventChange}
-                  />
-                  <TextField
-                    label="Descripción"
-                    name="description"
-                    value={growthEventData.description}
-                    onChange={handleEventChange}
-                  />
-
-                  <FormControl
-                    required
-                    variant="filled"
-                    sx={{ m: 1, minWidth: 220 }}
-                  >
-                    <InputLabel>Etapa</InputLabel>
-
-                    <Select
-                      name="referenceStage"
-                      value={referenceStage}
-                      onChange={(event) =>
-                        setReferenceStage(event.target.value)
-                      }
-                      displayEmpty
-                      variant="standard"
-                    >
-                      {stagesList.length > 0 ? (
-                        stagesList.map((stage, index) => (
-                          <MenuItem key={index} value={index}>
-                            {stage.name}
-                          </MenuItem>
-                        ))
-                      ) : (
-                        <MenuItem disabled>{"Ingrese etapas"}</MenuItem>
-                      )}
-                    </Select>
-                  </FormControl>
-
-                  <TextField
-                    required
-                    label="Tiempo desde el inicio de la etapa"
-                    name="ETFromStageStart"
-                    value={growthEventData.ETFromStageStart}
-                    onChange={handleEventChange}
-                    type="number"
-                    fullWidth
-                    error={timeFromStartError}
-                    helperText={
-                      timeFromStartError
-                        ? "El tiempo desde inicio de etapa debe ser menor a la duración de la misma"
-                        : ""
+                <TextField
+                  label="Periodo de repetición"
+                  name="timePeriod"
+                  value={growthEventData.timePeriod}
+                  onChange={handleEventChange}
+                  type="number"
+                  fullWidth
+                  onKeyPress={(event) => {
+                    if (
+                      event?.key === "-" ||
+                      event?.key === "+" ||
+                      event?.key === "." ||
+                      event?.key === "e"
+                    ) {
+                      event.preventDefault();
                     }
-                    onKeyPress={(event) => {
-                      if (
-                        event?.key === "-" ||
-                        event?.key === "+" ||
-                        event?.key === "." ||
-                        event?.key === "e"
-                      ) {
-                        event.preventDefault();
-                      }
-                    }}
-                    InputProps={{
-                      inputProps: { min: 0 },
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Select
-                            name="ETFromStageStartUnit"
-                            value={growthEventData.ETFromStageStartUnit}
-                            onChange={handleEventChange}
-                            displayEmpty
-                            variant="standard"
-                          >
-                            <MenuItem value="" disabled>
-                              Seleccione una unidad
+                  }}
+                  InputProps={{
+                    inputProps: { min: 1 },
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Select
+                          name="timePeriodUnit"
+                          value={growthEventData.timePeriodUnit}
+                          onChange={handleEventChange}
+                          displayEmpty
+                          variant="standard"
+                        >
+                          <MenuItem value="" disabled>
+                            Seleccione una unidad
+                          </MenuItem>
+                          <MenuItem value="">
+                            No es una tarea periódica
+                          </MenuItem>
+                          {timeUnits.map((unit) => (
+                            <MenuItem key={unit.key} value={unit.key}>
+                              {unit.label}
                             </MenuItem>
-                            {timeUnits.map((unit) => (
-                              <MenuItem key={unit.key} value={unit.key}>
-                                {unit.label}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-
-                  <TextField
-                    label="Periodo de repetición"
-                    name="timePeriod"
-                    value={growthEventData.timePeriod}
-                    onChange={handleEventChange}
-                    type="number"
-                    fullWidth
-                    onKeyPress={(event) => {
-                      if (
-                        event?.key === "-" ||
-                        event?.key === "+" ||
-                        event?.key === "." ||
-                        event?.key === "e"
-                      ) {
-                        event.preventDefault();
-                      }
-                    }}
-                    InputProps={{
-                      inputProps: { min: 1 },
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Select
-                            name="timePeriodUnit"
-                            value={growthEventData.timePeriodUnit}
-                            onChange={handleEventChange}
-                            displayEmpty
-                            variant="standard"
-                          >
-                            <MenuItem value="" disabled>
-                              Seleccione una unidad
-                            </MenuItem>
-                            <MenuItem value="">
-                              No es una tarea periódica
-                            </MenuItem>
-                            {timeUnits.map((unit) => (
-                              <MenuItem key={unit.key} value={unit.key}>
-                                {unit.label}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Box>
-                <Button
-                  type="submit"
-                  onClick={handleEventValidation}
-                  disabled={disableEventSubmit()}
-                >
-                  {editingEventRowId !== null ? "Actualizar" : "Agregar"}
-                </Button>
-              </TableContainer>
-            </Grid>
+                          ))}
+                        </Select>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
+              <Button
+                type="submit"
+                onClick={handleEventValidation}
+                disabled={disableEventSubmit()}
+              >
+                {editingEventRowId !== null ? "Actualizar" : "Agregar"}
+              </Button>
+            </TableContainer>
           </Grid>
+        </Grid>
 
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <CancelButton navigateDir={"/species/list"} />
-            <ConfirmButton
-              msg={msg}
-              onConfirm={handleSubmitForm}
-              navigateDir={"/species/list"}
-              disabled={!species.name}
-            />
-          </Box>
-        </Paper>
-      </Container>
-    </ThemeProvider>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <CancelButton navigateDir={"/species/list"} />
+          <ConfirmButton
+            msg={msg}
+            onConfirm={handleSubmitForm}
+            navigateDir={"/species/list"}
+            disabled={!species.name}
+          />
+        </Box>
+      </Paper>
+    </Container>
   );
 }
 

@@ -6,6 +6,8 @@ import { logout } from "../redux/authSlice";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 
+import { useThemeContext } from "./themeContext";
+
 import {
   Box,
   CssBaseline,
@@ -20,9 +22,10 @@ import {
   Menu,
   MenuItem,
   Avatar,
+  Switch,
 } from "@mui/material";
 
-import { styled, useTheme, Theme, CSSObject } from "@mui/material/styles";
+import { styled, Theme, CSSObject } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
 import MuiDrawer from "@mui/material/Drawer";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
@@ -196,23 +199,84 @@ const itemListsByUserType: { [key: number]: itemType[] } = {
   ],
 };
 
-export default function NavbarDrawer() {
+const SettingsMenu = () => {
+  const { theme, toggleTheme } = useThemeContext();
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const settingsOpen = Boolean(anchorEl);
+  const handleSettingsClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleSettingsClose = () => {
+    setAnchorEl(null);
+  };
+
+  return (
+    <Fragment>
+      <Tooltip title="Ajustes">
+        <IconButton
+          onClick={handleSettingsClick}
+          color="inherit"
+          sx={{ ml: 2 }}
+          aria-controls={settingsOpen ? "settings-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={settingsOpen ? "true" : undefined}
+        >
+          <SettingsIcon sx={{ width: 32, height: 32 }} />
+        </IconButton>
+      </Tooltip>
+
+      <Menu
+        anchorEl={anchorEl}
+        id="account-menu"
+        open={settingsOpen}
+        onClose={handleSettingsClose}
+        PaperProps={{
+          elevation: 0,
+          sx: {
+            overflow: "visible",
+            filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
+            mt: 1.5,
+            "& .MuiAvatar-root": {
+              width: 32,
+              height: 32,
+              ml: -0.5,
+              mr: 1,
+            },
+            "&:before": {
+              content: '""',
+              display: "block",
+              position: "absolute",
+              top: 0,
+              right: 14,
+              width: 10,
+              height: 10,
+              bgcolor: "background.paper",
+              transform: "translateY(-50%) rotate(45deg)",
+              zIndex: 0,
+            },
+          },
+        }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      >
+        <MenuItem onClick={toggleTheme}>
+          Tema oscuro
+          <Switch checked={theme} />
+        </MenuItem>
+
+        <Divider />
+        <MenuItem>Preferencias</MenuItem>
+      </Menu>
+    </Fragment>
+  );
+};
+
+const UserMenu = () => {
+  const dispatch = useDispatch();
   const { username, surname, names, userTypeId } = useSelector(
     (state: RootState) => state.auth
   );
-
-  const itemList: itemType[] = itemListsByUserType[userTypeId || 0] || [];
-
-  const theme = useTheme();
-  const [open, setOpen] = useState(false);
-
-  const handleDrawerOpen = () => {
-    setOpen(true);
-  };
-
-  const handleDrawerClose = () => {
-    setOpen(false);
-  };
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const userOpen = Boolean(anchorEl);
@@ -222,110 +286,26 @@ export default function NavbarDrawer() {
   const handleUserClose = () => {
     setAnchorEl(null);
   };
-
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
   const handleSessionClose = async (event: any) => {
     event.preventDefault();
     await dispatch(logout() as any);
-    navigate("/login");
   };
 
   return (
     <Fragment>
-      <Box>
-        <CssBaseline />
-        <AppBar position="fixed" open={open}>
-          <Toolbar>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              onClick={handleDrawerOpen}
-              edge="start"
-              sx={{
-                marginRight: 5,
-                ...(open && { display: "none" }),
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography
-              variant="h6"
-              sx={{ flexGrow: 1 }}
-              noWrap
-              component="div"
-            >
-              <Link to="/" style={{ textDecoration: "none", color: "white" }}>
-                IR A INICIO
-              </Link>
-            </Typography>
+      <Tooltip title="Usuario">
+        <IconButton
+          onClick={handleUserClick}
+          color="inherit"
+          sx={{ ml: 2 }}
+          aria-controls={userOpen ? "account-menu" : undefined}
+          aria-haspopup="true"
+          aria-expanded={userOpen ? "true" : undefined}
+        >
+          <AccountCircleIcon sx={{ width: 32, height: 32 }} />
+        </IconButton>
+      </Tooltip>
 
-            <Tooltip title="Ajustes">
-              <IconButton
-                color="inherit"
-                //onClick={handleClick}
-                sx={{ ml: 2 }}
-                aria-controls={open ? "account-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={open ? "true" : undefined}
-              >
-                <SettingsIcon sx={{ width: 32, height: 32 }} />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Usuario">
-              <IconButton
-                onClick={handleUserClick}
-                color="inherit"
-                //onClick={handleClick}
-                sx={{ ml: 2 }}
-                aria-controls={open ? "account-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={open ? "true" : undefined}
-              >
-                <AccountCircleIcon sx={{ width: 32, height: 32 }} />
-              </IconButton>
-            </Tooltip>
-          </Toolbar>
-        </AppBar>
-        <Drawer variant="permanent" open={open}>
-          <DrawerHeader>
-            <IconButton onClick={handleDrawerClose}>
-              {theme.direction === "rtl" ? (
-                <ChevronRightIcon />
-              ) : (
-                <ChevronLeftIcon />
-              )}
-            </IconButton>
-          </DrawerHeader>
-          <Divider />
-
-          <List>
-            {itemList.map((item, index) => {
-              const { text, icon } = item;
-              return (
-                <ListItemButton component={Link} to={item.to} key={text}>
-                  {icon && (
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 0,
-                        mr: open ? 3 : "auto",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {icon}
-                    </ListItemIcon>
-                  )}
-
-                  <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-              );
-            })}
-          </List>
-          <Divider />
-        </Drawer>
-      </Box>
       <Menu
         anchorEl={anchorEl}
         id="account-menu"
@@ -374,6 +354,91 @@ export default function NavbarDrawer() {
           Cerrar sesión
         </MenuItem>
       </Menu>
+    </Fragment>
+  );
+};
+
+export default function NavbarDrawer() {
+  const { userTypeId } = useSelector((state: RootState) => state.auth);
+
+  const itemList: itemType[] = itemListsByUserType[userTypeId || 0] || [];
+
+  const [open, setOpen] = useState(false);
+
+  const handleDrawerOpen = () => {
+    setOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    setOpen(false);
+  };
+
+  return (
+    <Fragment>
+      <Box>
+        <CssBaseline />
+        <AppBar position="fixed" open={open}>
+          <Toolbar>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              onClick={handleDrawerOpen}
+              edge="start"
+              sx={{
+                marginRight: 5,
+                ...(open && { display: "none" }),
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography
+              variant="h6"
+              sx={{ flexGrow: 1 }}
+              noWrap
+              component="div"
+            >
+              <Link to="/" style={{ textDecoration: "none", color: "white" }}>
+                IR A INICIO
+              </Link>
+            </Typography>
+
+            <SettingsMenu />
+            <UserMenu />
+          </Toolbar>
+        </AppBar>
+        <Drawer variant="permanent" open={open}>
+          <DrawerHeader>
+            <IconButton onClick={handleDrawerClose}>
+              <ChevronLeftIcon />
+            </IconButton>
+          </DrawerHeader>
+          <Divider />
+
+          <List>
+            {itemList.map((item, index) => {
+              const { text, icon } = item;
+              return (
+                <ListItemButton component={Link} to={item.to} key={text}>
+                  {icon && (
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: open ? 3 : "auto",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {icon}
+                    </ListItemIcon>
+                  )}
+
+                  <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
+                </ListItemButton>
+              );
+            })}
+          </List>
+          <Divider />
+        </Drawer>
+      </Box>
     </Fragment>
   );
 }

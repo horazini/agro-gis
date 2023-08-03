@@ -1,22 +1,24 @@
+// Style and theme
 import "./App.css";
-
-// Navigation
-import { Fragment } from "react";
-import { Route, Routes } from "react-router";
-import { BrowserRouter, Navigate } from "react-router-dom";
-
-// Auth state
-import { useSelector } from "react-redux";
-import { RootState } from "./redux/store";
+import { styled } from "@mui/material/styles";
+import { ThemeProvider } from "./components/themeContext";
 
 // Date handling
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 
+// Auth state
+import { useSelector } from "react-redux";
+import { RootState } from "./redux/store";
+
+// Navigation
+import { Fragment } from "react";
+import { Route, Routes } from "react-router";
+import { BrowserRouter, Navigate } from "react-router-dom";
+
 // Layout Wrapper
 import { Container } from "@mui/system";
-import { styled } from "@mui/material/styles";
 import { Box } from "@mui/material";
 import NavbarDrawer from "./components/navbarDrawer";
 import Footer from "./components/footer";
@@ -77,15 +79,17 @@ function App(): JSX.Element {
   dayjs.locale("es"); // idioma de la biblioteca de manipulación de fechas
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
-      <Box sx={{ display: "flex" }}>
-        <BrowserRouter>
-          <Routes>
-            <Route path="*" element={<RouteAuthLogic />} />
-          </Routes>
-        </BrowserRouter>
-      </Box>
-    </LocalizationProvider>
+    <ThemeProvider>
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+        <Box sx={{ display: "flex" }}>
+          <BrowserRouter>
+            <Routes>
+              <Route path="*" element={<RouteAuthLogic />} />
+            </Routes>
+          </BrowserRouter>
+        </Box>
+      </LocalizationProvider>
+    </ThemeProvider>
   );
 }
 

@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/authSlice";
 
@@ -358,11 +358,39 @@ const UserMenu = () => {
   );
 };
 
-export default function NavbarDrawer() {
+const ItemButtonsList = ({ open }: { open: boolean }) => {
   const { userTypeId } = useSelector((state: RootState) => state.auth);
+  if (userTypeId === null) return <Fragment />;
 
-  const itemList: itemType[] = itemListsByUserType[userTypeId || 0] || [];
+  const itemList: itemType[] = itemListsByUserType[userTypeId];
 
+  return (
+    <List>
+      {itemList.map((item, index) => {
+        const { text, icon } = item;
+        return (
+          <ListItemButton component={Link} to={item.to} key={index}>
+            {icon && (
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: open ? 3 : "auto",
+                  justifyContent: "center",
+                }}
+              >
+                {icon}
+              </ListItemIcon>
+            )}
+
+            <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
+          </ListItemButton>
+        );
+      })}
+    </List>
+  );
+};
+
+export default function NavbarDrawer() {
   const [open, setOpen] = useState(false);
 
   const handleDrawerOpen = () => {
@@ -414,28 +442,7 @@ export default function NavbarDrawer() {
           </DrawerHeader>
           <Divider />
 
-          <List>
-            {itemList.map((item, index) => {
-              const { text, icon } = item;
-              return (
-                <ListItemButton component={Link} to={item.to} key={text}>
-                  {icon && (
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 0,
-                        mr: open ? 3 : "auto",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {icon}
-                    </ListItemIcon>
-                  )}
-
-                  <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-              );
-            })}
-          </List>
+          <ItemButtonsList open={open} />
           <Divider />
         </Drawer>
       </Box>

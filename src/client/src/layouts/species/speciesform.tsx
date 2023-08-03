@@ -785,12 +785,7 @@ function SpeciesForm(): JSX.Element {
                       : ""
                   }
                   onKeyPress={(event) => {
-                    if (
-                      event?.key === "-" ||
-                      event?.key === "+" ||
-                      event?.key === "." ||
-                      event?.key === "e"
-                    ) {
+                    if (!/[0-9]/.test(event.key)) {
                       event.preventDefault();
                     }
                   }}

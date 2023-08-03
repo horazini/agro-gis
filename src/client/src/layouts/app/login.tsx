@@ -19,7 +19,6 @@ import PageTitle from "../../components/title";
 import { useDispatch } from "react-redux";
 import { login } from "../../redux/authSlice";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 function Copyright(props: any) {
   return (
@@ -41,7 +40,6 @@ function Copyright(props: any) {
 
 export default function SignIn() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   PageTitle("Acceder");
 
@@ -55,8 +53,6 @@ export default function SignIn() {
       const username = String(data.get("user"));
       const password = String(data.get("password"));
       await dispatch(login({ username, password }) as any);
-
-      navigate("/");
     } catch (error) {
       console.log(error);
     }

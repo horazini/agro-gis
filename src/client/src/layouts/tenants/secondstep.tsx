@@ -20,6 +20,7 @@ import {
 
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import React, { useState } from "react";
+import { usernameAlreadyExists } from "../../services/services";
 
 export interface RowData {
   id: number;
@@ -97,24 +98,39 @@ const SecondStep = ({
   const [usernameError, setUsernameError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleValidation = () => {
+  const handleValidation = async () => {
+    // Regex's
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isValidEmail = emailRegex.test(userData.mail_address);
-
     const usernameRegex = /^[a-z0-9._]+$/;
-    const isValidUsername = usernameRegex.test(userData.username);
 
-    const isUsernameValidLength = userData.username.length >= 6;
-
+    const isValidEmail = emailRegex.test(userData.mail_address);
     setEmailError(!isValidEmail);
-    setUsernameError(!isValidUsername || !isUsernameValidLength);
 
-    if (!isUsernameValidLength) {
-      setErrorMessage("El nombre de usuario debe tener al menos 6 caracteres");
-    } else if (!isValidUsername) {
-      setErrorMessage(
-        "El nombre de usuario sólo puede contener letras (a-z), números (0-9), puntos (.) y guiones bajos (_)."
-      );
+    const isUsernameLengthValid = userData.username.length >= 6;
+    const isUsernameRegexValid = usernameRegex.test(userData.username);
+    const isUsernameInList: boolean = userList.some(
+      (user) => user.username === userData.username
+    );
+    const isUsernameDuplicated =
+      (await usernameAlreadyExists(userData.username)) || isUsernameInList;
+
+    setUsernameError(
+      !isUsernameRegexValid || !isUsernameLengthValid || isUsernameDuplicated
+    );
+
+    const usernameValidationErrors = {
+      length: "El nombre de usuario debe tener al menos 6 caracteres.",
+      regex:
+        "El nombre de usuario sólo puede contener minúsculas (a-z), números (0-9), puntos (.) y guiones bajos (_).",
+      duplicate: "El nombre de usuario ya existe.",
+    };
+
+    if (!isUsernameLengthValid) {
+      setErrorMessage(usernameValidationErrors.length);
+    } else if (!isUsernameRegexValid) {
+      setErrorMessage(usernameValidationErrors.regex);
+    } else if (isUsernameDuplicated) {
+      setErrorMessage(usernameValidationErrors.duplicate);
     } else {
       setErrorMessage("");
       if (isValidEmail) {
@@ -204,6 +220,11 @@ const SecondStep = ({
               helperText={
                 emailError ? "El correo electrónico no es válido" : ""
               }
+              onKeyDown={(e) => {
+                if (e.key === " ") {
+                  e.preventDefault();
+                }
+              }}
             />
             <TextField
               label="Nombre de usuario"
@@ -212,6 +233,11 @@ const SecondStep = ({
               onChange={handleFormChange}
               error={usernameError}
               helperText={errorMessage}
+              onKeyDown={(e) => {
+                if (e.key === " ") {
+                  e.preventDefault();
+                }
+              }}
             />
             <Button
               type="submit"

@@ -45,10 +45,28 @@ export const postTenantData = async (tenantData: tenantDataType) => {
 
 // Users
 
+export type userType = {
+  id: number;
+  name: string;
+};
+
 export const getTenantUsertypes = async () => {
   const response = await fetch(`${API}/tenantusertypes`);
-  const data = await response.json();
+  const data: userType[] = await response.json();
   return data;
+};
+
+export const usernameAlreadyExists = async (username: string) => {
+  const res = await fetch(`${API}/usernameexists`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username }),
+    //body: JSON.stringify(username),
+  });
+  const bool = await res.json();
+  return bool;
 };
 
 // Species

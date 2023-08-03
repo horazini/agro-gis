@@ -105,6 +105,24 @@ export async function verifyUserCredentials(
   return bcrypt.compare(password, passwordHash);
 }
 
+export const usernameAlreadyExists = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const username: string = req.body.username;
+    const query: QueryResult = await pool.query(
+      "SELECT COUNT(*) AS user_exists FROM user_account WHERE username = $1",
+      [username]
+    );
+    const response = query.rows[0].user_exists > 0;
+    return res.status(200).json(response);
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const login = async (
   req: { body: { username: any; password: any } },
   res: any

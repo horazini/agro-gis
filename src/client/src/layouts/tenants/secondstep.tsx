@@ -109,7 +109,7 @@ const SecondStep = ({
     const isUsernameLengthValid = userData.username.length >= 6;
     const isUsernameRegexValid = usernameRegex.test(userData.username);
     const isUsernameInList: boolean = userList.some(
-      (user) => user.username === userData.username
+      (user) => user.username === userData.username && user.id !== editingRowId
     );
     const isUsernameDuplicated =
       (await usernameAlreadyExists(userData.username)) || isUsernameInList;

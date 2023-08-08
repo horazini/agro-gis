@@ -118,86 +118,47 @@ type itemType = {
   text: string;
   icon: JSX.Element;
   to: string;
+  allowed?: number[];
 };
 
-const itemListsByUserType: { [key: number]: itemType[] } = {
-  1: [
-    {
-      text: "Clientes",
-      icon: <GroupIcon />,
-      to: "/tenants/list",
-    },
-  ],
-  2: [],
-  3: [
-    {
-      text: "Especies",
-      icon: <InventoryIcon />,
-      to: "/species/list",
-    },
-    {
-      text: "Parcelas y cultivos",
-      icon: <MapIcon />,
-      to: "/croplandplots",
-    },
-    {
-      text: "Administración de parcelas",
-      icon: <MapIcon />,
-      to: "/landplotmanagement",
-    },
-    {
-      text: "Alta de cultivos",
-      icon: <MapIcon />,
-      to: "/cropregister",
-    },
-    {
-      text: "Lista de tareas",
-      icon: <CalendarMonthIcon />,
-      to: "/calendar",
-    },
-  ],
-  4: [
-    {
-      text: "Parcelas y cultivos",
-      icon: <MapIcon />,
-      to: "/croplandplots",
-    },
-    {
-      text: "Administración de parcelas",
-      icon: <MapIcon />,
-      to: "/landplotmanagement",
-    },
-  ],
-  5: [
-    {
-      text: "Especies",
-      icon: <InventoryIcon />,
-      to: "/species/list",
-    },
-  ],
-  6: [
-    {
-      text: "Especies",
-      icon: <InventoryIcon />,
-      to: "/species/list",
-    },
-    {
-      text: "Parcelas y cultivos",
-      icon: <MapIcon />,
-      to: "/croplandplots",
-    },
-    {
-      text: "Alta de cultivos",
-      icon: <MapIcon />,
-      to: "/cropregister",
-    },
-    {
-      text: "Lista de tareas",
-      icon: <CalendarMonthIcon />,
-      to: "/calendar",
-    },
-  ],
-};
+const routeList = [
+  {
+    text: "Clientes",
+    icon: <GroupIcon />,
+    to: "/tenants/list",
+    allowed: [1],
+  },
+  {
+    text: "Especies",
+    icon: <InventoryIcon />,
+    to: "/species/list",
+    allowed: [3, 5, 6],
+  },
+  {
+    text: "Parcelas y cultivos",
+    icon: <MapIcon />,
+    to: "/croplandplots",
+    allowed: [3, 4, 6],
+  },
+  {
+    text: "Administración de parcelas",
+    icon: <MapIcon />,
+    to: "/landplotmanagement",
+    allowed: [3, 4],
+  },
+  {
+    text: "Alta de cultivos",
+    icon: <MapIcon />,
+    to: "/cropregister",
+    allowed: [3, 6],
+  },
+  {
+    text: "Lista de tareas",
+    icon: <CalendarMonthIcon />,
+    to: "/calendar",
+    allowed: [3, 6],
+  },
+];
 
 const SettingsMenu = () => {
   const { theme, toggleTheme } = useThemeContext();
@@ -362,11 +323,13 @@ const ItemButtonsList = ({ open }: { open: boolean }) => {
   const { userTypeId } = useSelector((state: RootState) => state.auth);
   if (userTypeId === null) return <Fragment />;
 
-  const itemList: itemType[] = itemListsByUserType[userTypeId];
+  const allowedRoutes = routeList.filter((route) =>
+    route.allowed.includes(userTypeId || 0)
+  );
 
   return (
     <List>
-      {itemList.map((item, index) => {
+      {allowedRoutes.map((item, index) => {
         const { text, icon } = item;
         return (
           <ListItemButton component={Link} to={item.to} key={index}>

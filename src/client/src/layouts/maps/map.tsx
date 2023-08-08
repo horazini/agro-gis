@@ -15,10 +15,9 @@ import { getTenantGeo } from "../../services/services";
 
 import { position, LayerControler } from "../../components/mapcomponents";
 import { GeoJsonObject } from "geojson";
+import L, { LatLng, LatLngLiteral, Polygon, Polyline } from "leaflet";
 
 const MapView = () => {
-  const mystyle = {};
-
   const [geoData, setGeoData] = useState<GeoJsonObject>();
   const [circles, setCircles] = useState<(typeof Circle)[]>();
 
@@ -44,17 +43,48 @@ const MapView = () => {
 
   const PolygonPopup = (
     feature: { properties: { id: number; description: string } },
-    layer: { bindPopup: (arg0: string) => void }
+    layer: Polygon
   ) => {
     // Crea una variable con el contenido del pop-up
+
+    const latLngs: LatLng[] = layer.getLatLngs()[0] as LatLng[];
+    const latLngLiterals: LatLngLiteral[] = latLngs.map((latLng: LatLng) => ({
+      lat: latLng.lat,
+      lng: latLng.lng,
+    }));
+    const area = L.GeometryUtil.geodesicArea(latLngLiterals);
+    const formatedArea = L.GeometryUtil.readableArea(area, true);
+
     const popupContent = `
         <div>
           <h3>ID: ${feature.properties.id}</h3>
           <p>Descripción: ${feature.properties.description}</p>
+          <p>Área: ${formatedArea}</p>
         </div>
       `;
     // Asigna el pop-up al layer cuando se hace clic en él
     layer.bindPopup(popupContent);
+  };
+
+  const CirclePopup = (properties: any) => {
+    const area = Math.PI * Math.pow(properties.radius, 2);
+    let formatedArea = "";
+    if (area < 10000) {
+      formatedArea = area.toFixed(2) + " m²";
+    } else {
+      formatedArea = (area / 10000).toFixed(2) + " ha";
+    }
+
+    return (
+      <Popup>
+        <div>
+          <h3>ID: {properties.id}</h3>
+          <p>Descripción: {properties.description}</p>
+          <p>Radio: {properties.radius.toFixed(2)} m.</p>
+          <p>Área: {formatedArea}</p>
+        </div>
+      </Popup>
+    );
   };
 
   return (
@@ -71,7 +101,6 @@ const MapView = () => {
         {geoData && (
           <GeoJSON
             key="my-polygons"
-            style={mystyle}
             data={geoData}
             onEachFeature={PolygonPopup}
           />
@@ -86,13 +115,7 @@ const MapView = () => {
                   center={circle.geometry.coordinates}
                   radius={circle.properties.radius}
                 >
-                  <Popup>
-                    <div>
-                      <h3>ID: {circle.properties.id}</h3>
-                      <p>Descripción: {circle.properties.description}</p>
-                      <p>Radio: {circle.properties.radius.toFixed(2)} m.</p>
-                    </div>
-                  </Popup>
+                  {CirclePopup(circle.properties)}
                 </Circle>
               );
             })}

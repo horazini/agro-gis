@@ -15,21 +15,17 @@ import { useSelector } from "react-redux";
 import { getTenantGeoData, getTenantSpecies } from "../../services/services";
 import { Feature, FeatureCollection } from "geojson";
 
-import { position, LayerControler } from "../../components/mapcomponents";
+import {
+  position,
+  LayerControler,
+  featureInfo,
+} from "../../components/mapcomponents";
+import { Box } from "@mui/material";
 
 type Species = {
   id: number;
   name: string;
   description: string;
-  tenant_id: number;
-};
-
-type Crop = {
-  id: number;
-  species_id: number;
-  description: string | null;
-  start_date: string;
-  finish_date: string | null;
 };
 
 const MapView = () => {
@@ -143,39 +139,8 @@ const MapView = () => {
     return null;
   };
 
-  const cropInfo = (crop: Crop) => {
-    const startDate = new Date(crop.start_date).toLocaleDateString("en-GB");
-    const finishDate = new Date(crop.finish_date || "").toLocaleDateString(
-      "en-GB"
-    );
-
-    const cropSpecies = species.find(
-      (specie) => specie.id === crop.species_id
-    )?.name;
-
-    return (
-      <div>
-        {(crop.finish_date && (
-          <>
-            <h2>Parcela libre</h2>
-            <h3>Última cosecha:</h3>
-          </>
-        )) || (
-          <>
-            <h2>Parcela ocupada</h2>
-            <h3>Cultivo actual:</h3>
-          </>
-        )}
-        <p>Fecha de plantación: {startDate}</p>
-        {crop.finish_date && <p>Fecha de cosecha: {finishDate}</p>}
-        <p>Especie: {cropSpecies}</p>
-        {crop.description && <p>description: {crop.description}</p>}
-      </div>
-    );
-  };
-
   return (
-    <div
+    <Box
       style={{
         justifyContent: "center",
         alignItems: "center",
@@ -194,26 +159,10 @@ const MapView = () => {
         </LayerGroup>
       </MapContainer>
 
-      {(selectedFeature && (
-        <div>
-          <h2>Información seleccionada:</h2>
-          <p>Parcela N.° {selectedFeature.properties?.id}</p>
-          {selectedFeature.properties?.description && (
-            <p>Descripción: {selectedFeature.properties?.description}</p>
-          )}
-          {selectedFeature.properties?.radius && (
-            <p>Radio: {selectedFeature.properties?.radius.toFixed(2)} m.</p>
-          )}
-          {(selectedFeature.properties?.crop &&
-            cropInfo(selectedFeature.properties.crop)) || (
-            <>
-              <h2>Parcela libre</h2>
-              <h3>No se registran cultivos en esta parcela.</h3>
-            </>
-          )}
-        </div>
-      )) || <h2>Seleccione una parcela</h2>}
-    </div>
+      {(selectedFeature && featureInfo(selectedFeature, species)) || (
+        <h2>Seleccione una parcela</h2>
+      )}
+    </Box>
   );
 };
 

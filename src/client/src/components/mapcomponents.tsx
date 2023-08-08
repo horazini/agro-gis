@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   LayersControl,
   Marker,
@@ -10,6 +10,7 @@ import "leaflet/dist/leaflet.css";
 import { LatLngExpression } from "leaflet";
 
 import L from "leaflet";
+import { Box } from "@mui/material";
 
 export const position: LatLngExpression = [-29, -58];
 
@@ -81,3 +82,70 @@ export function LayerControler(): JSX.Element {
     </LayersControl>
   );
 }
+
+type Species = {
+  id: number;
+  name: string;
+  description: string;
+};
+
+type Crop = {
+  id: number;
+  species_id: number;
+  description: string | null;
+  start_date: string;
+  finish_date: string | null;
+};
+
+const cropInfo = (crop: Crop, species: Species[]) => {
+  const startDate = new Date(crop.start_date).toLocaleDateString("en-GB");
+  const finishDate = new Date(crop.finish_date || "").toLocaleDateString(
+    "en-GB"
+  );
+
+  const cropSpecies = species.find(
+    (specie) => specie.id === crop.species_id
+  )?.name;
+
+  return (
+    <div>
+      {(crop.finish_date && (
+        <Fragment>
+          <h2>Parcela libre</h2>
+          <h3>Última cosecha:</h3>
+        </Fragment>
+      )) || (
+        <Fragment>
+          <h2>Parcela ocupada</h2>
+          <h3>Cultivo actual:</h3>
+        </Fragment>
+      )}
+      <p>Fecha de plantación: {startDate}</p>
+      {crop.finish_date && <p>Fecha de cosecha: {finishDate}</p>}
+      <p>Especie: {cropSpecies}</p>
+      {crop.description && <p>description: {crop.description}</p>}
+    </div>
+  );
+};
+
+export const featureInfo = (feature: any, species: Species[]) => {
+  return (
+    <Box>
+      <h2>Información seleccionada:</h2>
+      <p>Parcela N.° {feature.properties?.id}</p>
+      {feature.properties?.description && (
+        <p>Descripción: {feature.properties?.description}</p>
+      )}
+      {feature.properties?.radius && (
+        <p>Radio: {feature.properties?.radius.toFixed(2)} m.</p>
+      )}
+      {(feature.properties?.crop &&
+        cropInfo(feature.properties.crop, species)) || (
+        <Fragment>
+          <h2>Parcela libre</h2>
+          <h3>No se registran cultivos en esta parcela.</h3>
+        </Fragment>
+      )}
+    </Box>
+  );
+};

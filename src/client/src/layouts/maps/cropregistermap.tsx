@@ -18,9 +18,13 @@ import {
   postCrop,
   speciesMainData,
 } from "../../services/services";
-import { Feature, GeoJsonObject } from "geojson";
+import { Feature } from "geojson";
 
-import { position, LayerControler } from "../../components/mapcomponents";
+import {
+  position,
+  LayerControler,
+  featureInfo,
+} from "../../components/mapcomponents";
 import {
   FormControl,
   InputLabel,
@@ -49,8 +53,6 @@ interface ICrop {
 }
 
 const MapView = () => {
-  const mystyle = {};
-
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const [geoData, setGeoData] = useState<any>();
@@ -289,25 +291,9 @@ const MapView = () => {
         </LayerGroup>
       </MapContainer>
 
-      {(selectedFeature && (
-        <div>
-          <h2>Información seleccionada:</h2>
-          <p>Parcela N.° {selectedFeature.properties?.id}</p>
-          {selectedFeature.properties?.description && (
-            <p>Descripción: {selectedFeature.properties?.description}</p>
-          )}
-          {selectedFeature.properties?.radius && (
-            <p>Radio: {selectedFeature.properties?.radius.toFixed(2)} m.</p>
-          )}
-          {(selectedFeature.properties?.crop &&
-            cropInfo(selectedFeature.properties.crop)) || (
-            <>
-              <h2>Parcela libre</h2>
-              <h3>No se registran cultivos en esta parcela.</h3>
-            </>
-          )}
-        </div>
-      )) || <h2>Seleccione una parcela</h2>}
+      {(selectedFeature && featureInfo(selectedFeature, species)) || (
+        <h2>Seleccione una parcela</h2>
+      )}
 
       <FormControl
         variant="filled"

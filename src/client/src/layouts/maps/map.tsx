@@ -15,7 +15,7 @@ import { getTenantGeo } from "../../services/services";
 
 import { position, LayerControler } from "../../components/mapcomponents";
 import { GeoJsonObject } from "geojson";
-import L, { LatLng, LatLngLiteral, Polygon, Polyline } from "leaflet";
+import L, { LatLng, LatLngLiteral, Polygon, GeometryUtil } from "leaflet";
 
 const MapView = () => {
   const [geoData, setGeoData] = useState<GeoJsonObject>();
@@ -52,8 +52,8 @@ const MapView = () => {
       lat: latLng.lat,
       lng: latLng.lng,
     }));
-    const area = L.GeometryUtil.geodesicArea(latLngLiterals);
-    const formatedArea = L.GeometryUtil.readableArea(area, true);
+    const area = GeometryUtil.geodesicArea(latLngLiterals);
+    const formatedArea = GeometryUtil.readableArea(area, true);
 
     const popupContent = `
         <div>

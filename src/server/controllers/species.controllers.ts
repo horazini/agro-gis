@@ -205,9 +205,6 @@ export const createSpeciesWithStagesAndEvents = async (
     );
     const speciesId = speciesInsertResponse.rows[0].id;
 
-    console.log("speciesInsertResponse: ", speciesInsertResponse);
-    console.log("speciesId: ", speciesId);
-
     for (const [index, stageData] of stagesData.entries()) {
       const { name, description, estimated_time, growthEvents } = stageData;
 
@@ -227,9 +224,8 @@ export const createSpeciesWithStagesAndEvents = async (
 
         await client.query(
           `
-          INSERT INTO species_growth_event (species_id, name, description, reference_stage, et_from_stage_start, time_period)
+          INSERT INTO crop_event (species_id, name, description, reference_stage, et_from_stage_start, time_period)
           VALUES ($1, $2, $3, $4, $5, $6)
-          RETURNING id
           `,
           [
             speciesId,

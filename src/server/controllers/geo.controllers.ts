@@ -4,15 +4,16 @@ import pool from "../database";
 
 // const GeoJSON = require("geojson");
 
-const parsePostGISToGeoJSON = (response: QueryResult) => {
-  const features = response.rows.map((row) => {
+const parsePostGISToGeoJSON = (rows: any) => {
+  const features = rows.map((row: any) => {
     let properties: any = {
       id: row.id,
       description: row.description,
+      area: row.area,
     };
 
     if (row.crop_id) {
-      const crop = response.rows.map((row) => ({
+      const crop = rows.map((row: any) => ({
         id: row.crop_id,
         species_id: row.species_id,
         description: row.description,
@@ -65,7 +66,7 @@ export const getGeo = async (
       "SELECT id, ST_AsGeoJSON(area) as geometry, ST_AsGeoJSON(circle_center) as center, circle_radius, description FROM landplot"
     );
 
-    const geoJSON = parsePostGISToGeoJSON(response);
+    const geoJSON = parsePostGISToGeoJSON(response.rows);
 
     return res.status(200).json(geoJSON);
   } catch (e) {
@@ -81,11 +82,11 @@ export const getTenantGeo = async (
   try {
     const tenantId = parseInt(req.params.tenantId);
     const response: QueryResult = await pool.query(
-      "SELECT id, ST_AsGeoJSON(area) as geometry, ST_AsGeoJSON(circle_center) as center, circle_radius, description FROM landplot WHERE tenant_id = $1",
+      "SELECT id, ST_AsGeoJSON(area) as geometry, ROUND(st_area(area, true)::numeric) AS area, ST_AsGeoJSON(circle_center) as center, circle_radius, description FROM landplot WHERE tenant_id = $1",
       [tenantId]
     );
 
-    const geoJSON = parsePostGISToGeoJSON(response);
+    const geoJSON = parsePostGISToGeoJSON(response.rows);
 
     return res.status(200).json(geoJSON);
   } catch (e) {
@@ -111,7 +112,7 @@ export const getAvailableTenantGeo = async (
       [tenantId]
     );
 
-    const geoJSON = parsePostGISToGeoJSON(response);
+    const geoJSON = parsePostGISToGeoJSON(response.rows);
 
     return res.status(200).json(geoJSON);
   } catch (e) {

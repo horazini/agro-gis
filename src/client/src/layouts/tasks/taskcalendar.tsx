@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "@mui/material/styles";
 import { Grid, Paper, Fade } from "@mui/material";
 import {
   format,
@@ -18,7 +17,6 @@ import TimeLineModeView from "./timelineview";
 import es from "date-fns/locale/es";
 
 function Taskcalendar() {
-  const theme = useTheme();
   const today = new Date();
 
   const [state, setState] = useState<any>({});

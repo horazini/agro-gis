@@ -1,8 +1,6 @@
 import { Router } from "express";
 const router = Router();
 
-router.get("/test", (req, res) => res.send("hello world"));
-
 // Tenant, user and auth logic
 
 // Tenants
@@ -17,7 +15,7 @@ import {
   getTenantWithUsers,
 } from "../controllers/tenant.controllers";
 
-router.get("/time", getTime);
+router.get("/", getTime);
 
 router.get("/tenants", getTenants);
 router.get("/tenant/:id", getTenantById);

@@ -472,7 +472,7 @@ export default function EditControlFC() {
           <ConfirmButton
             msg={"Se registrarán todos los cambios realizados."}
             onConfirm={handleSubmit}
-            navigateDir={"/map"}
+            navigateDir={"/croplandplots"}
             disabled={false}
           />
         </div>

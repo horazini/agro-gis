@@ -146,6 +146,7 @@ export const createCrop = async (
           start_date,
         ]
       );
+
       const stageId = stageInsertResponse.rows[0].id;
 
       for (const growthEvent of growthEvents) {

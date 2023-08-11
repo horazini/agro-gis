@@ -30,20 +30,10 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Alert,
-  AlertTitle,
-  Backdrop,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   FormHelperText,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
-import { useNavigate } from "react-router-dom";
+import { ConfirmButton } from "../../components/customComponents";
 
 interface ICrop {
   landplot: number;
@@ -101,13 +91,19 @@ const MapView = () => {
     setCrop({ ...crop, [e.target.name]: e.target.value });
   };
 
+  const [isDateValid, setIsDateValid] = useState<boolean>(false);
+
   function handleDateChange(date: any) {
-    const isoDate = date.toISOString(); // Convertir la fecha a formato ISO 8601
-    setCrop((prevCrop) => ({
-      ...prevCrop,
-      date: isoDate,
-    }));
-    console.log("crop:", crop, "selected:", selectedFeature);
+    if (!Number.isNaN(new Date(date).getTime())) {
+      const isoDate = date.toISOString(); // Convertir la fecha a formato ISO 8601
+      setCrop((prevCrop) => ({
+        ...prevCrop,
+        date: isoDate,
+      }));
+      setIsDateValid(true);
+    } else {
+      setIsDateValid(false);
+    }
   }
 
   // Comportamiento de las Layers
@@ -236,41 +232,6 @@ const MapView = () => {
     }
   };
 
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-
-  const navigate = useNavigate();
-
-  const handleClickOpen = () => {
-    const isOccupied =
-      selectedFeature?.properties?.crop &&
-      selectedFeature?.properties?.crop?.finish_date === null;
-
-    setLandplotError(isOccupied);
-
-    if (!isOccupied) {
-      setOpen(true);
-    }
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleConfirm = () => {
-    setLoading(true);
-    setTimeout(() => {
-      handleSubmitForm();
-      setLoading(false);
-      setOpen(false);
-      setSuccess(true);
-      setTimeout(() => {
-        navigate("/map");
-      }, 4000);
-    }, 500);
-  };
-
   return (
     <div
       style={{
@@ -347,47 +308,17 @@ const MapView = () => {
         />
       </FormControl>
 
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ mt: 3, ml: 1 }}
-        onClick={handleClickOpen}
-        disabled={!Object.values(crop).every((value) => !!value)}
-      >
-        Confirmar datos
-      </Button>
-
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"¿Confirmar datos?"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {"Se dará de alta al cultivo en la parcela seleccionada."}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleConfirm} autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Backdrop open={loading} style={{ zIndex: 9999 }}>
-        <CircularProgress color="inherit" />
-      </Backdrop>
-
-      {success && (
-        <Dialog open={success}>
-          <Alert severity="success" sx={{ width: "100%" }}>
-            <AlertTitle>Datos cargados correctamente!</AlertTitle>
-            Redirigiendo...
-          </Alert>
-        </Dialog>
-      )}
+      <ConfirmButton
+        msg={"Se dará de alta al cultivo en la parcela seleccionada."}
+        onConfirm={handleSubmitForm}
+        navigateDir={"/croplandplots"}
+        disabled={
+          !Object.values(crop).every((value) => !!value) ||
+          (selectedFeature?.properties?.crop &&
+            selectedFeature?.properties?.crop?.finish_date === null) ||
+          !isDateValid
+        }
+      />
     </div>
   );
 };

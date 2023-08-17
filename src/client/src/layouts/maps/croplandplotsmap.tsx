@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   MapContainer,
   Popup,
@@ -15,12 +15,9 @@ import { useSelector } from "react-redux";
 import { getTenantGeoData, getTenantSpecies } from "../../services/services";
 import { Feature, FeatureCollection } from "geojson";
 
-import {
-  position,
-  LayerControler,
-  featureInfo,
-} from "../../components/mapcomponents";
-import { Box } from "@mui/material";
+import { position, LayerControler, Crop } from "../../components/mapcomponents";
+import { Box, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 type Species = {
   id: number;
@@ -29,6 +26,7 @@ type Species = {
 };
 
 const MapView = () => {
+  const navigate = useNavigate();
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const [geoData, setGeoData] = useState<FeatureCollection>();
@@ -138,6 +136,64 @@ const MapView = () => {
     }
     return null;
   };
+  //
+  const CropInfo = (crop: Crop) => {
+    const startDate = new Date(crop.start_date).toLocaleDateString("en-GB");
+    const finishDate = new Date(crop.finish_date || "").toLocaleDateString(
+      "en-GB"
+    );
+
+    const cropSpecies = species.find(
+      (specie) => specie.id === crop.species_id
+    )?.name;
+
+    return (
+      <Box>
+        {(crop.finish_date && (
+          <Fragment>
+            <h2>Parcela libre</h2>
+            <h3>Última cosecha:</h3>
+          </Fragment>
+        )) || (
+          <Fragment>
+            <h2>Parcela ocupada</h2>
+            <h3>Cultivo actual:</h3>
+          </Fragment>
+        )}
+        <p>Fecha de plantación: {startDate}</p>
+        {crop.finish_date && <p>Fecha de cosecha: {finishDate}</p>}
+        <p>Especie: {cropSpecies}</p>
+        {crop.description && <p>description: {crop.description}</p>}
+        <Button
+          variant="contained"
+          onClick={() => navigate(`/cropdetails/${crop.id}`)}
+        >
+          Ver detalles del cultivo
+        </Button>
+      </Box>
+    );
+  };
+
+  const featureInfo = (feature: any) => {
+    return (
+      <Box>
+        <h2>Información seleccionada:</h2>
+        <p>Parcela N.° {feature.properties?.id}</p>
+        {feature.properties?.description && (
+          <p>Descripción: {feature.properties?.description}</p>
+        )}
+        {feature.properties?.radius && (
+          <p>Radio: {feature.properties?.radius.toFixed(2)} m.</p>
+        )}
+        {(feature.properties?.crop && CropInfo(feature.properties.crop)) || (
+          <Fragment>
+            <h2>Parcela libre</h2>
+            <h3>No se registran cultivos en esta parcela.</h3>
+          </Fragment>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <Box
@@ -159,7 +215,7 @@ const MapView = () => {
         </LayerGroup>
       </MapContainer>
 
-      {(selectedFeature && featureInfo(selectedFeature, species)) || (
+      {(selectedFeature && featureInfo(selectedFeature)) || (
         <h2>Seleccione una parcela</h2>
       )}
     </Box>

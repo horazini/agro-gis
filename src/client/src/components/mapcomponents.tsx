@@ -10,7 +10,8 @@ import "leaflet/dist/leaflet.css";
 import { LatLngExpression } from "leaflet";
 
 import L from "leaflet";
-import { Box } from "@mui/material";
+import { Box, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export const position: LatLngExpression = [-29, -58];
 
@@ -89,7 +90,7 @@ type Species = {
   description: string;
 };
 
-type Crop = {
+export type Crop = {
   id: number;
   species_id: number;
   description: string | null;
@@ -97,7 +98,9 @@ type Crop = {
   finish_date: string | null;
 };
 
-const cropInfo = (crop: Crop, species: Species[]) => {
+const CropInfo = (crop: Crop, species: Species[]) => {
+  const navigate = useNavigate();
+
   const startDate = new Date(crop.start_date).toLocaleDateString("en-GB");
   const finishDate = new Date(crop.finish_date || "").toLocaleDateString(
     "en-GB"
@@ -108,7 +111,7 @@ const cropInfo = (crop: Crop, species: Species[]) => {
   )?.name;
 
   return (
-    <div>
+    <Box>
       {(crop.finish_date && (
         <Fragment>
           <h2>Parcela libre</h2>
@@ -124,7 +127,13 @@ const cropInfo = (crop: Crop, species: Species[]) => {
       {crop.finish_date && <p>Fecha de cosecha: {finishDate}</p>}
       <p>Especie: {cropSpecies}</p>
       {crop.description && <p>description: {crop.description}</p>}
-    </div>
+      <Button
+        variant="outlined"
+        onClick={() => navigate(`/cropdetails/${crop.id}`)}
+      >
+        Ver detalles del cultivo
+      </Button>
+    </Box>
   );
 };
 
@@ -140,7 +149,7 @@ export const featureInfo = (feature: any, species: Species[]) => {
         <p>Radio: {feature.properties?.radius.toFixed(2)} m.</p>
       )}
       {(feature.properties?.crop &&
-        cropInfo(feature.properties.crop, species)) || (
+        CropInfo(feature.properties.crop, species)) || (
         <Fragment>
           <h2>Parcela libre</h2>
           <h3>No se registran cultivos en esta parcela.</h3>

@@ -16,11 +16,13 @@ import TenantDetails from "../layouts/tenants/tenantdetails";
 import SpeciesList from "../layouts/species/specieslist";
 import SpeciesForm from "../layouts/species/speciesform";
 
-import CropLandplotsMap from "../layouts/maps/croplandplotsmap";
-import CropRegisterMap from "../layouts/maps/cropregistermap";
 import MapView from "../layouts/maps/map";
 import MapView2 from "../layouts/maps/map2";
 import LandplotManagementMap from "../layouts/maps/landplotmanagementmap";
+
+import CropLandplotsMap from "../layouts/maps/croplandplotsmap";
+import CropRegisterMap from "../layouts/crops/cropregistermap";
+import CropDetails from "../layouts/crops/cropdetails";
 
 import Calendar from "../layouts/tasks/taskcalendar";
 
@@ -84,6 +86,11 @@ const routeList = [
     path: "/calendar",
     element: <Calendar />,
     allowed: [2, 3, 6],
+  },
+  {
+    path: "/cropdetails/:id",
+    element: <CropDetails />,
+    allowed: [1, 2, 3, 4, 5, 6],
   },
 ];
 

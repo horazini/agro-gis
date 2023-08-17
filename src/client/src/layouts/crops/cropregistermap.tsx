@@ -191,35 +191,6 @@ const MapView = () => {
     return null;
   };
 
-  const cropInfo = (crop: any) => {
-    const startDate = new Date(crop.start_date).toLocaleDateString("en-GB");
-    const finishDate = new Date(crop.finish_date).toLocaleDateString("en-GB");
-
-    const cropSpecies = species.find(
-      (specie) => specie.id === crop.species_id
-    )?.name;
-
-    return (
-      <div>
-        {(crop.finish_date && (
-          <>
-            <h2>Parcela libre</h2>
-            <h3>Última cosecha:</h3>
-          </>
-        )) || (
-          <>
-            <h2>Parcela ocupada</h2>
-            <h3>Cultivo actual:</h3>
-          </>
-        )}
-        <p>Fecha de plantación: {startDate}</p>
-        {crop.finish_date && <p>Fecha de cosecha: {finishDate}</p>}
-        <p>Especie: {cropSpecies}</p>
-        {crop.description && <p>description: {crop.description}</p>}
-      </div>
-    );
-  };
-
   // Confirmar datos
 
   const [landplotError, setLandplotError] = useState(false);

@@ -1,6 +1,36 @@
 import { NextFunction, Request, Response } from "express";
 import { QueryResult } from "pg";
 import pool from "../database";
+import { Feature } from "geojson";
+
+const parsePostGISToGeoJSON = (row: any) => {
+  const { landplot, ...properties } = row;
+
+  properties.landplot = {
+    id: landplot.id,
+    description: landplot.description,
+  };
+
+  let geometry;
+  if (landplot.center) {
+    const [longitud, latitud] = JSON.parse(landplot.center).coordinates;
+    geometry = {
+      type: "Point",
+      coordinates: [latitud, longitud],
+    };
+    properties.landplot.subType = "Circle";
+    properties.landplot.radius = landplot.circle_radius;
+  } else {
+    geometry = JSON.parse(landplot.geometry);
+  }
+
+  const feature: Feature = {
+    type: "Feature",
+    geometry,
+    properties,
+  };
+  return feature;
+};
 
 export const getCrops = async (
   req: Request,
@@ -181,5 +211,97 @@ export const createCrop = async (
     next(e);
   } finally {
     client.release();
+  }
+};
+
+export const getCropDataById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    const cropQuery = `
+      SELECT 
+      landplot_id, 
+      ST_AsGeoJSON(landplot_area) as landplot_geometry, 
+      ST_AsGeoJSON(landplot_circle_center) as landplot_center,
+      landplot_circle_radius, landplot_description,
+      species_id, species_name, species_description,
+      description, comments, start_date, finish_date, weight_in_tons 
+      FROM crop WHERE id = $1
+    `;
+    const cropResponse = (await pool.query(cropQuery, [id])).rows[0];
+
+    const landplot = {
+      id: cropResponse.landplot_id,
+      geometry: cropResponse.landplot_geometry,
+      center: cropResponse.landplot_center,
+      circle_radius: cropResponse.landplot_circle_radius,
+      description: cropResponse.landplot_description,
+    };
+
+    const species = {
+      id: cropResponse.species_id,
+      name: cropResponse.species_name,
+      description: cropResponse.species_description,
+    };
+
+    const crop = {
+      description: cropResponse.description,
+      comments: cropResponse.comments,
+      start_date: cropResponse.start_date,
+      finish_date: cropResponse.finish_date,
+      weight_in_tons: cropResponse.weight_in_tons,
+    };
+
+    const stagesQuery = `
+      SELECT id,
+      species_growth_stage_name, species_growth_stage_description, species_growth_stage_estimated_time, species_growth_stage_sequence_number,
+      comments, start_date, finish_date
+      FROM crop_stage WHERE crop_id  = $1
+      ORDER BY species_growth_stage_sequence_number 
+    `;
+    const stagesResponse: QueryResult = await pool.query(stagesQuery, [id]);
+
+    const stages = await Promise.all(
+      stagesResponse.rows.map(async (stage: any) => {
+        const eventsQuery = `
+          SELECT 
+          id,
+          species_growth_event_id, 
+          name, description,
+          species_growth_event_et_from_stage_start, species_growth_event_time_period,
+          due_date, done_date
+          FROM crop_event
+          WHERE crop_stage_id = $1
+        `;
+
+        const eventsResponse: QueryResult = await pool.query(eventsQuery, [
+          stage.id,
+        ]);
+
+        return {
+          ...stage,
+          events: eventsResponse.rows,
+        };
+      })
+    );
+
+    const result = {
+      landplot,
+      species,
+      crop,
+      stages,
+    };
+
+    const GeoJSON = parsePostGISToGeoJSON(result);
+
+    console.log(GeoJSON);
+
+    return res.status(200).json(GeoJSON);
+  } catch (e) {
+    next(e);
   }
 };

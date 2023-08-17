@@ -100,9 +100,11 @@ import {
   getCrops,
   //getTenantCrops,
   createCrop,
+  getCropDataById,
 } from "../controllers/crop.controllers";
 
 router.get("/crop", getCrops);
 router.post("/crop", createCrop);
+router.get("/cropdata/:id", getCropDataById);
 
 export default router;

@@ -9,6 +9,7 @@ const parsePostGISToGeoJSON = (row: any) => {
   properties.landplot = {
     id: landplot.id,
     description: landplot.description,
+    area: landplot.area,
   };
 
   let geometry;
@@ -226,6 +227,8 @@ export const getCropDataById = async (
       SELECT 
       landplot_id, 
       ST_AsGeoJSON(landplot_area) as landplot_geometry, 
+      ROUND(st_area(landplot_area, true)::numeric) AS landplot_area, 
+      ROUND((pi() * landplot_circle_radius * landplot_circle_radius)::numeric) AS landplot_circle_area,
       ST_AsGeoJSON(landplot_circle_center) as landplot_center,
       landplot_circle_radius, landplot_description,
       species_id, species_name, species_description,
@@ -234,11 +237,17 @@ export const getCropDataById = async (
     `;
     const cropResponse = (await pool.query(cropQuery, [id])).rows[0];
 
+    let area = cropResponse.landplot_area;
+    if (cropResponse.landplot_circle_area !== null) {
+      area = cropResponse.landplot_circle_area;
+    }
+
     const landplot = {
       id: cropResponse.landplot_id,
       geometry: cropResponse.landplot_geometry,
       center: cropResponse.landplot_center,
       circle_radius: cropResponse.landplot_circle_radius,
+      area,
       description: cropResponse.landplot_description,
     };
 

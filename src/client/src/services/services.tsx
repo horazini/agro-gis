@@ -191,3 +191,27 @@ export const getCropById = async (id: string) => {
   const data = await res.json();
   return data;
 };
+
+export const setDoneCropEvent = async (
+  updateData: any,
+  cropEventId: number
+) => {
+  const res = await fetch(`${API}/donecropevent/${cropEventId}`, {
+    method: "PUT",
+    body: JSON.stringify(updateData),
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};
+
+export const setFinishedCropStage = async (
+  updateData: any,
+  cropStageId: number
+) => {
+  const res = await fetch(`${API}/donecropstage/${cropStageId}`, {
+    method: "PUT",
+    body: JSON.stringify(updateData),
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};

@@ -101,10 +101,14 @@ import {
   //getTenantCrops,
   createCrop,
   getCropDataById,
+  setDoneCropEvent,
+  setFinishedCropStage,
 } from "../controllers/crop.controllers";
 
 router.get("/crop", getCrops);
 router.post("/crop", createCrop);
 router.get("/cropdata/:id", getCropDataById);
+router.put("/donecropevent/:id", setDoneCropEvent);
+router.put("/donecropstage/:id", setFinishedCropStage);
 
 export default router;

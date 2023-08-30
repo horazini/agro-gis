@@ -8,17 +8,23 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-import { getCropById } from "../../services/services";
+import {
+  getCropById,
+  setDoneCropEvent,
+  setFinishedCropStage,
+} from "../../services/services";
 import { Feature } from "geojson";
+import TodayIcon from "@mui/icons-material/Today";
 
 import { position, LayerControler } from "../../components/mapcomponents";
 import {
+  AlertColor,
   Box,
   Button,
-  Card,
-  CardContent,
   Collapse,
   IconButton,
+  InputAdornment,
+  Menu,
   Paper,
   Table,
   TableBody,
@@ -26,30 +32,33 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { LatLngExpression } from "leaflet";
 import L from "leaflet";
+import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import {
-  FormatListBulleted,
-  KeyboardArrowDown,
-  KeyboardArrowUp,
-  StorageSharp,
-} from "@mui/icons-material";
-import { DialogButton } from "../../components/customComponents";
+  CircularProgressBackdrop,
+  SnackBarAlert,
+  TimeIntervalToReadableString,
+} from "../../components/customComponents";
+
+import { DateCalendar } from "@mui/x-date-pickers";
+
+type GrowthEvent = {
+  due_date: string;
+  done_date?: string;
+};
 
 const MapView = () => {
-  const timeUnits = [
-    { key: "days", label: "Día/s" },
-    { key: "weeks", label: "Semana/s" },
-    { key: "months", label: "Mes/es" },
-    { key: "years", label: "Año/s" },
-  ];
-
   const params = useParams();
 
   const [cropFeature, setCropFeature] = useState<Feature>();
+
+  // Data refresh trigger
+  const [dataReloadCounter, setDataReloadCounter] = useState(0);
 
   const loadCrop = async (id: string) => {
     try {
@@ -64,10 +73,10 @@ const MapView = () => {
     if (params.id) {
       loadCrop(params.id);
     }
-  }, [params.id]);
+  }, [params.id, dataReloadCounter]);
 
   const CustomLayer = ({ feature }: any) => {
-    const { crop, landplot, species, stage } = feature.properties;
+    const { landplot } = feature.properties;
     const { type, coordinates } = feature.geometry;
 
     const [isHighlighted, setIsHighlighted] = useState<boolean>(false);
@@ -114,6 +123,29 @@ const MapView = () => {
     return null;
   };
 
+  type MySnackBarProps = {
+    open: boolean;
+    severity: AlertColor | undefined;
+    msg: string;
+  };
+  const [snackBar, setSnackBar] = useState<MySnackBarProps>({
+    open: false,
+    severity: undefined,
+    msg: "",
+  });
+
+  const eventSuccessSnackBar: MySnackBarProps = {
+    open: true,
+    severity: "success",
+    msg: "Tarea realizada!",
+  };
+
+  const errorSnackBar: MySnackBarProps = {
+    open: true,
+    severity: "error",
+    msg: "Algo ha fallado.",
+  };
+
   const [open, setOpen] = useState(-1);
   const CropInfo = ({ feature }: any) => {
     const { crop, landplot, species, stages } = feature.properties;
@@ -126,6 +158,112 @@ const MapView = () => {
     if (landplot.area > 10000) {
       formatedArea = (landplot.area / 10000).toFixed(2) + " ha";
     }
+
+    const [doneObject, setDoneObject] = useState<{
+      calendarAnchor: any;
+      objectTable: null | string;
+      objectId: number;
+      dateLimit: any;
+    }>({
+      calendarAnchor: null,
+      objectTable: null,
+      objectId: 0,
+      dateLimit: null,
+    });
+
+    const openDateSelector = Boolean(doneObject.calendarAnchor);
+    const handleOpenDateSelector = (
+      event: any,
+      objectTable: string,
+      objectId: number,
+      dateLimit: any
+    ) => {
+      setDoneObject({
+        calendarAnchor: event.currentTarget,
+        objectTable: objectTable,
+        objectId: objectId,
+        dateLimit: dateLimit,
+      });
+    };
+    const handleCloseDateSelector = () => {
+      setDoneObject({
+        calendarAnchor: null,
+        objectTable: null,
+        objectId: 0,
+        dateLimit: null,
+      });
+    };
+
+    const handleStageFinishClick = (event: any, stage: any) => {
+      let dateLimit = stage.start_date;
+
+      for (const event of stage.events) {
+        const isoDateLimit = new Date(dateLimit);
+        const isoEventDate = new Date(event.done_date);
+        if (isoEventDate > isoDateLimit) {
+          dateLimit = event.done_date;
+        }
+      }
+
+      handleOpenDateSelector(event, "crop_stage", stage.id, dateLimit);
+    };
+
+    const [loading, setLoading] = useState(false);
+
+    const handleDoneDateSelect = async (newValue: any) => {
+      setLoading(true);
+      try {
+        const isoDate = newValue.toISOString(); // Convertir la fecha a formato ISO 8601
+        let updateData = {
+          doneDate: isoDate,
+        };
+
+        let res;
+        if (doneObject.objectTable === "crop_event") {
+          res = await setDoneCropEvent(updateData, doneObject.objectId);
+        } else if (doneObject.objectTable === "crop_stage") {
+          res = await setFinishedCropStage(updateData, doneObject.objectId);
+        }
+
+        if (res === 200) {
+          // Increment the data reload counter to trigger a data refresh
+          setDataReloadCounter((prevCounter) => prevCounter + 1);
+          setSnackBar(eventSuccessSnackBar);
+        } else {
+          setSnackBar(errorSnackBar);
+        }
+      } catch (error) {
+        console.log(error);
+        setSnackBar(errorSnackBar);
+      }
+      setLoading(false);
+      handleCloseDateSelector();
+    };
+
+    const handleSnackbarClose = (
+      event: React.SyntheticEvent | Event,
+      reason?: string
+    ) => {
+      if (reason === "clickaway") {
+        return;
+      }
+      setSnackBar((prevObject) => ({
+        ...prevObject,
+        open: false,
+      }));
+    };
+
+    const disabledDates = (date: any) => {
+      if (!doneObject.dateLimit) {
+        return false;
+      }
+
+      const isoLimitDate = new Date(doneObject.dateLimit);
+
+      // Deshabilitar todas las fechas anteriores a la fecha tope
+      return date < isoLimitDate;
+    };
+
     return (
       <Box>
         <Box>
@@ -137,12 +275,10 @@ const MapView = () => {
         </Box>
         <Box>
           <h2>Cultivo:</h2>
-          <p>Fecha de plantación: {startDate}</p>
-          {crop.finish_date && <p>Fecha de cosecha: {finishDate}</p>}
-        </Box>
-        <Box>
           <p>Especie: {species.name}</p>
           {crop.description && <p>description: {crop.description}</p>}
+          <p>Fecha de plantación: {startDate}</p>
+          {crop.finish_date && <p>Fecha de cosecha: {finishDate}</p>}
         </Box>
         <h3>Etapas de cultivo:</h3>
 
@@ -160,18 +296,9 @@ const MapView = () => {
             </TableHead>
             <TableBody>
               {stages.map((stage: any) => {
-                const estimatedTimeUnit =
-                  Object.keys(stage.species_growth_stage_estimated_time)[0] ||
-                  "days";
-                const estimatedTimeCuantity =
-                  stage.species_growth_stage_estimated_time[
-                    estimatedTimeUnit
-                  ] || 0;
-                const formatedEstimatedTime =
-                  estimatedTimeCuantity +
-                  " " +
-                  timeUnits.find((unit) => unit.key === estimatedTimeUnit)
-                    ?.label;
+                const formatedEstimatedTime = TimeIntervalToReadableString(
+                  stage.species_growth_stage_estimated_time
+                );
 
                 const startDate = new Date(stage.start_date).toLocaleDateString(
                   "en-GB"
@@ -179,10 +306,10 @@ const MapView = () => {
                 const finishDate = new Date(
                   stage.finish_date || null
                 ).toLocaleDateString("en-GB");
+
                 return (
-                  <Fragment>
+                  <Fragment key={stage.id}>
                     <TableRow
-                      key={stage.id}
                       //onClick={() => setOpen(open === stage.id ? -1 : stage.id)}
                       sx={{ "& > *": { borderBottom: "unset" } }}
                     >
@@ -221,7 +348,136 @@ const MapView = () => {
                           timeout="auto"
                           unmountOnExit
                         >
-                          <Box>Comentarios: {stage.comments}</Box>
+                          <Box>
+                            <p>Comentarios: {stage.comments}</p>
+                            <Box>
+                              <h2>Tareas:</h2>
+                              {stage.events
+                                .sort((a: GrowthEvent, b: GrowthEvent) => {
+                                  const aDate = a.done_date || a.due_date;
+                                  const bDate = b.done_date || b.due_date;
+
+                                  return (
+                                    new Date(aDate).getTime() -
+                                    new Date(bDate).getTime()
+                                  );
+                                })
+                                .map((event: any) => {
+                                  const formatedETFromStageStart =
+                                    TimeIntervalToReadableString(
+                                      event.species_growth_event_et_from_stage_start
+                                    );
+                                  const formatedTimePeriod =
+                                    TimeIntervalToReadableString(
+                                      event.species_growth_event_time_period
+                                    );
+                                  const dueDate = new Date(
+                                    event.due_date
+                                  ).toLocaleDateString("en-GB");
+                                  const doneDate = new Date(
+                                    event.done_date
+                                  ).toLocaleDateString("en-GB");
+
+                                  return (
+                                    <Box key={event.id} mb={2}>
+                                      <h3>
+                                        {event.name} {event.id}
+                                      </h3>
+                                      <Typography mt={2}>
+                                        Descripción: {event.description}
+                                      </Typography>
+
+                                      {event.species_growth_event_time_period && (
+                                        <Typography mt={2}>
+                                          Periodo de repetición:{" "}
+                                          {formatedTimePeriod}
+                                        </Typography>
+                                      )}
+
+                                      {event.due_date ? (
+                                        <Fragment>
+                                          <Typography mt={2}>
+                                            Fecha estimada: {dueDate}
+                                          </Typography>
+                                          <Box
+                                            display={"flex"}
+                                            alignItems="center"
+                                          >
+                                            {event.done_date ? (
+                                              <Typography mt={2}>
+                                                {"Fecha de realización: "}{" "}
+                                                {doneDate}
+                                              </Typography>
+                                            ) : (
+                                              <Fragment>
+                                                <Typography mt={2} mr={1}>
+                                                  {"Fecha de realización: "}
+                                                </Typography>
+
+                                                <TextField
+                                                  disabled
+                                                  variant="standard"
+                                                  label="Marcar como realizado"
+                                                  onClick={(e) =>
+                                                    handleOpenDateSelector(
+                                                      e,
+                                                      "crop_event",
+                                                      event.id,
+                                                      stage.start_date
+                                                    )
+                                                  }
+                                                  InputProps={{
+                                                    endAdornment: (
+                                                      <InputAdornment position="start">
+                                                        <TodayIcon />
+                                                      </InputAdornment>
+                                                    ),
+                                                  }}
+                                                />
+                                              </Fragment>
+                                            )}
+                                          </Box>
+                                        </Fragment>
+                                      ) : (
+                                        <p>
+                                          Tiempo desde incio de la etapa:{" "}
+                                          {formatedETFromStageStart}
+                                        </p>
+                                      )}
+                                    </Box>
+                                  );
+                                })}
+                            </Box>
+
+                            <Box
+                              style={{
+                                display: "flex",
+                                justifyContent: "end",
+                              }}
+                              mb={3}
+                              mr={1}
+                            >
+                              {!stage.finish_date ? (
+                                <Button
+                                  variant="contained"
+                                  color="primary"
+                                  sx={{ mt: 3, ml: 1 }}
+                                  disabled={
+                                    !stage.events.every(
+                                      (event: GrowthEvent) =>
+                                        event.done_date !== null
+                                    )
+                                  }
+                                  onClick={(e) =>
+                                    handleStageFinishClick(e, stage)
+                                  }
+                                  endIcon={<TodayIcon />}
+                                >
+                                  Finalizar etapa
+                                </Button>
+                              ) : null}
+                            </Box>
+                          </Box>
                         </Collapse>
                       </TableCell>
                     </TableRow>
@@ -231,6 +487,36 @@ const MapView = () => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        <Fragment>
+          <Menu
+            id="date-menu"
+            anchorEl={doneObject.calendarAnchor}
+            open={openDateSelector}
+            onClose={() => handleCloseDateSelector()}
+            MenuListProps={{
+              "aria-labelledby": "basic-button",
+            }}
+          >
+            <DateCalendar
+              showDaysOutsideCurrentMonth
+              shouldDisableDate={disabledDates}
+              onChange={(newValue: any, selectionState: any) => {
+                if (selectionState === "finish") {
+                  handleDoneDateSelect(newValue);
+                }
+              }}
+            />
+          </Menu>
+
+          <CircularProgressBackdrop loading={loading} />
+          <SnackBarAlert
+            handleSnackbarClose={handleSnackbarClose}
+            msg={snackBar.msg}
+            open={snackBar.open}
+            severity={snackBar.severity}
+          />
+        </Fragment>
       </Box>
     );
   };

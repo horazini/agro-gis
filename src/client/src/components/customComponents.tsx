@@ -1,5 +1,6 @@
 import {
   Alert,
+  AlertColor,
   AlertTitle,
   Backdrop,
   Button,
@@ -9,6 +10,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Snackbar,
 } from "@mui/material";
 import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +34,7 @@ export type DialogButtonProps = {
   onConfirm: () => void;
 };
 
+// Opens a dialog component to confirm an action. Stays in the same page
 export const DialogButton = ({
   icon,
   buttonText,
@@ -83,6 +86,7 @@ export const DialogButton = ({
   );
 };
 
+// Opens a dialog component to confirm the 'leave' of a form. Redirects to some other page
 export const CancelButton = ({ navigateDir }: CancelFormProps) => {
   const navigate = useNavigate();
 
@@ -134,6 +138,10 @@ export const CancelButton = ({ navigateDir }: CancelFormProps) => {
   );
 };
 
+/**
+ * Opens a dialog component to confirm a data load action. Redirects to some other page
+ * @param {Number} params
+ */
 export const ConfirmButton = ({
   msg,
   onConfirm,
@@ -213,3 +221,89 @@ export const ConfirmButton = ({
     </Fragment>
   );
 };
+
+/* 
+    --------------------------------------------------------------------
+ */
+
+export type CircularProgressBackdropProps = {
+  loading: boolean;
+};
+
+export const CircularProgressBackdrop = ({
+  loading,
+}: CircularProgressBackdropProps) => {
+  return (
+    <Backdrop open={loading} style={{ zIndex: 9999 }}>
+      <CircularProgress color="inherit" />
+    </Backdrop>
+  );
+};
+
+export type SnackBarAlertProps = {
+  open: boolean;
+  severity: AlertColor | undefined;
+  msg: string;
+  handleSnackbarClose: (
+    event: React.SyntheticEvent | Event,
+    reason?: string
+  ) => void;
+};
+
+export const SnackBarAlert = ({
+  open,
+  severity,
+  msg,
+  handleSnackbarClose,
+}: SnackBarAlertProps) => {
+  return (
+    <Snackbar
+      open={open}
+      autoHideDuration={6000}
+      onClose={handleSnackbarClose}
+      anchorOrigin={{ vertical: "top", horizontal: "center" }}
+    >
+      <Alert
+        onClose={handleSnackbarClose}
+        severity={severity}
+        sx={{ width: "100%" }}
+      >
+        {msg}
+      </Alert>
+    </Snackbar>
+  );
+};
+
+/**
+ *
+ * @param {[unit: string]: number;} interval - PostgreSQL return object of data type 'interval'
+ * @returns {string} readable string (in Spanish) of the interval
+ */
+export function TimeIntervalToReadableString(interval: {
+  [unit: string]: number;
+}): string {
+  const timeUnitObjects = [
+    { key: "days", singularLabel: "Día", pluralLabel: "Días" },
+    { key: "weeks", singularLabel: "Semana", pluralLabel: "Semanas" },
+    { key: "months", singularLabel: "Mes", pluralLabel: "Meses" },
+    { key: "years", singularLabel: "Año", pluralLabel: "Años" },
+  ];
+
+  try {
+    const intervalUnit = Object.keys(interval)[0] || "days";
+    const intervalCuantity = interval[intervalUnit] || 0;
+    const intervalUnitObject = timeUnitObjects.find(
+      (unitObj) => unitObj.key === intervalUnit
+    );
+    let readableIntervalUnit = "";
+    if (intervalCuantity === 1) {
+      readableIntervalUnit = intervalUnitObject?.singularLabel || "";
+    } else {
+      readableIntervalUnit = intervalUnitObject?.pluralLabel || "";
+    }
+    const readableString = intervalCuantity + " " + readableIntervalUnit;
+    return readableString;
+  } catch {
+    return "";
+  }
+}

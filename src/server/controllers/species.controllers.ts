@@ -224,7 +224,7 @@ export const createSpeciesWithStagesAndEvents = async (
 
         await client.query(
           `
-          INSERT INTO crop_event (species_id, name, description, reference_stage, et_from_stage_start, time_period)
+          INSERT INTO species_growth_event (species_id, name, description, reference_stage, et_from_stage_start, time_period)
           VALUES ($1, $2, $3, $4, $5, $6)
           `,
           [
@@ -332,7 +332,6 @@ export const updateSpecies = async (
             ]
           );
         } else {
-          console.log("Inserting!");
           await client.query(
             `
             INSERT INTO species_growth_event (species_id, name, description, reference_stage, et_from_stage_start, time_period)

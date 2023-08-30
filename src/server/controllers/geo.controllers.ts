@@ -2,8 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { QueryResult } from "pg";
 import pool from "../database";
 
-// const GeoJSON = require("geojson");
-
 const parsePostGISToGeoJSON = (rows: any) => {
   const features = rows.map((row: any) => {
     let properties: any = {
@@ -250,7 +248,7 @@ const insertLandplot = async (feature: any) => {
   const { tenantId, description, radius } = feature.properties;
 
   if (feature.geometry.type === "Polygon") {
-    const response: QueryResult = await pool.query(
+    await pool.query(
       "INSERT INTO landplot (tenant_id, area, description) VALUES ($1, $2, $3)",
       [tenantId, geometry, description]
     );
@@ -265,7 +263,7 @@ const insertLandplot = async (feature: any) => {
     const queryText = `INSERT INTO landplot(tenant_id, area, circle_center, circle_radius, description) VALUES ($1, ${circular_polygon}, ${WKT_point}, ${radius}, $2)`;
     const values = [tenantId, description];
 
-    const response: QueryResult = await pool.query(queryText, values);
+    await pool.query(queryText, values);
   } else {
     console.log("Invalid feature type");
   }
@@ -276,7 +274,7 @@ const newInsertLandplot = async (feature: any, tenantId: number) => {
   const { description, radius } = feature.properties;
 
   if (feature.geometry.type === "Polygon") {
-    const response: QueryResult = await pool.query(
+    await pool.query(
       "INSERT INTO landplot (tenant_id, area, description) VALUES ($1, $2, $3)",
       [tenantId, geometry, description]
     );
@@ -291,7 +289,7 @@ const newInsertLandplot = async (feature: any, tenantId: number) => {
     const queryText = `INSERT INTO landplot(tenant_id, area, circle_center, circle_radius, description) VALUES ($1, ${circular_polygon}, ${WKT_point}, ${radius}, $2)`;
     const values = [tenantId, description];
 
-    const response: QueryResult = await pool.query(queryText, values);
+    await pool.query(queryText, values);
   } else {
     console.log("Invalid feature type");
   }
@@ -302,7 +300,7 @@ const updateLandplot = async (feature: any) => {
   const { id, description, radius } = feature.properties;
 
   if (feature.geometry.type === "Polygon") {
-    const response: QueryResult = await pool.query(
+    await pool.query(
       "UPDATE landplot SET area = $1, description = $2 WHERE id = $3",
       [geometry, description, id]
     );
@@ -318,7 +316,7 @@ const updateLandplot = async (feature: any) => {
 
     const values = [description, id];
 
-    const response: QueryResult = await pool.query(queryText, values);
+    await pool.query(queryText, values);
   } else {
     console.log("Invalid feature type");
   }

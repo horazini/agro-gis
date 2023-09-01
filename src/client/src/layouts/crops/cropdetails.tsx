@@ -16,7 +16,11 @@ import {
 import { Feature } from "geojson";
 import TodayIcon from "@mui/icons-material/Today";
 
-import { position, LayerControler } from "../../components/mapcomponents";
+import {
+  position,
+  LayerControler,
+  FormattedArea,
+} from "../../components/mapcomponents";
 import {
   AlertColor,
   Box,
@@ -154,10 +158,7 @@ const MapView = () => {
       "en-GB"
     );
 
-    let formatedArea = landplot.area + " m²";
-    if (landplot.area > 10000) {
-      formatedArea = (landplot.area / 10000).toFixed(2) + " ha";
-    }
+    const formattedArea = FormattedArea(landplot.area);
 
     const [doneObject, setDoneObject] = useState<{
       calendarAnchor: any;
@@ -270,7 +271,7 @@ const MapView = () => {
           <h2>Parcela:</h2>
           <p>Parcela N.° {landplot.id}</p>
           {landplot.description && <p>Descripción: {landplot.description}</p>}
-          {landplot.area && <p>Área: {formatedArea} </p>}
+          {landplot.area && <p>Área: {formattedArea} </p>}
           {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
         </Box>
         <Box>
@@ -380,9 +381,7 @@ const MapView = () => {
 
                                   return (
                                     <Box key={event.id} mb={2}>
-                                      <h3>
-                                        {event.name} {event.id}
-                                      </h3>
+                                      <h3>{event.name}</h3>
                                       <Typography mt={2}>
                                         Descripción: {event.description}
                                       </Typography>
@@ -457,7 +456,7 @@ const MapView = () => {
                               mb={3}
                               mr={1}
                             >
-                              {!stage.finish_date ? (
+                              {!stage.finish_date && stage.start_date ? (
                                 <Button
                                   variant="contained"
                                   color="primary"

@@ -153,3 +153,16 @@ export const FeatureInfo = (feature: any, navigate: NavigateFunction) => {
     </Box>
   );
 };
+
+/**
+ *
+ * @param {number} area - the area in square meters, as it is returned by the PostGIS ST_Area function.
+ * @returns {string} the formatted area in either square meters or hectares
+ */
+export function FormattedArea(area: number): string {
+  let formatedArea = area + " m²";
+  if (area > 10000) {
+    formatedArea = (area / 10000).toFixed(2) + " ha.";
+  }
+  return formatedArea;
+}

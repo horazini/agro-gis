@@ -13,9 +13,30 @@ import { useSelector } from "react-redux";
 
 import { getTenantGeo } from "../../services/services";
 
-import { position, LayerControler } from "../../components/mapcomponents";
+import {
+  position,
+  LayerControler,
+  FormattedArea,
+} from "../../components/mapcomponents";
 import { GeoJsonObject } from "geojson";
-import L, { LatLng, LatLngLiteral, Polygon, GeometryUtil } from "leaflet";
+import { LatLng, LatLngLiteral, Polygon, GeometryUtil } from "leaflet";
+
+const CirclePopup = (properties: any) => {
+  const area = Math.PI * Math.pow(properties.radius, 2);
+
+  const formattedArea = FormattedArea(area);
+
+  return (
+    <Popup>
+      <div>
+        <h3>ID: {properties.id}</h3>
+        <p>Descripción: {properties.description}</p>
+        <p>Radio: {properties.radius.toFixed(2)} m.</p>
+        <p>Área: {formattedArea}</p>
+      </div>
+    </Popup>
+  );
+};
 
 const MapView = () => {
   const [geoData, setGeoData] = useState<GeoJsonObject>();
@@ -66,27 +87,6 @@ const MapView = () => {
     layer.bindPopup(popupContent);
   };
 
-  const CirclePopup = (properties: any) => {
-    const area = Math.PI * Math.pow(properties.radius, 2);
-    let formatedArea = "";
-    if (area < 10000) {
-      formatedArea = area.toFixed(2) + " m²";
-    } else {
-      formatedArea = (area / 10000).toFixed(2) + " ha";
-    }
-
-    return (
-      <Popup>
-        <div>
-          <h3>ID: {properties.id}</h3>
-          <p>Descripción: {properties.description}</p>
-          <p>Radio: {properties.radius.toFixed(2)} m.</p>
-          <p>Área: {formatedArea}</p>
-        </div>
-      </Popup>
-    );
-  };
-
   return (
     <div
       style={{
@@ -107,18 +107,19 @@ const MapView = () => {
         )}
 
         <LayerGroup>
-          {circles &&
-            circles.map((circle: any) => {
-              return (
-                <Circle
-                  key={circle.properties.id}
-                  center={circle.geometry.coordinates}
-                  radius={circle.properties.radius}
-                >
-                  {CirclePopup(circle.properties)}
-                </Circle>
-              );
-            })}
+          {circles
+            ? circles.map((circle: any) => {
+                return (
+                  <Circle
+                    key={circle.properties.id}
+                    center={circle.geometry.coordinates}
+                    radius={circle.properties.radius}
+                  >
+                    {CirclePopup(circle.properties)}
+                  </Circle>
+                );
+              })
+            : null}
         </LayerGroup>
       </MapContainer>
     </div>

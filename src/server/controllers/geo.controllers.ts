@@ -174,7 +174,7 @@ export const getTenantGeoWithCurrentCrops = async (
     const response: QueryResult = await pool.query(
       `
       SELECT l.id AS id, ST_AsGeoJSON(l.area) as geometry, ST_AsGeoJSON(l.circle_center) as center, l.circle_radius, l.description, 
-      c.id AS crop_id, c.species_id, c.description AS crop_description, c.start_date, c.finish_date
+      c.id AS crop_id, c.species_id, c.species_name, c.species_description, c.description AS crop_description, c.comments, c.start_date, c.finish_date, c.weight_in_tons
       FROM landplot l
       LEFT JOIN crop c ON l.id = c.landplot_id
       WHERE l.tenant_id = $1 AND (
@@ -200,9 +200,13 @@ export const getTenantGeoWithCurrentCrops = async (
         crop = {
           id: row.crop_id,
           species_id: row.species_id,
+          species_name: row.species_name,
+          species_description: row.species_description,
           description: row.crop_description,
+          comments: row.comments,
           start_date: row.start_date,
           finish_date: row.finish_date,
+          weight_in_tons: row.weight_in_tons,
         };
       }
 

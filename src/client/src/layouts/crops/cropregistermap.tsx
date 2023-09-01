@@ -23,7 +23,7 @@ import { Feature } from "geojson";
 import {
   position,
   LayerControler,
-  featureInfo,
+  FeatureInfo,
 } from "../../components/mapcomponents";
 import {
   FormControl,
@@ -34,6 +34,7 @@ import {
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import { ConfirmButton } from "../../components/customComponents";
+import { useNavigate } from "react-router";
 
 interface ICrop {
   landplot: number;
@@ -139,7 +140,6 @@ const MapView = () => {
 
     const handleLayerClick = (event: LayerEvent, feature: any) => {
       handleLandplotChange(feature.properties?.id);
-      console.log(feature);
     };
 
     const eventHandlers = {
@@ -203,6 +203,8 @@ const MapView = () => {
     }
   };
 
+  const navigate = useNavigate();
+
   return (
     <div
       style={{
@@ -223,7 +225,7 @@ const MapView = () => {
         </LayerGroup>
       </MapContainer>
 
-      {(selectedFeature && featureInfo(selectedFeature, species)) || (
+      {(selectedFeature && FeatureInfo(selectedFeature, navigate)) || (
         <h2>Seleccione una parcela</h2>
       )}
 

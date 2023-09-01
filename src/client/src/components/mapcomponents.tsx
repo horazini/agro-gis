@@ -11,7 +11,7 @@ import { LatLngExpression } from "leaflet";
 
 import L from "leaflet";
 import { Box, Button } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { NavigateFunction, useNavigate } from "react-router-dom";
 
 export const position: LatLngExpression = [-29, -58];
 
@@ -93,22 +93,17 @@ type Species = {
 export type Crop = {
   id: number;
   species_id: number;
+  species_name: string;
   description: string | null;
   start_date: string;
   finish_date: string | null;
 };
 
-const CropInfo = (crop: Crop, species: Species[]) => {
-  const navigate = useNavigate();
-
+const CropInfo = (crop: Crop, navigate: NavigateFunction) => {
   const startDate = new Date(crop.start_date).toLocaleDateString("en-GB");
   const finishDate = new Date(crop.finish_date || "").toLocaleDateString(
     "en-GB"
   );
-
-  const cropSpecies = species.find(
-    (specie) => specie.id === crop.species_id
-  )?.name;
 
   return (
     <Box>
@@ -125,7 +120,7 @@ const CropInfo = (crop: Crop, species: Species[]) => {
       )}
       <p>Fecha de plantación: {startDate}</p>
       {crop.finish_date && <p>Fecha de cosecha: {finishDate}</p>}
-      <p>Especie: {cropSpecies}</p>
+      <p>Especie: {crop.species_name}</p>
       {crop.description && <p>description: {crop.description}</p>}
       <Button
         variant="outlined"
@@ -137,7 +132,7 @@ const CropInfo = (crop: Crop, species: Species[]) => {
   );
 };
 
-export const featureInfo = (feature: any, species: Species[]) => {
+export const FeatureInfo = (feature: any, navigate: NavigateFunction) => {
   return (
     <Box>
       <h2>Información seleccionada:</h2>
@@ -149,7 +144,7 @@ export const featureInfo = (feature: any, species: Species[]) => {
         <p>Radio: {feature.properties?.radius.toFixed(2)} m.</p>
       )}
       {(feature.properties?.crop &&
-        CropInfo(feature.properties.crop, species)) || (
+        CropInfo(feature.properties.crop, navigate)) || (
         <Fragment>
           <h2>Parcela libre</h2>
           <h3>No se registran cultivos en esta parcela.</h3>

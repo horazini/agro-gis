@@ -43,42 +43,54 @@ export const getTenantById = async (
   }
 };
 
-export const getTenantWithUsers = async (
+export const getTenantData = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const id = parseInt(req.params.id);
-    const response: QueryResult = await pool.query(
+    const tenantQuery: QueryResult = await pool.query(
       `
-      SELECT t.id AS tenant_id, t.name AS tenant_name, u.id AS user_id, u.usertype_id, u.mail_address, u.username, u.names, u.surname
-      FROM tenant t
-      LEFT JOIN user_account u ON t.id = u.tenant_id
-      WHERE t.id = $1
+      SELECT 
+      id, name FROM tenant WHERE id = $1
       `,
       [id]
     );
 
-    const tenant = {
-      id: response.rows[0].tenant_id,
-      name: response.rows[0].tenant_name,
-    };
+    const tenant = tenantQuery.rows[0];
+
+    const usersQuery: QueryResult = await pool.query(
+      `
+      SELECT 
+      id, usertype_id, mail_address, username, names, surname
+      FROM user_account 
+      WHERE tenant_id = $1
+      `,
+      [id]
+    );
 
     let users: any[] = [];
 
-    if (response.rows[0].user_id) {
-      users = response.rows.map((row) => ({
-        id: row.user_id,
-        usertype_id: row.usertype_id,
-        mail_address: row.mail_address,
-        username: row.username,
-        names: row.names,
-        surname: row.surname,
-      }));
+    if (usersQuery.rows[0]) {
+      users = usersQuery.rows;
     }
 
-    const result = { tenant, users };
+    const landQuery: QueryResult = await pool.query(
+      `SELECT 
+        COUNT(id) AS landplots_number,
+        SUM(CASE 
+          WHEN circle_radius IS NULL THEN ROUND(st_area(area, true)::numeric)
+          ELSE ROUND((pi() * circle_radius * circle_radius)::numeric)
+        END) AS areas_sum
+        FROM landplot WHERE tenant_id = $1;
+    `,
+      [id]
+    );
+
+    const land = landQuery.rows[0];
+
+    const result = { tenant, users, land };
 
     return res.status(200).json(result);
   } catch (e) {

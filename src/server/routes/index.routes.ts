@@ -12,7 +12,7 @@ import {
   deleteTenant,
   getTenantById,
   createTenantWithUsers,
-  getTenantWithUsers,
+  getTenantData,
 } from "../controllers/tenant.controllers";
 
 router.get("/", getTime);
@@ -23,7 +23,7 @@ router.put("/tenant/:id", updateTenant);
 router.delete("/tenant/:id", deleteTenant);
 
 router.post("/tenantdata", createTenantWithUsers);
-router.get("/tenantdata/:id", getTenantWithUsers);
+router.get("/tenantdata/:id", getTenantData);
 
 // Users
 

@@ -46,6 +46,31 @@ export const getCrops = async (
   }
 };
 
+/**
+ * Gets the date from a date after a certain interval.
+ * @param {Date} referenceDate
+ * @param {Postgres interval return object} interval
+ * @returns {Date}
+ */
+function sumIntervalToDate(referenceDate: string, interval: any): Date {
+  let finalDate = new Date(referenceDate);
+
+  const intervalUnit = Object.keys(interval)[0] || "days";
+  const intervalCuantity: number = interval[intervalUnit] || 0;
+
+  if (intervalUnit === "days") {
+    finalDate.setDate(finalDate.getDate() + intervalCuantity);
+  }
+  if (intervalUnit === "months") {
+    finalDate.setMonth(finalDate.getMonth() + intervalCuantity);
+  }
+  if (intervalUnit === "years") {
+    finalDate.setFullYear(finalDate.getFullYear() + intervalCuantity);
+  }
+
+  return finalDate;
+}
+
 export const createCrop = async (
   req: Request,
   res: Response,
@@ -186,21 +211,7 @@ export const createCrop = async (
 
         let due_date = null;
         if (sequence_number === 0) {
-          due_date = new Date(date);
-
-          const intervalUnit = Object.keys(et_from_stage_start)[0] || "days";
-          const intervalCuantity: number =
-            et_from_stage_start[intervalUnit] || 0;
-
-          if (intervalUnit === "days") {
-            due_date.setDate(due_date.getDate() + intervalCuantity);
-          }
-          if (intervalUnit === "months") {
-            due_date.setMonth(due_date.getMonth() + intervalCuantity);
-          }
-          if (intervalUnit === "years") {
-            due_date.setFullYear(due_date.getFullYear() + intervalCuantity);
-          }
+          due_date = sumIntervalToDate(date, et_from_stage_start);
         }
 
         await client.query(
@@ -418,24 +429,11 @@ export const setFinishedCropStage = async (
 
       for (const growthEvent of growthEvents) {
         const { id, species_growth_event_et_from_stage_start } = growthEvent;
-        console.log(species_growth_event_et_from_stage_start[0]);
 
-        let due_date = new Date(doneDate);
-
-        const intervalUnit =
-          Object.keys(species_growth_event_et_from_stage_start)[0] || "days";
-        const intervalCuantity: number =
-          species_growth_event_et_from_stage_start[intervalUnit] || 0;
-
-        if (intervalUnit === "days") {
-          due_date.setDate(due_date.getDate() + intervalCuantity);
-        }
-        if (intervalUnit === "months") {
-          due_date.setMonth(due_date.getMonth() + intervalCuantity);
-        }
-        if (intervalUnit === "years") {
-          due_date.setFullYear(due_date.getFullYear() + intervalCuantity);
-        }
+        const due_date = sumIntervalToDate(
+          doneDate,
+          species_growth_event_et_from_stage_start
+        );
 
         await client.query(
           `

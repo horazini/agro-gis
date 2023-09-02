@@ -132,19 +132,19 @@ const CropInfo = (crop: Crop, navigate: NavigateFunction) => {
   );
 };
 
-export const FeatureInfo = (feature: any, navigate: NavigateFunction) => {
+export const FeatureInfo = (
+  featureProperties: any,
+  navigate: NavigateFunction
+) => {
+  const { landplot, crop } = featureProperties;
+
   return (
     <Box>
       <h2>Información seleccionada:</h2>
-      <p>Parcela N.° {feature.properties?.id}</p>
-      {feature.properties?.description && (
-        <p>Descripción: {feature.properties?.description}</p>
-      )}
-      {feature.properties?.radius && (
-        <p>Radio: {feature.properties?.radius.toFixed(2)} m.</p>
-      )}
-      {(feature.properties?.crop &&
-        CropInfo(feature.properties.crop, navigate)) || (
+      <p>Parcela N.° {landplot.id}</p>
+      {landplot.description && <p>Descripción: {landplot.description}</p>}
+      {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
+      {(crop && CropInfo(crop, navigate)) || (
         <Fragment>
           <h2>Parcela libre</h2>
           <h3>No se registran cultivos en esta parcela.</h3>

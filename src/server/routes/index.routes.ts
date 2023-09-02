@@ -57,7 +57,6 @@ router.get("/user", getUserData);
 import {
   getSpecies,
   getSpeciesByTenant,
-  getSpeciesById,
   getSpeciesDataById,
   createSpecies,
   deleteSpecies,
@@ -66,7 +65,6 @@ import {
 } from "../controllers/species.controllers";
 
 router.get("/species", getSpecies);
-router.get("/species/:id", getSpeciesById);
 router.get("/speciesdata/:id", getSpeciesDataById);
 router.get("/tenantspecies/:id", getSpeciesByTenant);
 router.post("/species", createSpecies);
@@ -81,16 +79,17 @@ import {
   getGeoWithCrops,
   getTenantGeoWithCurrentCrops,
   getTenantGeo,
-  getAvailableTenantGeo,
+  getAvailableAndOccupiedTenantGeo,
   createFeatures,
   updateFeatures,
 } from "../controllers/geo.controllers";
 
-router.get("/geo", getGeo);
-router.get("/geodata/:id", getGeoWithCrops);
-router.get("/tenantgeo/:tenantId", getTenantGeo);
+router.get("/geo", getGeo); // not used
+
+router.get("/geodata/:id", getGeoWithCrops); // not used (yet)
+router.get("/tenantgeo/:tenantId", getTenantGeo); // used only on development components
 router.get("/tenantgeocurrentdata/:tenantId", getTenantGeoWithCurrentCrops);
-router.get("/availabletenantGeo/:tenantId", getAvailableTenantGeo);
+router.get("/availabletenantGeo/:tenantId", getAvailableAndOccupiedTenantGeo);
 router.post("/features", createFeatures);
 router.put("/features", updateFeatures);
 

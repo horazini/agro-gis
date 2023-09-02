@@ -53,7 +53,7 @@ const MapView = () => {
     );
     setCircles(
       data.features.filter(
-        (feature: any) => feature.properties.subType === "Circle"
+        (feature: any) => feature.properties.landplot.subType === "Circle"
       )
     );
   };
@@ -62,10 +62,7 @@ const MapView = () => {
     loadData();
   }, []);
 
-  const PolygonPopup = (
-    feature: { properties: { id: number; description: string } },
-    layer: Polygon
-  ) => {
+  const PolygonPopup = (feature: { properties: any }, layer: Polygon) => {
     // Crea una variable con el contenido del pop-up
 
     const latLngs: LatLng[] = layer.getLatLngs()[0] as LatLng[];
@@ -78,8 +75,8 @@ const MapView = () => {
 
     const popupContent = `
         <div>
-          <h3>ID: ${feature.properties.id}</h3>
-          <p>Descripción: ${feature.properties.description}</p>
+          <h3>ID: ${feature.properties.landplot.id}</h3>
+          <p>Descripción: ${feature.properties.landplot.description}</p>
           <p>Área: ${formatedArea}</p>
         </div>
       `;
@@ -111,11 +108,11 @@ const MapView = () => {
             ? circles.map((circle: any) => {
                 return (
                   <Circle
-                    key={circle.properties.id}
+                    key={circle.properties.landplot.id}
                     center={circle.geometry.coordinates}
-                    radius={circle.properties.radius}
+                    radius={circle.properties.landplot.radius}
                   >
-                    {CirclePopup(circle.properties)}
+                    {CirclePopup(circle.properties.landplot)}
                   </Circle>
                 );
               })

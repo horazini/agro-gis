@@ -49,7 +49,8 @@ const MapView = () => {
   // Comportamiento de las Layers
 
   const CustomLayer = ({ feature }: any) => {
-    const { id, crop, description } = feature.properties;
+    const { landplot, crop } = feature.properties;
+    const { id, description } = landplot;
     const { type } = feature.geometry;
 
     const [highlightedLayerId, setHighlightedLayerId] = useState<number | null>(
@@ -64,7 +65,8 @@ const MapView = () => {
     };
 
     const isHighlighted = highlightedLayerId === id;
-    const isSelected = (selectedFeature?.properties?.id ?? null) === id;
+    const isSelected =
+      (selectedFeature?.properties?.landplot.id ?? null) === id;
     const isOccupied = crop && crop?.finish_date === null;
 
     const pathOptions = {
@@ -92,8 +94,8 @@ const MapView = () => {
       <div>
         <h3>ID: {id}</h3>
         <p>Descripción: {description}</p>
-        {feature.properties?.radius && (
-          <p>Radio: {feature.properties.radius} m.</p>
+        {feature.properties?.landplot.radius && (
+          <p>Radio: {feature.properties.landplot.radius} m.</p>
         )}
       </div>
     );
@@ -112,12 +114,15 @@ const MapView = () => {
           <Popup>{PopUp}</Popup>
         </Polygon>
       );
-    } else if (type === "Point" && feature.properties.subType === "Circle") {
+    } else if (
+      type === "Point" &&
+      feature.properties.landplot.subType === "Circle"
+    ) {
       return (
         <Circle
           key={id}
           center={feature.geometry.coordinates}
-          radius={feature.properties.radius}
+          radius={feature.properties.landplot.radius}
           pathOptions={pathOptions}
           eventHandlers={eventHandlers}
         >
@@ -142,13 +147,17 @@ const MapView = () => {
           {geoData &&
             geoData.features.map((feature: Feature) => {
               return (
-                <CustomLayer key={feature.properties?.id} feature={feature} />
+                <CustomLayer
+                  key={feature.properties?.landplot.id}
+                  feature={feature}
+                />
               );
             })}
         </LayerGroup>
       </MapContainer>
 
-      {(selectedFeature && FeatureInfo(selectedFeature, navigate)) || (
+      {(selectedFeature &&
+        FeatureInfo(selectedFeature.properties, navigate)) || (
         <h2>Seleccione una parcela</h2>
       )}
     </Box>

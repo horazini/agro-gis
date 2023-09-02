@@ -63,7 +63,6 @@ export const usernameAlreadyExists = async (username: string) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ username }),
-    //body: JSON.stringify(username),
   });
   const bool = await res.json();
   return bool;
@@ -97,12 +96,6 @@ export type speciesDataType = {
       time_period: string | undefined;
     }[];
   }[];
-};
-
-export const getSpeciesById = async (id: string) => {
-  const res = await fetch(`${API}/species/${id}`);
-  const data = (await res.json())[0];
-  return data;
 };
 
 export const getSpeciesData = async (id: string) => {
@@ -144,6 +137,14 @@ export const putSpeciesData = async (
 
 export const getTenantGeo = async (tenantId: number | null) => {
   const response = await fetch(`${API}/tenantGeo/${tenantId}`);
+  const data = await response.json();
+  return data;
+};
+
+export const getAvailableAndOccupiedTenantGeo = async (
+  tenantId: number | null
+) => {
+  const response = await fetch(`${API}/availabletenantGeo/${tenantId}`);
   const data = await response.json();
   return data;
 };

@@ -1,58 +1,67 @@
 import { NextFunction, Request, Response } from "express";
 import { QueryResult } from "pg";
 import pool from "../database";
+import { Feature, FeatureCollection } from "geojson";
 
-const parsePostGISToGeoJSON = (rows: any) => {
+/**
+ *
+ * @param {center?: any; geometry?: any; circle_radius?: number; [key: string]: any;} landplot
+ * @param {[key: string]: any;} properties (optional)
+ * @returns {Feature} GeoJSON Feature
+ */
+export function PostGISToGeoJSONFeature(
+  landplot: {
+    center?: any;
+    geometry?: any;
+    circle_radius?: number;
+    [key: string]: any;
+  },
+  properties?: {
+    [key: string]: any;
+  }
+): Feature {
+  const { center, geometry, circle_radius, ...landplotRest } = landplot;
+  if (properties === undefined) {
+    properties = {};
+  }
+  properties.landplot = landplotRest;
+
+  let geoJSONGeometry;
+  if (center) {
+    const [long, lat] = JSON.parse(center).coordinates;
+    geoJSONGeometry = {
+      type: "Point",
+      coordinates: [lat, long],
+    };
+    properties.landplot.subType = "Circle";
+    properties.landplot.radius = circle_radius;
+  } else {
+    geoJSONGeometry = JSON.parse(geometry);
+  }
+
+  const Feature: Feature = {
+    type: "Feature",
+    geometry: geoJSONGeometry,
+    properties,
+  };
+  return Feature;
+}
+
+export function PostGISToGeoJSONFeatureCollection(
+  rows: any
+): FeatureCollection {
   const features = rows.map((row: any) => {
-    let properties: any = {
-      id: row.id,
-      description: row.description,
-      area: row.area,
-    };
-
-    if (row.crop_id) {
-      const crop = rows.map((row: any) => ({
-        id: row.crop_id,
-        species_id: row.species_id,
-        description: row.description,
-        start_date: row.start_date,
-        finish_date: row.finish_date,
-      }));
-
-      properties = {
-        id: row.id,
-        description: row.description,
-        crop,
-      };
-    }
-
-    let geometry;
-    if (row.center) {
-      const [longitud, latitud] = JSON.parse(row.center).coordinates;
-      geometry = {
-        type: "Point",
-        coordinates: [latitud, longitud],
-      };
-      properties["subType"] = "Circle";
-      properties["radius"] = row.circle_radius;
-    } else {
-      geometry = JSON.parse(row.geometry);
-    }
-
-    return {
-      type: "Feature",
-      geometry,
-      properties,
-    };
+    const { landplot, properties } = row;
+    return PostGISToGeoJSONFeature(landplot, properties);
   });
 
-  const geoJSON = {
+  const FeatureCollection: FeatureCollection = {
     type: "FeatureCollection",
     features: features,
   };
 
-  return geoJSON;
-};
+  return FeatureCollection;
+}
 
 export const getGeo = async (
   req: Request,
@@ -64,9 +73,21 @@ export const getGeo = async (
       "SELECT id, ST_AsGeoJSON(area) as geometry, ST_AsGeoJSON(circle_center) as center, circle_radius, description FROM landplot"
     );
 
-    const geoJSON = parsePostGISToGeoJSON(response.rows);
+    const features = response.rows.map((row: any) => {
+      const landplot = {
+        id: row.id,
+        geometry: row.geometry,
+        center: row.center,
+        circle_radius: row.circle_radius,
+        description: row.description,
+      };
 
-    return res.status(200).json(geoJSON);
+      return { landplot };
+    });
+
+    const FeatureCollection = PostGISToGeoJSONFeatureCollection(features);
+
+    return res.status(200).json(FeatureCollection);
   } catch (e) {
     next(e);
   }
@@ -84,35 +105,11 @@ export const getTenantGeo = async (
       [tenantId]
     );
 
-    const geoJSON = parsePostGISToGeoJSON(response.rows);
+    const features = response.rows.map((row: any) => ({ landplot: row }));
 
-    return res.status(200).json(geoJSON);
-  } catch (e) {
-    next(e);
-  }
-};
+    const FeatureCollection = PostGISToGeoJSONFeatureCollection(features);
 
-export const getAvailableTenantGeo = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const tenantId = parseInt(req.params.tenantId);
-    const response: QueryResult = await pool.query(
-      `SELECT id, ST_AsGeoJSON(area) as geometry, ST_AsGeoJSON(circle_center) as center, circle_radius, description 
-        FROM landplot 
-        WHERE tenant_id = $1 
-        AND id NOT IN (
-        SELECT landplot_id 
-        FROM crop 
-        WHERE finish_date IS NULL)`,
-      [tenantId]
-    );
-
-    const geoJSON = parsePostGISToGeoJSON(response.rows);
-
-    return res.status(200).json(geoJSON);
+    return res.status(200).json(FeatureCollection);
   } catch (e) {
     next(e);
   }
@@ -158,13 +155,13 @@ export const getGeoWithCrops = async (
 
     const result = { landplot, crops };
 
-    return res.status(200).json(result);
+    return res.status(200).json("Unfinished function");
   } catch (e) {
     next(e);
   }
 };
 
-export const getTenantGeoWithCurrentCrops = async (
+export const getAvailableAndOccupiedTenantGeo = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -174,7 +171,7 @@ export const getTenantGeoWithCurrentCrops = async (
     const response: QueryResult = await pool.query(
       `
       SELECT l.id AS id, ST_AsGeoJSON(l.area) as geometry, ST_AsGeoJSON(l.circle_center) as center, l.circle_radius, l.description, 
-      c.id AS crop_id, c.species_id, c.species_name, c.species_description, c.description AS crop_description, c.comments, c.start_date, c.finish_date, c.weight_in_tons
+      c.id AS crop_id, c.finish_date 
       FROM landplot l
       LEFT JOIN crop c ON l.id = c.landplot_id
       WHERE l.tenant_id = $1 AND (
@@ -199,14 +196,7 @@ export const getTenantGeoWithCurrentCrops = async (
       if (row.crop_id) {
         crop = {
           id: row.crop_id,
-          species_id: row.species_id,
-          species_name: row.species_name,
-          species_description: row.species_description,
-          description: row.crop_description,
-          comments: row.comments,
-          start_date: row.start_date,
           finish_date: row.finish_date,
-          weight_in_tons: row.weight_in_tons,
         };
       }
 
@@ -242,6 +232,73 @@ export const getTenantGeoWithCurrentCrops = async (
     };
 
     return res.status(200).json(geoJSON);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const getTenantGeoWithCurrentCrops = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
+    const response: QueryResult = await pool.query(
+      `
+      SELECT l.id AS id, ST_AsGeoJSON(l.area) as geometry, ST_AsGeoJSON(l.circle_center) as center, l.circle_radius, l.description, 
+      c.id AS crop_id, c.species_id, c.species_name, c.species_description, c.description AS crop_description, c.comments, c.start_date, c.finish_date, c.weight_in_tons
+      FROM landplot l
+      LEFT JOIN crop c ON l.id = c.landplot_id
+      WHERE l.tenant_id = $1 AND (
+        c.finish_date IS NULL OR
+        c.finish_date = (
+          SELECT CASE WHEN EXISTS (
+            SELECT 1
+            FROM crop
+            WHERE landplot_id = l.id AND finish_date IS NULL
+          ) THEN NULL ELSE MAX(finish_date) END
+          FROM crop 
+          WHERE landplot_id = l.id
+        )
+      )
+      `,
+      [tenantId]
+    );
+
+    const features = response.rows.map((row: any) => {
+      const { id, description, geometry, center, circle_radius, ...cropData } =
+        row;
+      const landplot = {
+        id,
+        description,
+        geometry,
+        center,
+        circle_radius,
+      };
+
+      let crop = null;
+
+      if (row.crop_id) {
+        const { crop_id, crop_description, ...rest } = cropData;
+
+        crop = {
+          id: crop_id,
+          description: crop_description,
+          ...rest,
+        };
+      }
+
+      const properties = {
+        crop,
+      };
+
+      return { landplot, properties };
+    });
+
+    const FeatureCollection = PostGISToGeoJSONFeatureCollection(features);
+
+    return res.status(200).json(FeatureCollection);
   } catch (e) {
     next(e);
   }

@@ -74,8 +74,8 @@ const MapView = () => {
       landplot: cropId,
     }));
     const found: Feature = geoData.features.find(
-      (feature: { properties: { id: number } }) =>
-        feature.properties.id === cropId
+      (feature: { properties: { landplot: { id: number } } }) =>
+        feature.properties.landplot.id === cropId
     );
     setSelectedFeature(found);
     setLandplotError(false);
@@ -121,9 +121,10 @@ const MapView = () => {
       setHighlightedLayerId(null);
     };
 
-    const isHighlighted = highlightedLayerId === feature.properties.id;
+    const isHighlighted = highlightedLayerId === feature.properties.landplot.id;
     const isSelected =
-      (selectedFeature?.properties?.id ?? null) === feature.properties.id;
+      (selectedFeature?.properties?.landplot.id ?? null) ===
+      feature.properties.landplot.id;
     const isOccupied =
       feature.properties.crop && feature.properties.crop?.finish_date === null;
 
@@ -139,21 +140,21 @@ const MapView = () => {
     };
 
     const handleLayerClick = (event: LayerEvent, feature: any) => {
-      handleLandplotChange(feature.properties?.id);
+      handleLandplotChange(feature.properties?.landplot.id);
     };
 
     const eventHandlers = {
       click: (event: LayerEvent) => handleLayerClick(event, feature),
-      mouseover: () => handleLayerMouseOver(feature.properties.id),
+      mouseover: () => handleLayerMouseOver(feature.properties.landplot.id),
       mouseout: handleLayerMouseOut,
     };
 
     const PopUp = (
       <div>
-        <h3>ID: {feature.properties.id}</h3>
-        <p>Descripción: {feature.properties.description}</p>
-        {feature.properties?.radius && (
-          <p>Radio: {feature.properties.radius} m.</p>
+        <h3>ID: {feature.properties.landplot.id}</h3>
+        <p>Descripción: {feature.properties.landplot.description}</p>
+        {feature.properties?.landplot.radius && (
+          <p>Radio: {feature.properties.landplot.radius} m.</p>
         )}
       </div>
     );
@@ -164,7 +165,7 @@ const MapView = () => {
       );
       return (
         <Polygon
-          key={feature.properties.id}
+          key={feature.properties.landplot.id}
           positions={coordinates}
           pathOptions={pathOptions}
           eventHandlers={eventHandlers}
@@ -174,13 +175,13 @@ const MapView = () => {
       );
     } else if (
       feature.geometry.type === "Point" &&
-      feature.properties.subType === "Circle"
+      feature.properties.landplot.subType === "Circle"
     ) {
       return (
         <Circle
-          key={feature.properties.id}
+          key={feature.properties.landplot.id}
           center={feature.geometry.coordinates}
-          radius={feature.properties.radius}
+          radius={feature.properties.landplot.radius}
           pathOptions={pathOptions}
           eventHandlers={eventHandlers}
         >
@@ -219,13 +220,17 @@ const MapView = () => {
           {geoData &&
             geoData.features.map((feature: any) => {
               return (
-                <CustomLayer key={feature.properties.id} feature={feature} />
+                <CustomLayer
+                  key={feature.properties.landplot.id}
+                  feature={feature}
+                />
               );
             })}
         </LayerGroup>
       </MapContainer>
 
-      {(selectedFeature && FeatureInfo(selectedFeature, navigate)) || (
+      {(selectedFeature &&
+        FeatureInfo(selectedFeature.properties, navigate)) || (
         <h2>Seleccione una parcela</h2>
       )}
 
@@ -245,9 +250,13 @@ const MapView = () => {
             Seleccione una parcela
           </MenuItem>
           {geoData &&
-            geoData.features.map((item: any) => (
-              <MenuItem key={item.properties.id} value={item.properties.id}>
-                Parcela {item.properties.id + " "} {item.properties.description}
+            geoData.features.map((feature: any) => (
+              <MenuItem
+                key={feature.properties.landplot.id}
+                value={feature.properties.landplot.id}
+              >
+                Parcela {feature.properties.landplot.id + " "}{" "}
+                {feature.properties.landplot.description}
               </MenuItem>
             ))}
         </Select>

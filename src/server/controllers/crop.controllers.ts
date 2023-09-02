@@ -1,37 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { QueryResult } from "pg";
 import pool from "../database";
-import { Feature } from "geojson";
-
-const parsePostGISToGeoJSON = (row: any) => {
-  const { landplot, ...properties } = row;
-
-  properties.landplot = {
-    id: landplot.id,
-    description: landplot.description,
-    area: landplot.area,
-  };
-
-  let geometry;
-  if (landplot.center) {
-    const [longitud, latitud] = JSON.parse(landplot.center).coordinates;
-    geometry = {
-      type: "Point",
-      coordinates: [latitud, longitud],
-    };
-    properties.landplot.subType = "Circle";
-    properties.landplot.radius = landplot.circle_radius;
-  } else {
-    geometry = JSON.parse(landplot.geometry);
-  }
-
-  const feature: Feature = {
-    type: "Feature",
-    geometry,
-    properties,
-  };
-  return feature;
-};
+import { PostGISToGeoJSONFeature } from "./geo.controllers";
 
 export const getCrops = async (
   req: Request,
@@ -258,8 +228,10 @@ export const getCropDataById = async (
       SELECT 
       landplot_id, 
       ST_AsGeoJSON(landplot_area) as landplot_geometry, 
-      ROUND(st_area(landplot_area, true)::numeric) AS landplot_area, 
-      ROUND((pi() * landplot_circle_radius * landplot_circle_radius)::numeric) AS landplot_circle_area,
+      CASE 
+        WHEN landplot_circle_radius IS NULL THEN ROUND(st_area(landplot_area, true)::numeric)
+        ELSE ROUND((pi() * landplot_circle_radius * landplot_circle_radius)::numeric)
+      END AS landplot_area,
       ST_AsGeoJSON(landplot_circle_center) as landplot_center,
       landplot_circle_radius, landplot_description,
       species_id, species_name, species_description,
@@ -268,17 +240,12 @@ export const getCropDataById = async (
     `;
     const cropResponse = (await pool.query(cropQuery, [id])).rows[0];
 
-    let area = cropResponse.landplot_area;
-    if (cropResponse.landplot_circle_area !== null) {
-      area = cropResponse.landplot_circle_area;
-    }
-
     const landplot = {
       id: cropResponse.landplot_id,
       geometry: cropResponse.landplot_geometry,
       center: cropResponse.landplot_center,
       circle_radius: cropResponse.landplot_circle_radius,
-      area,
+      area: cropResponse.landplot_area,
       description: cropResponse.landplot_description,
     };
 
@@ -329,16 +296,15 @@ export const getCropDataById = async (
       })
     );
 
-    const result = {
-      landplot,
+    const properties = {
       species,
       crop,
       stages,
     };
 
-    const GeoJSON = parsePostGISToGeoJSON(result);
+    const Feature = PostGISToGeoJSONFeature(landplot, properties);
 
-    return res.status(200).json(GeoJSON);
+    return res.status(200).json(Feature);
   } catch (e) {
     next(e);
   }

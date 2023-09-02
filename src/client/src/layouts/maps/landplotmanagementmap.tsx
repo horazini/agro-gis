@@ -11,7 +11,10 @@ import { EditControl } from "react-leaflet-draw";
 import type { FeatureCollection, Feature, GeoJsonObject } from "geojson";
 import { useEffect, useRef, useState } from "react";
 import { LayerControler, position } from "../../components/mapcomponents";
-import { getTenantGeoData, putFeatures } from "../../services/services";
+import {
+  getAvailableAndOccupiedTenantGeo,
+  putFeatures,
+} from "../../services/services";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { LatLngExpression } from "leaflet";
@@ -67,7 +70,7 @@ export default function EditControlFC() {
   }, []);
 
   const loadData = async () => {
-    const data = await getTenantGeoData(tenantId);
+    const data = await getAvailableAndOccupiedTenantGeo(tenantId);
     setGeojson(data.features);
   };
 

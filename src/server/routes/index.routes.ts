@@ -9,7 +9,6 @@ import {
   getTime,
   getTenants,
   updateTenant,
-  deleteTenant,
   getTenantById,
   createTenantWithUsers,
   getTenantData,
@@ -20,7 +19,6 @@ router.get("/", getTime);
 router.get("/tenants", getTenants);
 router.get("/tenant/:id", getTenantById);
 router.put("/tenant/:id", updateTenant);
-router.delete("/tenant/:id", deleteTenant);
 
 router.post("/tenantdata", createTenantWithUsers);
 router.get("/tenantdata/:id", getTenantData);
@@ -80,7 +78,6 @@ import {
   getTenantGeoWithCurrentCrops,
   getTenantGeo,
   getAvailableAndOccupiedTenantGeo,
-  createFeatures,
   updateFeatures,
 } from "../controllers/geo.controllers";
 
@@ -90,7 +87,6 @@ router.get("/geodata/:id", getGeoWithCrops); // not used (yet)
 router.get("/tenantgeo/:tenantId", getTenantGeo); // used only on development components
 router.get("/tenantgeocurrentdata/:tenantId", getTenantGeoWithCurrentCrops);
 router.get("/availabletenantGeo/:tenantId", getAvailableAndOccupiedTenantGeo);
-router.post("/features", createFeatures);
 router.put("/features", updateFeatures);
 
 // Crops

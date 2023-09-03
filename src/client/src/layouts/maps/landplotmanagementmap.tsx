@@ -45,10 +45,12 @@ type CircleFeature = {
   };
   properties: {
     status?: string;
-    id: string;
-    subType: "Circle";
-    radius: number;
-    description?: string | null;
+    landplot: {
+      id: string;
+      subType: "Circle";
+      radius: number;
+      description?: string | null;
+    };
   };
 };
 
@@ -85,9 +87,12 @@ export default function EditControlFC() {
             layer instanceof L.Polygon ||
             layer instanceof L.Marker)
         ) {
-          if (layer?.feature?.properties.radius && featureGroup.current) {
+          if (
+            layer?.feature?.properties.landplot.radius &&
+            featureGroup.current
+          ) {
             const circle = new L.Circle(layer.feature.geometry.coordinates, {
-              radius: layer.feature?.properties.radius,
+              radius: layer.feature?.properties.landplot.radius,
             });
             circle.feature = layer.feature;
             featureGroup.current?.addLayer(circle);
@@ -123,7 +128,6 @@ export default function EditControlFC() {
       },
       properties: {
         ...circleProperties,
-        subType: "Circle",
       },
     };
     return feature;
@@ -133,10 +137,13 @@ export default function EditControlFC() {
     const { layerType, layer } = e;
     if (layerType === "circle") {
       const circleProperties = {
-        id: layer._leaflet_id,
-        radius: layer.getRadius().toFixed(2),
         status: "added",
-        description: null,
+        landplot: {
+          id: layer._leaflet_id,
+          radius: layer.getRadius().toFixed(2),
+          description: null,
+          subType: "Circle",
+        },
       };
       const circleLatLng: L.LatLng = layer.getLatLng();
 
@@ -149,9 +156,11 @@ export default function EditControlFC() {
 
       const polygon = layer.toGeoJSON(); // convierte los polígonos dibujados en objetos GeoJSON.
       polygon.properties = {
-        id: _leaflet_id,
         status: "added",
-        description: null,
+        landplot: {
+          id: _leaflet_id,
+          description: null,
+        },
       };
       setGeojson((layers: any) => [...layers, polygon]);
     }
@@ -166,7 +175,7 @@ export default function EditControlFC() {
       let FeatureToEditId = layer._leaflet_id;
       let status = "added";
       if (layer?.feature) {
-        FeatureToEditId = layer.feature.properties.id;
+        FeatureToEditId = layer.feature.properties.landplot.id;
         status = "modified";
         layer.feature.properties.status = status;
       }
@@ -176,7 +185,7 @@ export default function EditControlFC() {
 
         setGeojson((layers: any) =>
           layers.map((l: any) =>
-            l.properties.id === FeatureToEditId
+            l.properties.landplot.id === FeatureToEditId
               ? {
                   ...l,
                   geometry: {
@@ -201,7 +210,7 @@ export default function EditControlFC() {
 
         setGeojson((layers: any) =>
           layers.map((l: any) =>
-            l.properties.id === FeatureToEditId
+            l.properties.landplot.id === FeatureToEditId
               ? {
                   ...l,
                   geometry: {
@@ -213,7 +222,10 @@ export default function EditControlFC() {
                   },
                   properties: {
                     ...l.properties,
-                    radius: layer.editing._shape._mRadius.toFixed(2),
+                    landplot: {
+                      ...l.properties.landplot,
+                      radius: layer.editing._shape._mRadius.toFixed(2),
+                    },
                     status,
                   },
                 }
@@ -233,10 +245,10 @@ export default function EditControlFC() {
       let FeatureToDeleteId = layer._leaflet_id;
 
       if (layer.feature) {
-        FeatureToDeleteId = layer.feature.properties.id;
+        FeatureToDeleteId = layer.feature.properties.landplot.id;
         setGeojson((existingFeatures: any) =>
           existingFeatures.map((f: any) =>
-            f.properties.id === FeatureToDeleteId
+            f.properties.landplot.id === FeatureToDeleteId
               ? {
                   ...f,
                   properties: {
@@ -250,7 +262,7 @@ export default function EditControlFC() {
       } else {
         setGeojson((existingFeatures: any) =>
           existingFeatures.filter(
-            (f: any) => f.properties.id !== FeatureToDeleteId
+            (f: any) => f.properties.landplot.id !== FeatureToDeleteId
           )
         );
       }
@@ -265,10 +277,10 @@ export default function EditControlFC() {
     const PopUp = (
       <div>
         <h3>Parcela ocupada</h3>
-        <p>ID: {feature.properties.id}</p>
-        <p>Descripción: {feature.properties.description}</p>
-        {feature.properties?.radius && (
-          <p>Radio: {feature.properties.radius} m.</p>
+        <p>ID: {feature.properties.landplot.id}</p>
+        <p>Descripción: {feature.properties.landplot.description}</p>
+        {feature.properties?.landplot.radius && (
+          <p>Radio: {feature.properties.landplot.radius} m.</p>
         )}
       </div>
     );
@@ -279,7 +291,7 @@ export default function EditControlFC() {
       );
       return (
         <Polygon
-          key={feature.properties.id}
+          key={feature.properties.landplot.id}
           positions={coordinates}
           pathOptions={pathOptions}
         >
@@ -288,13 +300,13 @@ export default function EditControlFC() {
       );
     } else if (
       feature.geometry.type === "Point" &&
-      feature.properties.subType === "Circle"
+      feature.properties.landplot.subType === "Circle"
     ) {
       return (
         <Circle
-          key={feature.properties.id}
+          key={feature.properties.landplot.id}
           center={feature.geometry.coordinates}
-          radius={feature.properties.radius}
+          radius={feature.properties.landplot.radius}
           pathOptions={pathOptions}
         >
           <Popup>{PopUp}</Popup>
@@ -306,13 +318,13 @@ export default function EditControlFC() {
 
   const handleSubmit = async () => {
     try {
-      const featurecollection = geojson?.filter(
+      const featureCollection = geojson?.filter(
         (f: any) => f.properties.status !== undefined
       );
 
       const msg = {
         tenantId: tenantId || 1,
-        featurecollection,
+        featureCollection,
       };
 
       await putFeatures(msg);
@@ -361,7 +373,7 @@ export default function EditControlFC() {
                   if (feature.properties.crop?.finish_date === null) {
                     return (
                       <CustomLayer
-                        key={feature.properties.id}
+                        key={feature.properties.landplot.id}
                         feature={feature}
                       />
                     );
@@ -393,11 +405,11 @@ export default function EditControlFC() {
               <TableBody>
                 {geojson &&
                   geojson.map((feature: any) => (
-                    <React.Fragment key={feature.properties.id}>
-                      <TableRow key={feature.properties.id}>
+                    <React.Fragment key={feature.properties.landplot.id}>
+                      <TableRow key={feature.properties.landplot.id}>
                         <TableCell>
                           {feature.properties.status !== "added"
-                            ? feature.properties.id
+                            ? feature.properties.landplot.id
                             : ""}
                         </TableCell>
                         <TableCell>
@@ -422,13 +434,13 @@ export default function EditControlFC() {
                             size="small"
                             onClick={() =>
                               setOpen(
-                                open === feature.properties.id
+                                open === feature.properties.landplot.id
                                   ? -1
-                                  : feature.properties.id
+                                  : feature.properties.landplot.id
                               )
                             }
                           >
-                            {open === feature.properties.id ? (
+                            {open === feature.properties.landplot.id ? (
                               <KeyboardArrowUpIcon />
                             ) : (
                               <KeyboardArrowDownIcon />
@@ -446,7 +458,7 @@ export default function EditControlFC() {
                           }}
                         >
                           <Collapse
-                            in={open === feature.properties.id}
+                            in={open === feature.properties.landplot.id}
                             timeout="auto"
                             unmountOnExit
                           >
@@ -459,7 +471,9 @@ export default function EditControlFC() {
                                 label="Descripción"
                                 fullWidth
                                 variant="standard"
-                                value={feature.properties.description || ""}
+                                value={
+                                  feature.properties.landplot.description || ""
+                                }
                                 /* onChange={handle...Change} */
                               />
                             </Box>

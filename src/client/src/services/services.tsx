@@ -155,16 +155,6 @@ export const getTenantGeoData = async (tenantId: number | null) => {
   return data;
 };
 
-export const postFeatures = async (features: any) => {
-  const res = await fetch(`${API}/features`, {
-    method: "POST",
-    body: JSON.stringify(features),
-    headers: { "Content-type": "application/json" },
-  });
-  const data = await res.json();
-  return data;
-};
-
 export const putFeatures = async (features: any) => {
   const res = await fetch(`${API}/features`, {
     method: "PUT",

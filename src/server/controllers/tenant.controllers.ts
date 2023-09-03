@@ -90,7 +90,17 @@ export const getTenantData = async (
 
     const land = landQuery.rows[0];
 
-    const result = { tenant, users, land };
+    const speciesQuery: QueryResult = await pool.query(
+      `SELECT 
+        COUNT(id) AS species_number
+        FROM species WHERE tenant_id = $1;
+    `,
+      [id]
+    );
+
+    const species = speciesQuery.rows[0];
+
+    const result = { tenant, users, land, species };
 
     return res.status(200).json(result);
   } catch (e) {
@@ -175,20 +185,6 @@ export const updateTenant = async (
       [name, id]
     );
     return res.status(204).send("Tenant ${id} updated succesfully");
-  } catch (e) {
-    next(e);
-  }
-};
-
-export const deleteTenant = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const id = parseInt(req.params.id);
-    await pool.query("DELETE FROM tenant WHERE id = $1", [id]);
-    return res.status(204).send("Tenant ${id} deleted succesfully");
   } catch (e) {
     next(e);
   }

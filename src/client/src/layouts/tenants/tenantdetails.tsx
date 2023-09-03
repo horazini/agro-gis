@@ -41,6 +41,9 @@ interface tenantData {
     landplots_number: number;
     areas_sum: number;
   };
+  species: {
+    species_number: number;
+  };
 }
 
 const UserList = (users: user[]) => {
@@ -66,9 +69,10 @@ const UserList = (users: user[]) => {
 
                 <Box>
                   <Button
+                    disabled
                     variant="contained"
                     color="warning"
-                    onClick={() => navigate(`/tenants/${user.id}`)}
+                    /* onClick={() => navigate(`/tenants/${user.id}`)} */
                     style={{ marginLeft: ".5rem" }}
                     startIcon={<FormatListBulleted />}
                   >
@@ -112,7 +116,7 @@ const LandInfo = (landplotinfo: any) => {
 
   return (
     <Fragment>
-      <h2>Información de terreno</h2>
+      <h2>Terreno</h2>
       {landplotinfo.landplots_number > 0 ? (
         <Fragment>
           <h3>
@@ -128,6 +132,23 @@ const LandInfo = (landplotinfo: any) => {
   );
 };
 
+const speciesInfo = (speciesInfo: any) => {
+  const { species_number } = speciesInfo;
+
+  return (
+    <Fragment>
+      <h2>Especies</h2>
+      {species_number > 0 ? (
+        <Fragment>
+          <h3>El cliente registra un total de {species_number} especies.</h3>
+        </Fragment>
+      ) : (
+        <h3> El cliente no registra especies. </h3>
+      )}
+    </Fragment>
+  );
+};
+
 const TenantDetails = () => {
   const params = useParams();
 
@@ -135,6 +156,7 @@ const TenantDetails = () => {
     tenant: { id: 0, name: "" },
     users: [],
     land: { landplots_number: 0, areas_sum: 0 },
+    species: { species_number: 0 },
   });
 
   const loadTenant = async (id: string) => {
@@ -158,6 +180,7 @@ const TenantDetails = () => {
 
       {UserList(tenantData.users)}
       {LandInfo(tenantData.land)}
+      {speciesInfo(tenantData.species)}
     </Fragment>
   );
 };

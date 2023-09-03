@@ -64,7 +64,7 @@ declare module "leaflet" {
 }
 
 export default function EditControlFC() {
-  const [geojson, setGeojson] = useState<GeoJsonObject[]>();
+  const [features, setFeatures] = useState<Feature[]>([]);
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
@@ -73,14 +73,14 @@ export default function EditControlFC() {
 
   const loadData = async () => {
     const data = await getAvailableAndOccupiedTenantGeo(tenantId);
-    setGeojson(data.features);
+    setFeatures(data.features);
   };
 
   const featureGroup = useRef<L.FeatureGroup>(null);
 
   useEffect(() => {
-    if (featureGroup.current?.getLayers().length === 0 && geojson) {
-      L.geoJSON(geojson).eachLayer((layer) => {
+    if (featureGroup.current?.getLayers().length === 0 && features) {
+      L.geoJSON(features).eachLayer((layer) => {
         if (
           layer.feature?.properties?.crop?.finish_date !== null &&
           (layer instanceof L.Polyline ||
@@ -116,7 +116,7 @@ export default function EditControlFC() {
         }
       });
     }
-  }, [geojson]);
+  }, [features]);
 
   const circleToGeoJSON = (circleProperties: any, circleLatLng: L.LatLng) => {
     const { lat, lng } = circleLatLng;
@@ -149,7 +149,7 @@ export default function EditControlFC() {
 
       const circle = circleToGeoJSON(circleProperties, circleLatLng);
 
-      setGeojson((layers: any) => [...layers, circle]); // Almacena en GeoJSON Features
+      setFeatures((layers: any) => [...layers, circle]); // Almacena en GeoJSON Features
     }
     if (layerType === "polygon") {
       const { _leaflet_id } = layer;
@@ -162,7 +162,7 @@ export default function EditControlFC() {
           description: null,
         },
       };
-      setGeojson((layers: any) => [...layers, polygon]);
+      setFeatures((layers: any) => [...layers, polygon]);
     }
   };
 
@@ -183,7 +183,7 @@ export default function EditControlFC() {
       if (layer.editing.latlngs) {
         // Acciones para polígonos
 
-        setGeojson((layers: any) =>
+        setFeatures((layers: any) =>
           layers.map((l: any) =>
             l.properties.landplot.id === FeatureToEditId
               ? {
@@ -208,7 +208,7 @@ export default function EditControlFC() {
       } else if (layer.editing._shape) {
         // Acciones para círculos
 
-        setGeojson((layers: any) =>
+        setFeatures((layers: any) =>
           layers.map((l: any) =>
             l.properties.landplot.id === FeatureToEditId
               ? {
@@ -246,7 +246,7 @@ export default function EditControlFC() {
 
       if (layer.feature) {
         FeatureToDeleteId = layer.feature.properties.landplot.id;
-        setGeojson((existingFeatures: any) =>
+        setFeatures((existingFeatures: any) =>
           existingFeatures.map((f: any) =>
             f.properties.landplot.id === FeatureToDeleteId
               ? {
@@ -260,7 +260,7 @@ export default function EditControlFC() {
           )
         );
       } else {
-        setGeojson((existingFeatures: any) =>
+        setFeatures((existingFeatures: any) =>
           existingFeatures.filter(
             (f: any) => f.properties.landplot.id !== FeatureToDeleteId
           )
@@ -318,13 +318,18 @@ export default function EditControlFC() {
 
   const handleSubmit = async () => {
     try {
-      const featureCollection = geojson?.filter(
+      const featureArray = features?.filter(
         (f: any) => f.properties.status !== undefined
       );
 
+      const FeatureCollection: FeatureCollection = {
+        type: "FeatureCollection",
+        features: featureArray,
+      };
+
       const msg = {
         tenantId: tenantId || 1,
-        featureCollection,
+        FeatureCollection,
       };
 
       await putFeatures(msg);
@@ -368,8 +373,8 @@ export default function EditControlFC() {
             </FeatureGroup>
 
             <LayerGroup>
-              {geojson &&
-                geojson.map((feature: any) => {
+              {features &&
+                features.map((feature: any) => {
                   if (feature.properties.crop?.finish_date === null) {
                     return (
                       <CustomLayer
@@ -403,8 +408,8 @@ export default function EditControlFC() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {geojson &&
-                  geojson.map((feature: any) => (
+                {features &&
+                  features.map((feature: any) => (
                     <React.Fragment key={feature.properties.landplot.id}>
                       <TableRow key={feature.properties.landplot.id}>
                         <TableCell>

@@ -63,6 +63,35 @@ export function PostGISToGeoJSONFeatureCollection(
   return FeatureCollection;
 }
 
+const is_circle = `circle_center IS NOT NULL AND circle_radius IS NOT NULL`;
+const shape_data_query = `
+CASE
+  WHEN ${is_circle} THEN NULL
+  ELSE ST_AsGeoJSON(area)
+END as geometry,
+CASE
+  WHEN ${is_circle} THEN ST_AsGeoJSON(circle_center)
+  ELSE NULL
+END as center,
+CASE
+  WHEN ${is_circle} THEN circle_radius
+  ELSE NULL
+END as circle_radius`;
+const is_circle_l = `l.circle_center IS NOT NULL AND l.circle_radius IS NOT NULL`;
+const shape_data_query_l = `
+CASE
+  WHEN ${is_circle_l} THEN NULL
+  ELSE ST_AsGeoJSON(l.area)
+END as geometry,
+CASE
+  WHEN ${is_circle_l} THEN ST_AsGeoJSON(l.circle_center)
+  ELSE NULL
+END as center,
+CASE
+  WHEN ${is_circle_l} THEN l.circle_radius
+  ELSE NULL
+END as circle_radius`;
+
 export const getGeo = async (
   req: Request,
   res: Response,
@@ -70,7 +99,8 @@ export const getGeo = async (
 ) => {
   try {
     const response: QueryResult = await pool.query(
-      "SELECT id, ST_AsGeoJSON(area) as geometry, ST_AsGeoJSON(circle_center) as center, circle_radius, description FROM landplot"
+      `SELECT id, ${shape_data_query}, description FROM landplot;
+    `
     );
 
     const features = response.rows.map((row: any) => {
@@ -101,7 +131,7 @@ export const getTenantGeo = async (
   try {
     const tenantId = parseInt(req.params.tenantId);
     const response: QueryResult = await pool.query(
-      "SELECT id, ST_AsGeoJSON(area) as geometry, ROUND(st_area(area, true)::numeric) AS area, ST_AsGeoJSON(circle_center) as center, circle_radius, description FROM landplot WHERE tenant_id = $1",
+      `SELECT id, ${shape_data_query}, ROUND(st_area(area, true)::numeric) AS area, description FROM landplot WHERE tenant_id = $1`,
       [tenantId]
     );
 
@@ -124,7 +154,7 @@ export const getGeoWithCrops = async (
     const id = parseInt(req.params.id);
     const response: QueryResult = await pool.query(
       `
-      SELECT l.id AS landplot_id, ST_AsGeoJSON(l.area) as geometry, ST_AsGeoJSON(l.circle_center) as center, l.circle_radius, l.description, 
+      SELECT l.id AS landplot_id, ${shape_data_query_l}, l.description, 
       c.id, c.species_id, c.description, c.start_date, c.finish_date
       FROM landplot l
       LEFT JOIN crop c ON l.id = c.landplot_id
@@ -170,7 +200,7 @@ export const getAvailableAndOccupiedTenantGeo = async (
     const tenantId = parseInt(req.params.tenantId);
     const response: QueryResult = await pool.query(
       `
-      SELECT l.id AS id, ST_AsGeoJSON(l.area) as geometry, ST_AsGeoJSON(l.circle_center) as center, l.circle_radius, l.description, 
+      SELECT l.id AS id, ${shape_data_query_l}, l.description, 
       c.id AS crop_id, c.finish_date 
       FROM landplot l
       LEFT JOIN crop c ON l.id = c.landplot_id
@@ -236,7 +266,7 @@ export const getTenantGeoWithCurrentCrops = async (
     const tenantId = parseInt(req.params.tenantId);
     const response: QueryResult = await pool.query(
       `
-      SELECT l.id AS id, ST_AsGeoJSON(l.area) as geometry, ST_AsGeoJSON(l.circle_center) as center, l.circle_radius, l.description, 
+      SELECT l.id AS id, ${shape_data_query_l}, l.description, 
       c.id AS crop_id, c.species_id, c.species_name, c.species_description, c.description AS crop_description, c.comments, c.start_date, c.finish_date, c.weight_in_tons
       FROM landplot l
       LEFT JOIN crop c ON l.id = c.landplot_id
@@ -296,7 +326,6 @@ export const getTenantGeoWithCurrentCrops = async (
 
 const insertLandplot = async (feature: any, tenantId: number) => {
   const { geometry, properties } = feature;
-  //  const { id, description, radius, subType } = properties;
   const { landplot, ...rest } = properties;
   const { description, radius, subType } = landplot;
 
@@ -321,7 +350,6 @@ const insertLandplot = async (feature: any, tenantId: number) => {
 
 const updateLandplot = async (feature: any) => {
   const { geometry, properties } = feature;
-  //  const { id, description, radius, subType } = properties;
   const { landplot, ...rest } = properties;
   const { id, description, radius, subType } = landplot;
 
@@ -352,9 +380,9 @@ export const updateFeatures = async (
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const { tenantId, featureCollection } = req.body;
+    const { tenantId, FeatureCollection } = req.body;
 
-    featureCollection.forEach(async (feature: any) => {
+    FeatureCollection.features.forEach(async (feature: any) => {
       switch (feature.properties.status) {
         case "deleted": {
           await client.query("DELETE FROM landplot WHERE id = $1", [

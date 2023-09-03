@@ -406,7 +406,7 @@ export const updateFeatures = async (
     });
 
     await client.query("COMMIT");
-    return res.status(201).send("Features updated");
+    return res.status(200).send("Features updated");
   } catch (e) {
     await client.query("ROLLBACK");
     next(e);

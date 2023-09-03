@@ -15,7 +15,7 @@ export type ThirdStepProps = {
     total: number;
   }[];
   onBack: () => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<number>;
 };
 
 const ThirdStep = ({

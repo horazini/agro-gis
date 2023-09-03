@@ -22,24 +22,11 @@ import "leaflet-draw/dist/leaflet.draw.css";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 
-import { getTenantGeoData, postFeatures } from "../../services/services";
-
 import { position, LayerControler } from "../../components/mapcomponents";
 
 const MapView = () => {
   const [geoJSONFeatures, setGeoJSONFeatures] = useState<any>([]);
   const { tenantId } = useSelector((state: RootState) => state.auth);
-
-  const [geoData, setGeoData] = useState<any>(null);
-
-  const loadData = async () => {
-    const data = await getTenantGeoData(tenantId);
-    setGeoData(data);
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   const circleToGeoJSON = (circle: any) => {
     const { lat, lng } = circle.latlngs;
@@ -149,9 +136,9 @@ const MapView = () => {
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit: () => Promise<void> = async () => {
     try {
-      await postFeatures(geoJSONFeatures);
+      //await postFeatures(geoJSONFeatures);
     } catch (error) {
       console.log(error);
     }
@@ -231,12 +218,12 @@ const MapView = () => {
               {JSON.stringify(geoJSONFeatures, null, 2)}
             </pre>
 
-            <ConfirmButton
+            {/* <ConfirmButton
               msg={msg}
               onConfirm={handleSubmit}
               navigateDir={"/map"}
               disabled={false}
-            />
+            /> */}
           </div>
         </div>
       </div>

@@ -21,7 +21,7 @@ export type CancelFormProps = {
 
 export type ConfirmFormProps = {
   msg: string;
-  onConfirm: () => void;
+  onConfirm: () => Promise<number>;
   navigateDir: string;
   disabled: boolean;
 };
@@ -140,7 +140,10 @@ export const CancelButton = ({ navigateDir }: CancelFormProps) => {
 
 /**
  * Opens a dialog component to confirm a data load action. Redirects to some other page
- * @param {Number} params
+ * @param {string} msg - dialog content text
+ * @param {() => Promise<number>} onConfirm - action to realize when user confirms
+ * @param {string} navigateDir - redirect directory
+ * @param {boolean} disabled - boolean to set the button as disabled or not
  */
 export const ConfirmButton = ({
   msg,
@@ -151,6 +154,7 @@ export const ConfirmButton = ({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [failure, setFailure] = useState(false);
 
   const navigate = useNavigate();
 
@@ -162,17 +166,23 @@ export const ConfirmButton = ({
     setOpen(false);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setLoading(true);
-    setTimeout(() => {
-      onConfirm();
-      setLoading(false);
-      setOpen(false);
+    const res = await onConfirm();
+
+    setLoading(false);
+    setOpen(false);
+    if (res === 200) {
       setSuccess(true);
       setTimeout(() => {
         navigate(navigateDir);
       }, 4000);
-    }, 500);
+    } else {
+      setFailure(true);
+      setTimeout(() => {
+        setFailure(false);
+      }, 4000);
+    }
   };
 
   return (
@@ -210,14 +220,19 @@ export const ConfirmButton = ({
         <CircularProgress color="inherit" />
       </Backdrop>
 
-      {success && (
-        <Dialog open={success}>
-          <Alert severity="success" sx={{ width: "100%" }}>
-            <AlertTitle>Datos cargados correctamente!</AlertTitle>
-            Redirigiendo...
-          </Alert>
-        </Dialog>
-      )}
+      <Dialog open={success}>
+        <Alert severity="success" sx={{ width: "100%" }}>
+          <AlertTitle>Datos cargados correctamente!</AlertTitle>
+          Redirigiendo...
+        </Alert>
+      </Dialog>
+
+      <Dialog open={failure}>
+        <Alert severity="error">
+          <AlertTitle>Los datos no pudieron ser cargados</AlertTitle>
+          Algo ha salido mal.
+        </Alert>
+      </Dialog>
     </Fragment>
   );
 };

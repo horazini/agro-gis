@@ -206,7 +206,7 @@ export const createCrop = async (
 
     await client.query("COMMIT");
     return res
-      .status(201)
+      .status(200)
       .send("Crop, with its stages and events, created successfully");
   } catch (e) {
     await client.query("ROLLBACK");

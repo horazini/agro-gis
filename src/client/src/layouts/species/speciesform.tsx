@@ -362,7 +362,7 @@ function SpeciesForm(): JSX.Element {
 
   // Subtim form
 
-  const handleSubmitForm = async () => {
+  const handleSubmitForm: () => Promise<number> = async () => {
     try {
       const speciesData: speciesDataType = {
         species,
@@ -393,12 +393,15 @@ function SpeciesForm(): JSX.Element {
           deletedStages,
           speciesData,
         };
-        await putSpeciesData(updateData, params.id);
+        const res = await putSpeciesData(updateData, params.id);
+        return res;
       } else {
-        await postSpeciesData(speciesData);
+        const res = await postSpeciesData(speciesData);
+        return res;
       }
     } catch (error) {
       console.log(error);
+      return 400;
     }
   };
 

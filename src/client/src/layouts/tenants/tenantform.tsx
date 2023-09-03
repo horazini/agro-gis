@@ -127,9 +127,11 @@ const MyForm = () => {
         }),
       };
 
-      await postTenantData(tenantData);
+      const res = await postTenantData(tenantData);
+      return res;
     } catch (error) {
       console.log(error);
+      return 400;
     }
   };
 

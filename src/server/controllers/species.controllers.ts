@@ -11,7 +11,6 @@ export const getSpecies = async (
     const response: QueryResult = await pool.query("SELECT * FROM species");
     return res.status(200).json(response.rows);
   } catch (e) {
-    // console.log(e);
     // return res.status(500).json("internal server error");
     next(e);
   }
@@ -29,23 +28,6 @@ export const getSpeciesByTenant = async (
       [id]
     );
     return res.status(200).json(response.rows);
-  } catch (e) {
-    next(e);
-  }
-};
-
-export const getSpeciesById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const id = parseInt(req.params.id);
-    const response: QueryResult = await pool.query(
-      "SELECT * FROM species WHERE id = $1",
-      [id]
-    );
-    return res.json(response.rows);
   } catch (e) {
     next(e);
   }
@@ -241,7 +223,7 @@ export const createSpeciesWithStagesAndEvents = async (
 
     await client.query("COMMIT");
 
-    return res.status(201).send("Species with stages and events added");
+    return res.status(200).send("Species with stages and events added");
   } catch (e) {
     await client.query("ROLLBACK");
     next(e);
@@ -352,7 +334,7 @@ export const updateSpecies = async (
 
     await client.query("COMMIT");
 
-    return res.json("Species ${id} updated succesfully");
+    return res.status(200).json("Species ${id} updated succesfully");
   } catch (e) {
     console.log(e);
     await client.query("ROLLBACK");

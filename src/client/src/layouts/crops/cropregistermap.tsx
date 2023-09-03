@@ -196,11 +196,13 @@ const MapView = () => {
 
   const [landplotError, setLandplotError] = useState(false);
 
-  const handleSubmitForm = async () => {
+  const handleSubmitForm: () => Promise<number> = async () => {
     try {
-      await postCrop(crop);
+      const res = await postCrop(crop);
+      return res;
     } catch (error) {
       console.log(error);
+      return 400;
     }
   };
 

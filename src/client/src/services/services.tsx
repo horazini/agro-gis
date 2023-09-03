@@ -39,8 +39,7 @@ export const postTenantData = async (tenantData: tenantDataType) => {
     body: JSON.stringify(tenantData),
     headers: { "Content-type": "application/json" },
   });
-  const data = await res.json();
-  return data;
+  return res.status;
 };
 
 // Users
@@ -116,8 +115,7 @@ export const postSpeciesData = async (speciesData: speciesDataType) => {
     body: JSON.stringify(speciesData),
     headers: { "Content-type": "application/json" },
   });
-  const data = await res.json();
-  return data;
+  return res.status;
 };
 
 export const putSpeciesData = async (
@@ -129,8 +127,7 @@ export const putSpeciesData = async (
     body: JSON.stringify(updateData),
     headers: { "Content-type": "application/json" },
   });
-  const data = await res.json();
-  return data;
+  return res.status;
 };
 
 // Landplots
@@ -161,8 +158,7 @@ export const putFeatures = async (features: any) => {
     body: JSON.stringify(features),
     headers: { "Content-type": "application/json" },
   });
-  const data = await res.json();
-  return data;
+  return res.status;
 };
 
 // Crops
@@ -173,8 +169,7 @@ export const postCrop = async (crop: any) => {
     body: JSON.stringify(crop),
     headers: { "Content-type": "application/json" },
   });
-  const data = await res.json();
-  return data;
+  return res.status;
 };
 
 export const getCropById = async (id: string) => {

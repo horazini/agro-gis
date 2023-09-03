@@ -18,7 +18,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { LatLngExpression } from "leaflet";
-import { ConfirmButton } from "../../components/customComponents";
+import { CancelButton, ConfirmButton } from "../../components/customComponents";
 
 import {
   Box,
@@ -316,7 +316,7 @@ export default function EditControlFC() {
     return null;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit: () => Promise<number> = async () => {
     try {
       const featureArray = features?.filter(
         (f: any) => f.properties.status !== undefined
@@ -332,19 +332,21 @@ export default function EditControlFC() {
         FeatureCollection,
       };
 
-      await putFeatures(msg);
+      const res = await putFeatures(msg);
+      return res;
     } catch (error) {
       console.log(error);
+      return 400;
     }
   };
 
   const [open, setOpen] = useState(-1);
   return (
-    <div className="row">
-      <div className="col text-center">
+    <Box className="row">
+      <Box className="col text-center">
         <h1>Administración de parcelas</h1>
 
-        <div className="col">
+        <Box className="col">
           <MapContainer center={position} zoom={7}>
             <LayerControler />
             <FeatureGroup ref={featureGroup}>
@@ -491,14 +493,23 @@ export default function EditControlFC() {
             </Table>
           </TableContainer>
 
-          <ConfirmButton
-            msg={"Se registrarán todos los cambios realizados."}
-            onConfirm={handleSubmit}
-            navigateDir={"/croplandplots"}
-            disabled={false}
-          />
-        </div>
-      </div>
-    </div>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <CancelButton navigateDir={"/croplandplots"} />
+            <ConfirmButton
+              msg={"Se registrarán todos los cambios realizados."}
+              onConfirm={handleSubmit}
+              navigateDir={"/croplandplots"}
+              disabled={false}
+            />
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }

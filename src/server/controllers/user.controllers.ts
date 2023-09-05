@@ -105,6 +105,33 @@ export async function verifyUserCredentials(
   return bcrypt.compare(password, passwordHash);
 }
 
+export async function verifyUserEnabled(username: string): Promise<string> {
+  const query = `
+  SELECT u.deleted AS user_deleted, t.deleted AS tenant_deleted
+  FROM user_account AS u
+  JOIN tenant AS t ON u.tenant_id = t.id
+  WHERE u.username = $1
+`;
+
+  const result = await pool.query(query, [username]);
+
+  if (result.rows.length > 0) {
+    const userDeleted = result.rows[0].user_deleted;
+    const tenantDeleted = result.rows[0].tenant_deleted;
+
+    if (tenantDeleted) {
+      return "Disabled tenant";
+    }
+    if (userDeleted) {
+      return "Disabled user";
+    }
+  } else {
+    return "Username not found";
+  }
+
+  return "OK";
+}
+
 export const usernameAlreadyExists = async (
   req: Request,
   res: Response,
@@ -128,6 +155,10 @@ export const login = async (
   res: any
 ) => {
   const { username, password } = req.body;
+  const isUserEnabled = await verifyUserEnabled(username);
+  if (isUserEnabled !== "OK") {
+    return res.status(401).json({ error: isUserEnabled });
+  }
   const isValidCredentials = await verifyUserCredentials(username, password);
   if (!isValidCredentials) {
     return res.status(401).json({ error: "Invalid credentials" });
@@ -136,9 +167,6 @@ export const login = async (
   const query =
     "SELECT tenant_id, usertype_id, id, username, names, surname FROM user_account WHERE username = $1";
   const result = await pool.query(query, [username]);
-  if (result.rows.length === 0) {
-    return false; // usuario no encontrado
-  }
   const {
     tenant_id: tenantId,
     usertype_id: userTypeId,

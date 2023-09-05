@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { Grid, Paper, Fade } from "@mui/material";
+import {
+  Grid,
+  Paper,
+  Fade,
+  DialogTitle,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+} from "@mui/material";
 import {
   format,
   getDaysInMonth,
@@ -66,43 +75,43 @@ function Taskcalendar() {
 
   const events = [
     {
-      id: "event-1",
+      id: 1,
       label: "Evento N° 1",
-      groupLabel: "Grupo 1",
-      user: "Grupo 1",
+      groupLabel: "Cultivo 1",
+      landplot: "Parcela 32",
+      species: "Tomate",
       color: "#f28f6a",
       date: "2022-05-05",
-      createdAt: new Date(),
       createdBy: "Juan Perez",
     },
     {
-      id: "event-2",
+      id: 2,
       label: "Evento N° 2: Riego",
-      groupLabel: "Grupo 2",
-      user: "Grupo 2",
+      groupLabel: "Cultivo 2",
+      landplot: "Parcela 45",
+      species: "Morron",
       color: "#099ce5",
       date: "2022-05-09",
-      createdAt: new Date(),
       createdBy: "Juan Perez",
     },
     {
-      id: "event-3",
+      id: 3,
       label: "Evento N° 3: Fertilización",
-      groupLabel: "Grupo 3",
-      user: "Grupo 3",
+      groupLabel: "Cultivo 3",
+      landplot: "Parclea 17",
+      species: "Cebolla",
       color: "#263686",
       date: "2023-08-03",
-      createdAt: new Date(),
       createdBy: "Juan Perez",
     },
     {
-      id: "event-4",
+      id: 4,
       label: "Evento N° 4: Cosecha",
-      groupLabel: "Grupo 1",
-      user: "Grupo 1",
+      groupLabel: "Cultivo 1",
+      landplot: "Parcela 32",
+      species: "Tomate",
       color: "#f28f6a",
       date: "2023-06-29",
-      createdAt: new Date(),
       createdBy: "Juan Perez",
     },
   ];
@@ -235,7 +244,43 @@ function Taskcalendar() {
     // Do something...
   };
 
+  const [eventDialogOpen, setEventDialogOpen] = useState(false);
+  const [eventDialogItem, setEventDialogItem] = useState<any>();
+
   const handleEventClick = (event: any, item: any) => {
+    setEventDialogOpen(true);
+    setEventDialogItem(item);
+    console.log(item);
+  };
+
+  const EventDialog = () => {
+    return (
+      <Dialog
+        open={eventDialogOpen}
+        onClose={() => setEventDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {eventDialogItem?.label}
+        </DialogTitle>
+        <DialogContent>
+          <p>{eventDialogItem?.groupLabel}</p>
+          <p>{eventDialogItem?.landplot}</p>
+          <p> {eventDialogItem?.createdBy}</p>
+          <p> {eventDialogItem?.date}</p>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEventDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={handleEventDialogConfirm} autoFocus>
+            Confirmar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
+  const handleEventDialogConfirm = () => {
     // Do something...
   };
 
@@ -293,6 +338,7 @@ function Taskcalendar() {
           </Grid>
         </Fade>
       )}
+      <EventDialog />
     </Paper>
   );
 }

@@ -1,6 +1,9 @@
 import { Container, Grid, Paper } from "@mui/material";
+import PageTitle from "../../components/title";
 
 const Home = () => {
+  PageTitle("Inicio");
+
   return (
     <Container maxWidth="xl">
       <Grid container spacing={3}>

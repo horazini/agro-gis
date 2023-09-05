@@ -21,8 +21,11 @@ import {
   postTenantData,
   tenantDataType,
 } from "../../services/services";
+import PageTitle from "../../components/title";
 
 const MyForm = () => {
+  PageTitle("Nuevo cliente");
+
   // Pasos del formulario
 
   const [activeStep, setActiveStep] = useState(0);

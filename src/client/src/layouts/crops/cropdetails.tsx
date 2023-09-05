@@ -50,6 +50,7 @@ import {
 } from "../../components/customComponents";
 
 import { DateCalendar } from "@mui/x-date-pickers";
+import PageTitle from "../../components/title";
 
 type GrowthEvent = {
   due_date: string;
@@ -57,6 +58,7 @@ type GrowthEvent = {
 };
 
 const MapView = () => {
+  PageTitle("Cultivo");
   const params = useParams();
 
   const [cropFeature, setCropFeature] = useState<Feature>();

@@ -22,8 +22,10 @@ import {
 } from "../../components/mapcomponents";
 import { Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import PageTitle from "../../components/title";
 
 const MapView = () => {
+  PageTitle("Cultivos en curso");
   const navigate = useNavigate();
   const { tenantId } = useSelector((state: RootState) => state.auth);
 

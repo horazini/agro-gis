@@ -15,8 +15,11 @@ import SchedulerToolbar from "./toolbar";
 import MonthModeView from "./monthview";
 import TimeLineModeView from "./timelineview";
 import es from "date-fns/locale/es";
+import PageTitle from "../../components/title";
 
 function Taskcalendar() {
+  PageTitle("Calendario");
+
   const today = new Date();
 
   const [state, setState] = useState<any>({});

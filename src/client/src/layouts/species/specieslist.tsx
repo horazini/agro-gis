@@ -11,8 +11,11 @@ import {
 } from "@mui/icons-material";
 
 import { speciesMainData, getTenantSpecies } from "../../services/services";
+import PageTitle from "../../components/title";
 
 function SpeciesList() {
+  PageTitle("Especies");
+
   const [species, setSpecies] = useState<speciesMainData[]>([]);
 
   const { tenantId } = useSelector((state: RootState) => state.auth);

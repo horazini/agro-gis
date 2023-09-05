@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   Collapse,
+  Divider,
   IconButton,
   Typography,
 } from "@mui/material";
@@ -27,6 +28,7 @@ import {
 } from "../../services/services";
 import { FormattedArea } from "../../components/mapcomponents";
 import { ConfirmDialog } from "../../components/customComponents";
+import PageTitle from "../../components/title";
 
 interface user {
   id: number;
@@ -105,7 +107,7 @@ const TenantHeader = (tenantInfo: any) => {
             startIcon={<HowToRegIcon />}
             variant="contained"
             color="success"
-            sx={{ mt: 3, ml: 1 }}
+            sx={{ mr: 4 }}
             onClick={handleClickOpenEnable}
           >
             Habilitar
@@ -115,13 +117,15 @@ const TenantHeader = (tenantInfo: any) => {
             startIcon={<PersonOffIcon />}
             variant="contained"
             color="error"
-            sx={{ mt: 3, ml: 1 }}
+            sx={{ mr: 4 }}
             onClick={handleClickOpenDisable}
           >
             Inhabilitar
           </Button>
         )}
       </Box>
+
+      <Divider />
 
       <ConfirmDialog
         open={openDisable}
@@ -271,6 +275,8 @@ const CropsInfo = (cropsInfo: any) => {
 };
 
 const TenantDetails = () => {
+  PageTitle("Cliente");
+
   const params = useParams();
 
   const [tenantData, setTenantData] = useState<tenantData>({

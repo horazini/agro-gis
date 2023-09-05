@@ -45,6 +45,7 @@ import {
   ConfirmButton,
   DialogButton,
 } from "../../components/customComponents";
+import PageTitle from "../../components/title";
 
 interface ISpeciesData {
   id: number | null;
@@ -100,6 +101,38 @@ function SpeciesForm(): JSX.Element {
     { key: "months", label: "Mes/es" },
     { key: "years", label: "Año/s" },
   ];
+
+  // Cargar especie existente (caso de edicion)
+
+  const params = useParams();
+
+  const [isEditingForm, setIsEditingForm] = useState(false);
+
+  const [deletedStages, setDeletedStages] = useState<number[]>([]);
+  const [deletedEvents, setDeletedEvents] = useState<number[]>([]);
+
+  const loadSpecies = async (id: string) => {
+    try {
+      const data = await getSpeciesData(id);
+      setSpecies(data.species);
+      setStagesList(data.stages);
+      setIsEditingForm(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    if (params.id) {
+      loadSpecies(params.id);
+    }
+  }, [params.id]);
+
+  if (isEditingForm) {
+    PageTitle("Editar especie");
+  } else {
+    PageTitle("Agregar especie");
+  }
 
   // Datos principales de especie
 
@@ -404,32 +437,6 @@ function SpeciesForm(): JSX.Element {
       return 400;
     }
   };
-
-  // Cargar especie existente (caso de edicion)
-
-  const params = useParams();
-
-  const [isEditingForm, setIsEditingForm] = useState(false);
-
-  const [deletedStages, setDeletedStages] = useState<number[]>([]);
-  const [deletedEvents, setDeletedEvents] = useState<number[]>([]);
-
-  const loadSpecies = async (id: string) => {
-    try {
-      const data = await getSpeciesData(id);
-      setSpecies(data.species);
-      setStagesList(data.stages);
-      setIsEditingForm(true);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    if (params.id) {
-      loadSpecies(params.id);
-    }
-  }, [params.id]);
 
   // ---
 

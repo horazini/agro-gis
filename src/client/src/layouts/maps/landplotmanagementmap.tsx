@@ -36,6 +36,7 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import React from "react";
+import PageTitle from "../../components/title";
 
 type CircleFeature = {
   type: "Feature";
@@ -64,6 +65,7 @@ declare module "leaflet" {
 }
 
 export default function EditControlFC() {
+  PageTitle("Parcelas");
   const [features, setFeatures] = useState<Feature[]>([]);
   const { tenantId } = useSelector((state: RootState) => state.auth);
 

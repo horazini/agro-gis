@@ -35,6 +35,7 @@ import {
 import { DatePicker } from "@mui/x-date-pickers";
 import { ConfirmButton } from "../../components/customComponents";
 import { useNavigate } from "react-router";
+import PageTitle from "../../components/title";
 
 interface ICrop {
   landplot: number;
@@ -44,6 +45,7 @@ interface ICrop {
 }
 
 const MapView = () => {
+  PageTitle("Nuevo cultivo");
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const [geoData, setGeoData] = useState<any>();

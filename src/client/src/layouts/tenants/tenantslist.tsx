@@ -19,8 +19,11 @@ import {
 } from "@mui/icons-material/";
 
 import { tenantMainData, getTenants } from "../../services/services";
+import PageTitle from "../../components/title";
 
 function TenantsList() {
+  PageTitle("Clientes");
+
   const [tenants, setTenants] = useState<tenantMainData[]>([]);
 
   const loadTenants = async () => {

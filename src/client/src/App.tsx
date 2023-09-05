@@ -33,11 +33,28 @@ function RouteAuthLogic(): JSX.Element {
 
   if (!isAuthenticated) {
     return (
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/login2" element={<Login2 />} />; {/* Prueba */}
-        <Route path="*" element={<Navigate to="/login" />} />;
-      </Routes>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          paddingTop: 3,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+          height: "100vh",
+          overflow: "auto",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "light"
+              ? theme.palette.grey[200]
+              : theme.palette.background.default,
+        }}
+      >
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/login2" element={<Login2 />} />; {/* Prueba */}
+          <Route path="*" element={<Navigate to="/login" />} />;
+        </Routes>
+      </Box>
     );
   } else {
     const DrawerHeader = styled("div")(({ theme }) => ({
@@ -60,6 +77,10 @@ function RouteAuthLogic(): JSX.Element {
             display: "flex",
             flexDirection: "column",
             minHeight: "100vh",
+            height: "100vh",
+            overflow: "auto",
+            backgroundColor: (theme) =>
+              theme.palette.mode === "light" ? theme.palette.grey[200] : null,
           }}
         >
           <DrawerHeader />

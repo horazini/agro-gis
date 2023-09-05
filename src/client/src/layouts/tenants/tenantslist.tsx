@@ -13,9 +13,9 @@ import { useNavigate } from "react-router-dom";
 
 import {
   FormatListBulleted,
-  Add,
   KeyboardArrowDown,
   KeyboardArrowUp,
+  AddBusiness,
 } from "@mui/icons-material/";
 
 import { tenantMainData, getTenants } from "../../services/services";
@@ -41,7 +41,7 @@ function TenantsList() {
   const [open, setOpen] = useState(-1);
   return (
     <Fragment>
-      <div
+      <Box
         style={{
           display: "flex",
           justifyContent: "space-between",
@@ -51,10 +51,10 @@ function TenantsList() {
         <h1>Lista de clientes</h1>
 
         <Button variant="outlined" onClick={() => navigate("/tenants/new")}>
-          <Add sx={{ mr: 1 }} />
+          <AddBusiness sx={{ mr: 1 }} />
           Crear nuevo cliente
         </Button>
-      </div>
+      </Box>
 
       {tenants
         .filter((tenant) => tenant.id !== 1) // filters systadmin 'tenant'

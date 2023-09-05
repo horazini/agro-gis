@@ -37,10 +37,13 @@ import {
   Settings as SettingsIcon,
   AccountCircle as AccountCircleIcon,
   Logout as LogoutIcon,
-  Group as GroupIcon,
+  Store as StoreIcon,
   Inventory as InventoryIcon,
   Map as MapIcon,
   CalendarMonth as CalendarMonthIcon,
+  Layers as LayersIcon,
+  Groups as GroupsIcon,
+  BarChart as BarChartIcon,
 } from "@mui/icons-material";
 
 const drawerWidth = 240;
@@ -124,10 +127,23 @@ type itemType = {
 const routeList = [
   {
     text: "Clientes",
-    icon: <GroupIcon />,
+    icon: <StoreIcon />,
     to: "/tenants/list",
     allowed: [1],
   },
+  {
+    text: "Reportes",
+    icon: <BarChartIcon />,
+    to: "/",
+    allowed: [3],
+  },
+  {
+    text: "Usuarios",
+    icon: <GroupsIcon />,
+    to: "/",
+    allowed: [3],
+  },
+
   {
     text: "Especies",
     icon: <InventoryIcon />,
@@ -142,7 +158,7 @@ const routeList = [
   },
   {
     text: "Administración de parcelas",
-    icon: <MapIcon />,
+    icon: <LayersIcon />,
     to: "/landplotmanagement",
     allowed: [3, 4],
   },
@@ -389,7 +405,7 @@ export default function NavbarDrawer() {
               component="div"
             >
               <Link to="/" style={{ textDecoration: "none", color: "white" }}>
-                IR A INICIO
+                IR A INICIO {/* AgTracker */}
               </Link>
             </Typography>
 

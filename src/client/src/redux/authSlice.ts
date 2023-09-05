@@ -1,13 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ThunkAction } from "redux-thunk";
 import { RootState } from "./store";
-import { apiRequest, setAuthToken, removeAuthToken } from "./api";
 
 import { API } from "../config";
 
 interface AuthState {
   isAuthenticated: boolean;
-  error: string | null;
   userId: number | null;
   tenantId: number | null;
   userTypeId: number | null;
@@ -18,7 +16,6 @@ interface AuthState {
 
 const initialState: AuthState = {
   isAuthenticated: false,
-  error: null,
   userId: null,
   tenantId: null,
   userTypeId: null,
@@ -26,6 +23,8 @@ const initialState: AuthState = {
   names: null,
   surname: null,
 };
+
+// ------------------------------------
 
 export const authSlice = createSlice({
   name: "auth",
@@ -43,7 +42,6 @@ export const authSlice = createSlice({
       }>
     ) => {
       state.isAuthenticated = true;
-      state.error = null;
       state.tenantId = action.payload.tenantId;
       state.userTypeId = action.payload.userTypeId;
       state.userId = action.payload.userId;
@@ -61,11 +59,9 @@ export const authSlice = createSlice({
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.isAuthenticated = false;
-      state.error = action.payload;
     },
     logoutSuccess: (state) => {
       state.isAuthenticated = false;
-      state.error = null;
       state.tenantId = null;
       state.userTypeId = null;
       state.userId = null;
@@ -92,17 +88,30 @@ export const login =
   }): ThunkAction<Promise<void>, RootState, unknown, any> =>
   async (dispatch) => {
     try {
+      const headers: HeadersInit = {};
+      const authToken = localStorage.getItem("authToken"); //getAuthToken();
+      if (authToken) {
+        headers["Authorization"] = `Bearer ${authToken}`;
+      }
+      /* 
+      // Attempt to log in outside dev environment fails on next 
+      // fetch, may have something to do with CORS or env var 
+      */
+      const response = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: { "Content-type": "application/json" },
+        body: formData ? JSON.stringify(formData) : undefined,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error);
+      }
+      const res = await response.json();
+
       const { token, tenantId, userTypeId, userId, username, names, surname } =
-        await apiRequest<{
-          token: string;
-          tenantId: number;
-          userTypeId: number;
-          userId: number;
-          username: string;
-          names: string;
-          surname: string;
-        }>("POST", `${API}/login`, formData);
-      setAuthToken(token);
+        res;
+
+      localStorage.setItem("authToken", token); // setAuthToken(token: string);
 
       dispatch(
         loginSuccess({ tenantId, userTypeId, userId, username, names, surname })
@@ -118,12 +127,11 @@ export const login =
 export const logout =
   (): ThunkAction<Promise<void>, RootState, unknown, any> =>
   async (dispatch) => {
-    removeAuthToken();
+    localStorage.removeItem("authToken"); //removeAuthToken();
     dispatch(logoutSuccess());
   };
 
 export const selectIsAuthenticated = (state: RootState) =>
   state.auth.isAuthenticated;
-export const selectError = (state: RootState) => state.auth.error;
 
 export default authSlice.reducer;

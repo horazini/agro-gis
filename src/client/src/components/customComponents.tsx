@@ -138,40 +138,31 @@ export const CancelButton = ({ navigateDir }: CancelFormProps) => {
   );
 };
 
-/**
- * Opens a dialog component to confirm a data load action. Redirects to some other page
- * @param {string} msg - dialog content text
- * @param {() => Promise<number>} onConfirm - action to realize when user confirms
- * @param {string} navigateDir - redirect directory
- * @param {boolean} disabled - boolean to set the button as disabled or not
- */
-export const ConfirmButton = ({
+export const ConfirmDialog = ({
+  open,
+  handleClose,
   msg,
   onConfirm,
   navigateDir,
-  disabled,
-}: ConfirmFormProps) => {
-  const [open, setOpen] = useState(false);
+}: {
+  open: boolean;
+  handleClose: () => void;
+  msg: string;
+  onConfirm: () => Promise<number>;
+  navigateDir: string;
+}) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [failure, setFailure] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
   const handleConfirm = async () => {
     setLoading(true);
     const res = await onConfirm();
 
     setLoading(false);
-    setOpen(false);
+    handleClose();
     if (res === 200) {
       setSuccess(true);
       setTimeout(() => {
@@ -187,23 +178,13 @@ export const ConfirmButton = ({
 
   return (
     <Fragment>
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ mt: 3, ml: 1 }}
-        onClick={handleClickOpen}
-        disabled={disabled}
-      >
-        Confirmar datos
-      </Button>
-
       <Dialog
         open={open}
         onClose={handleClose}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">{"¿Confirmar datos?"}</DialogTitle>
+        <DialogTitle id="alert-dialog-title">{"¿Confirmar?"}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             {msg}
@@ -233,6 +214,52 @@ export const ConfirmButton = ({
           Algo ha salido mal.
         </Alert>
       </Dialog>
+    </Fragment>
+  );
+};
+
+/**
+ * Opens a dialog component to confirm a data load action. Redirects to some other page
+ * @param {string} msg - dialog content text
+ * @param {() => Promise<number>} onConfirm - action to realize when user confirms
+ * @param {string} navigateDir - redirect directory
+ * @param {boolean} disabled - boolean to set the button as disabled or not
+ */
+export const ConfirmButton = ({
+  msg,
+  onConfirm,
+  navigateDir,
+  disabled,
+}: ConfirmFormProps) => {
+  const [open, setOpen] = useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  return (
+    <Fragment>
+      <Button
+        variant="contained"
+        color="primary"
+        sx={{ mt: 3, ml: 1 }}
+        onClick={handleClickOpen}
+        disabled={disabled}
+      >
+        Confirmar
+      </Button>
+
+      <ConfirmDialog
+        open={open}
+        handleClose={handleClose}
+        msg={msg}
+        navigateDir={navigateDir}
+        onConfirm={onConfirm}
+      />
     </Fragment>
   );
 };

@@ -18,7 +18,7 @@ export const getTenants = async (
 ) => {
   try {
     const response: QueryResult = await pool.query(
-      "SELECT id, name FROM tenant"
+      "SELECT id, name FROM tenant WHERE deleted IS NULL OR deleted = false"
     );
     return res.status(200).json(response.rows);
   } catch (e) {
@@ -43,6 +43,42 @@ export const getTenantById = async (
   }
 };
 
+export const disableTenant = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+    console.log(id);
+    const response: QueryResult = await pool.query(
+      "UPDATE tenant SET deleted = true WHERE id = $1",
+      [id]
+    );
+    return res.status(200).send("Tenant ${id} disabled succesfully");
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const enableTenant = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+    console.log(id);
+    const response: QueryResult = await pool.query(
+      "UPDATE tenant SET deleted = false WHERE id = $1",
+      [id]
+    );
+    return res.status(200).send("Tenant ${id} enabled succesfully");
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const getTenantData = async (
   req: Request,
   res: Response,
@@ -53,7 +89,7 @@ export const getTenantData = async (
     const tenantQuery: QueryResult = await pool.query(
       `
       SELECT 
-      id, name FROM tenant WHERE id = $1
+      id, name, deleted FROM tenant WHERE id = $1
       `,
       [id]
     );

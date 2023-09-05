@@ -12,6 +12,8 @@ import {
   getTenantById,
   createTenantWithUsers,
   getTenantData,
+  disableTenant,
+  enableTenant,
 } from "../controllers/tenant.controllers";
 
 router.get("/", getTime);
@@ -22,6 +24,8 @@ router.put("/tenant/:id", updateTenant);
 
 router.post("/tenantdata", createTenantWithUsers);
 router.get("/tenantdata/:id", getTenantData);
+router.put("/disabletenant/:id", disableTenant);
+router.put("/enabletenant/:id", enableTenant);
 
 // Users
 

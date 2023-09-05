@@ -42,6 +42,22 @@ export const postTenantData = async (tenantData: tenantDataType) => {
   return res.status;
 };
 
+export const disableTenant = async (tenantId: number) => {
+  const res = await fetch(`${API}/disabletenant/${tenantId}`, {
+    method: "PUT",
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};
+
+export const enableTenant = async (tenantId: number) => {
+  const res = await fetch(`${API}/enabletenant/${tenantId}`, {
+    method: "PUT",
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};
+
 // Users
 
 export type userType = {

@@ -37,6 +37,7 @@ interface user {
   username: string;
   names: string;
   surname: string;
+  deleted: boolean;
 }
 
 interface tenantData {
@@ -107,7 +108,7 @@ const TenantHeader = (tenantInfo: any) => {
             startIcon={<HowToRegIcon />}
             variant="contained"
             color="success"
-            sx={{ mr: 4 }}
+            sx={{ mr: 2 }}
             onClick={handleClickOpenEnable}
           >
             Habilitar
@@ -117,7 +118,7 @@ const TenantHeader = (tenantInfo: any) => {
             startIcon={<PersonOffIcon />}
             variant="contained"
             color="error"
-            sx={{ mr: 4 }}
+            sx={{ mr: 2 }}
             onClick={handleClickOpenDisable}
           >
             Inhabilitar

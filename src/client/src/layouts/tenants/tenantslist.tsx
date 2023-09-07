@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   Collapse,
   IconButton,
   TextField,
@@ -66,8 +67,20 @@ function TenantsList() {
             <CardContent
               style={{ display: "flex", justifyContent: "space-between" }}
             >
-              <Box>
+              <Box fontStyle={{ display: "flex" }}>
                 <Typography>{tenant.name}</Typography>
+                {tenant.deleted === true ? (
+                  <Fragment>
+                    <Typography style={{ marginLeft: 10 }}>•</Typography>
+                    <Chip
+                      label="INHABILITADO"
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      style={{ marginLeft: 10 }}
+                    />
+                  </Fragment>
+                ) : null}
               </Box>
 
               <Box>

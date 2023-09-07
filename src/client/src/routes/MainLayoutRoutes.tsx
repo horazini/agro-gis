@@ -13,6 +13,9 @@ import TenantList from "../layouts/tenants/tenantslist";
 import TenantForm from "../layouts/tenants/tenantform";
 import TenantDetails from "../layouts/tenants/tenantdetails";
 
+import TenantUsers from "../layouts/tenants/tenantusers";
+import UserDetails from "../layouts/tenants/userdetails";
+
 import SpeciesList from "../layouts/species/specieslist";
 import SpeciesForm from "../layouts/species/speciesform";
 
@@ -41,6 +44,16 @@ const routeList = [
     path: "/tenants/:id",
     element: <TenantDetails />,
     allowed: [1],
+  },
+  {
+    path: "/users",
+    element: <TenantUsers />,
+    allowed: [2, 3],
+  },
+  {
+    path: "/users/:id",
+    element: <UserDetails />,
+    allowed: [2, 3],
   },
   {
     path: "/species/list",

@@ -18,7 +18,7 @@ export const getTenants = async (
 ) => {
   try {
     const response: QueryResult = await pool.query(
-      "SELECT id, name FROM tenant WHERE deleted IS NULL OR deleted = false"
+      "SELECT id, name, deleted FROM tenant"
     );
     return res.status(200).json(response.rows);
   } catch (e) {
@@ -50,11 +50,7 @@ export const disableTenant = async (
 ) => {
   try {
     const id = parseInt(req.params.id);
-    console.log(id);
-    const response: QueryResult = await pool.query(
-      "UPDATE tenant SET deleted = true WHERE id = $1",
-      [id]
-    );
+    await pool.query("UPDATE tenant SET deleted = true WHERE id = $1", [id]);
     return res.status(200).send("Tenant ${id} disabled succesfully");
   } catch (e) {
     next(e);
@@ -68,12 +64,49 @@ export const enableTenant = async (
 ) => {
   try {
     const id = parseInt(req.params.id);
-    console.log(id);
-    const response: QueryResult = await pool.query(
-      "UPDATE tenant SET deleted = false WHERE id = $1",
+    await pool.query("UPDATE tenant SET deleted = false WHERE id = $1", [id]);
+    return res.status(200).send("Tenant ${id} enabled succesfully");
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const getTenantUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+    const tenantQuery: QueryResult = await pool.query(
+      `
+      SELECT 
+      name FROM tenant WHERE id = $1
+      `,
       [id]
     );
-    return res.status(200).send("Tenant ${id} enabled succesfully");
+
+    const tenantName = tenantQuery.rows[0].name;
+
+    const usersQuery: QueryResult = await pool.query(
+      `
+      SELECT 
+      id, usertype_id, mail_address, username, names, surname, deleted
+      FROM user_account 
+      WHERE tenant_id = $1
+      `,
+      [id]
+    );
+
+    let users: any[] = [];
+
+    if (usersQuery.rows[0]) {
+      users = usersQuery.rows;
+    }
+
+    const result = { tenantName, users };
+
+    return res.status(200).json(result);
   } catch (e) {
     next(e);
   }
@@ -99,7 +132,7 @@ export const getTenantData = async (
     const usersQuery: QueryResult = await pool.query(
       `
       SELECT 
-      id, usertype_id, mail_address, username, names, surname
+      id, usertype_id, mail_address, username, names, surname, deleted
       FROM user_account 
       WHERE tenant_id = $1
       `,

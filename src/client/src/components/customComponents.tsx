@@ -349,3 +349,20 @@ export function TimeIntervalToReadableString(interval: {
     return "";
   }
 }
+
+export function UsertypeIDToString(id: number): string {
+  const usertypeObjects = [
+    { key: 1, label: "Service admin" },
+    { key: 2, label: "Gerente administrativo" },
+    { key: 3, label: "Gerente agrónomo" },
+    { key: 4, label: "Especialista en suelos" },
+    { key: 5, label: "Botánico " },
+    { key: 6, label: "Agricultor" },
+  ];
+
+  const usertypeString = usertypeObjects.find(
+    (usertypeObj) => usertypeObj.key === id
+  )?.label;
+
+  return usertypeString || "";
+}

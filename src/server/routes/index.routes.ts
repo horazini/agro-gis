@@ -11,6 +11,7 @@ import {
   updateTenant,
   getTenantById,
   createTenantWithUsers,
+  getTenantUsers,
   getTenantData,
   disableTenant,
   enableTenant,
@@ -23,6 +24,7 @@ router.get("/tenant/:id", getTenantById);
 router.put("/tenant/:id", updateTenant);
 
 router.post("/tenantdata", createTenantWithUsers);
+router.get("/tenantusers/:id", getTenantUsers);
 router.get("/tenantdata/:id", getTenantData);
 router.put("/disabletenant/:id", disableTenant);
 router.put("/enabletenant/:id", enableTenant);
@@ -36,6 +38,9 @@ import {
   getTenantUserTypes,
   getUsersByTenant,
   usernameAlreadyExists,
+  getUserData,
+  disableUser,
+  enableUser,
 } from "../controllers/user.controllers";
 
 router.get("/users", getUsers);
@@ -44,13 +49,15 @@ router.get("/usertypes", getUserTypes);
 router.get("/tenantusertypes", getTenantUserTypes);
 router.get("/tenantusers/:id", getUsersByTenant);
 router.post("/usernameexists", usernameAlreadyExists);
+router.get("/userdata/:id", getUserData);
+router.put("/disableuser/:id", disableUser);
+router.put("/enableuser/:id", enableUser);
 
 // auth
 
-import { login, getUserData } from "../controllers/user.controllers";
+import { login } from "../controllers/user.controllers";
 
 router.post("/login", login);
-router.get("/user", getUserData);
 
 // Data tables
 

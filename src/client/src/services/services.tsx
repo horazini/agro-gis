@@ -5,6 +5,7 @@ import { API } from "../config";
 export type tenantMainData = {
   id: number;
   name: string;
+  deleted: boolean;
 };
 
 export type tenantDataType = {
@@ -24,6 +25,12 @@ export type tenantDataType = {
 export const getTenants = async () => {
   const response = await fetch(`${API}/tenants`);
   const data: tenantMainData[] = await response.json();
+  return data;
+};
+
+export const getTenantUsers = async (id: number) => {
+  const res = await fetch(`${API}/tenantusers/${id}`);
+  const data = await res.json();
   return data;
 };
 
@@ -81,6 +88,28 @@ export const usernameAlreadyExists = async (username: string) => {
   });
   const bool = await res.json();
   return bool;
+};
+
+export const getUserData = async (id: string) => {
+  const res = await fetch(`${API}/userdata/${id}`);
+  const data = await res.json();
+  return data;
+};
+
+export const disableUser = async (userId: number) => {
+  const res = await fetch(`${API}/disableuser/${userId}`, {
+    method: "PUT",
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};
+
+export const enableUser = async (userId: number) => {
+  const res = await fetch(`${API}/enableuser/${userId}`, {
+    method: "PUT",
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
 };
 
 // Species

@@ -75,23 +75,6 @@ export const createUser = async (
 
 // Métodos de autenticación
 
-export async function getUserData(
-  username: string
-): Promise<{ tenant_id: number; usertype_id: number; id: number }> {
-  const query =
-    "SELECT id, tenant_id, usertype_id FROM user_account WHERE username = $1";
-  const result = await pool.query(query, [username]);
-  if (result.rows.length === 0) {
-    throw new Error("User not found");
-  }
-  const userData = result.rows[0];
-  return {
-    tenant_id: userData.tenant_id,
-    usertype_id: userData.usertype_id,
-    id: userData.id,
-  };
-}
-
 export async function verifyUserCredentials(
   username: string,
   password: string
@@ -212,6 +195,64 @@ export const getTenantUserTypes = async (
     const filteredRows = response.rows.filter((row) => row.id > 1);
 
     return res.status(200).json(filteredRows);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const getUserData = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+    const queryResponse: QueryResult = await pool.query(
+      `
+      SELECT 
+      usertype_id, mail_address, username, names, surname, deleted
+      FROM user_account 
+      WHERE id = $1
+      `,
+      [id]
+    );
+
+    const result = queryResponse.rows[0];
+
+    return res.status(200).json(result);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const disableUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+    console.log(id);
+    await pool.query("UPDATE user_account SET deleted = true WHERE id = $1", [
+      id,
+    ]);
+    return res.status(200).send("User ${id} disabled succesfully");
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const enableUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+    await pool.query("UPDATE user_account SET deleted = false WHERE id = $1", [
+      id,
+    ]);
+    return res.status(200).send("User ${id} enabled succesfully");
   } catch (e) {
     next(e);
   }

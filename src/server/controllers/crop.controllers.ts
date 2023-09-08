@@ -288,10 +288,49 @@ export const getCropDataById = async (
         const eventsResponse: QueryResult = await pool.query(eventsQuery, [
           stage.id,
         ]);
+        const rows = eventsResponse.rows;
+
+        const formattedEvents: any = {};
+        const individualEvents: any = [];
+
+        for (const row of rows) {
+          const {
+            id,
+            due_date,
+            done_date,
+            species_growth_event_id,
+            species_growth_event_time_period,
+            ...eventData
+          } = row;
+          const eventMainData = {
+            id,
+            due_date,
+            done_date,
+          };
+
+          if (species_growth_event_time_period) {
+            if (formattedEvents[species_growth_event_id]?.periodic_events) {
+              formattedEvents[species_growth_event_id].periodic_events.push(
+                eventMainData
+              );
+            } else {
+              formattedEvents[species_growth_event_id] = {
+                ...eventData,
+                species_growth_event_id,
+                species_growth_event_time_period,
+                periodic_events: [eventMainData],
+              };
+            }
+          } else {
+            formattedEvents[species_growth_event_id] = row;
+          }
+        }
+
+        const events = Object.values(formattedEvents).concat(individualEvents);
 
         return {
           ...stage,
-          events: eventsResponse.rows,
+          events,
         };
       })
     );
@@ -327,6 +366,57 @@ export const setDoneCropEvent = async (
       `,
       [doneDate, event_id]
     );
+
+    const timePeriodQuery = await client.query(
+      `
+      SELECT species_growth_event_time_period FROM crop_event WHERE id = $1
+      `,
+      [event_id]
+    );
+
+    const species_growth_event_time_period =
+      timePeriodQuery.rows[0].species_growth_event_time_period;
+
+    if (species_growth_event_time_period) {
+      const taskDone = await client.query(
+        `
+        SELECT * FROM crop_event WHERE id = $1
+        `,
+        [event_id]
+      );
+
+      const {
+        crop_id,
+        crop_stage_id,
+        species_growth_event_id,
+        name,
+        description,
+        species_growth_event_et_from_stage_start,
+      } = taskDone.rows[0];
+
+      const due_date = sumIntervalToDate(
+        doneDate,
+        species_growth_event_time_period
+      );
+
+      await client.query(
+        `
+        INSERT INTO crop_event (crop_id, crop_stage_id, 
+          species_growth_event_id, name, description, species_growth_event_ET_from_stage_start, species_growth_event_time_period, due_date)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `,
+        [
+          crop_id,
+          crop_stage_id,
+          species_growth_event_id,
+          name,
+          description,
+          species_growth_event_et_from_stage_start,
+          species_growth_event_time_period,
+          due_date,
+        ]
+      );
+    }
 
     await client.query("COMMIT");
 

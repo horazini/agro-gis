@@ -361,7 +361,13 @@ const ItemButtonsList = ({ open }: { open: boolean }) => {
               </ListItemIcon>
             )}
 
-            <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
+            <ListItemText
+              primary={text}
+              sx={{
+                opacity: open ? 1 : 0,
+                whiteSpace: open ? "normal" : "nowrap",
+              }}
+            />
           </ListItemButton>
         );
       })}

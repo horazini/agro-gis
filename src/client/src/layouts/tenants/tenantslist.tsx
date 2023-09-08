@@ -38,10 +38,6 @@ function TenantsList() {
 
   const navigate = useNavigate();
 
-  const handleDelete = async (id: number) => {
-    // Do something
-  };
-
   const [open, setOpen] = useState(-1);
   return (
     <Fragment>

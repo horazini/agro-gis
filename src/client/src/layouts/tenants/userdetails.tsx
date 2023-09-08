@@ -24,6 +24,8 @@ import {
   UsertypeIDToString,
 } from "../../components/customComponents";
 import PageTitle from "../../components/title";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 interface user {
   usertype_id: number;
@@ -36,6 +38,7 @@ interface user {
 
 const TenantDetails = () => {
   PageTitle("Cliente");
+  const { userId } = useSelector((state: RootState) => state.auth);
 
   const params = useParams();
 
@@ -115,6 +118,7 @@ const TenantDetails = () => {
 
         {deleted ? (
           <Button
+            disabled={Number(params.id) === userId}
             startIcon={<HowToRegIcon />}
             variant="contained"
             color="success"
@@ -125,6 +129,7 @@ const TenantDetails = () => {
           </Button>
         ) : (
           <Button
+            disabled={Number(params.id) === userId}
             startIcon={<PersonOffIcon />}
             variant="contained"
             color="error"

@@ -518,3 +518,39 @@ export const setFinishedCropStage = async (
     client.release();
   }
 };
+
+export const getTenantCropData = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
+    const response: QueryResult = await pool.query(
+      `
+      SELECT
+      id, 
+      landplot_id,
+      CASE 
+        WHEN landplot_circle_radius IS NULL THEN ROUND(st_area(landplot_area, true)::numeric)
+        ELSE ROUND((pi() * landplot_circle_radius * landplot_circle_radius)::numeric)
+      END AS landplot_area,
+      landplot_description,
+      species_name,
+      description,
+      comments,
+      start_date, 
+      finish_date,
+      weight_in_tons,
+      deleted  
+      FROM crop
+      WHERE tenant_id = $1
+      `,
+      [tenantId]
+    );
+
+    return res.status(200).json(response.rows);
+  } catch (e) {
+    next(e);
+  }
+};

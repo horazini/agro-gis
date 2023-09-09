@@ -32,8 +32,10 @@ const MapView = () => {
   const [geoData, setGeoData] = useState<FeatureCollection>();
 
   const loadData = async () => {
-    const data = await getTenantGeoData(tenantId);
-    setGeoData(data);
+    if (tenantId) {
+      const data = await getTenantGeoData(tenantId);
+      setGeoData(data);
+    }
   };
 
   useEffect(() => {

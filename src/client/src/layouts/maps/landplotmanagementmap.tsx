@@ -74,8 +74,10 @@ export default function EditControlFC() {
   }, []);
 
   const loadData = async () => {
-    const data = await getAvailableAndOccupiedTenantGeo(tenantId);
-    setFeatures(data.features);
+    if (tenantId) {
+      const data = await getAvailableAndOccupiedTenantGeo(tenantId);
+      setFeatures(data.features);
+    }
   };
 
   const featureGroup = useRef<L.FeatureGroup>(null);

@@ -21,8 +21,10 @@ function SpeciesList() {
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const loadSpecies = async () => {
-    const data = await getTenantSpecies(tenantId);
-    setSpecies(data);
+    if (tenantId) {
+      const data = await getTenantSpecies(tenantId);
+      setSpecies(data);
+    }
   };
 
   useEffect(() => {
@@ -66,7 +68,7 @@ function SpeciesList() {
             <Box>
               <Button
                 variant="contained"
-                color="inherit"
+                color="primary"
                 onClick={() => navigate(`/species/${specie.id}/edit`)}
                 endIcon={<EditIcon />}
               >

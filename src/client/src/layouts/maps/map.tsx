@@ -45,17 +45,19 @@ const MapView = () => {
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const loadData = async () => {
-    const data = await getTenantGeo(tenantId);
-    setGeoData(
-      data.features.filter(
-        (feature: any) => feature.geometry.type === "Polygon"
-      )
-    );
-    setCircles(
-      data.features.filter(
-        (feature: any) => feature.properties.landplot.subType === "Circle"
-      )
-    );
+    if (tenantId) {
+      const data = await getTenantGeo(tenantId);
+      setGeoData(
+        data.features.filter(
+          (feature: any) => feature.geometry.type === "Polygon"
+        )
+      );
+      setCircles(
+        data.features.filter(
+          (feature: any) => feature.properties.landplot.subType === "Circle"
+        )
+      );
+    }
   };
 
   useEffect(() => {

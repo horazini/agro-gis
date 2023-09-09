@@ -52,13 +52,17 @@ const MapView = () => {
   const [species, setSpecies] = useState<speciesMainData[]>([]);
 
   const loadData = async () => {
-    const data = await getTenantGeoData(tenantId);
-    setGeoData(data);
+    if (tenantId) {
+      const data = await getTenantGeoData(tenantId);
+      setGeoData(data);
+    }
   };
 
   const loadSpecies = async () => {
-    const data = await getTenantSpecies(tenantId);
-    setSpecies(data);
+    if (tenantId) {
+      const data = await getTenantSpecies(tenantId);
+      setSpecies(data);
+    }
   };
 
   useEffect(() => {

@@ -145,107 +145,13 @@ const CropsList = (crops: any[]) => {
     },
   ];
 
-  const rows = [
-    {
-      id: 28,
-      landplot_id: 54,
-      landplot_area: "286355",
-      landplot_description: null,
-      species_name: "eucaliptus",
-      description: null,
-      comments: null,
-      start_date: "2023-08-19T03:00:00.000Z",
-      finish_date: null,
-      weight_in_tons: null,
-      deleted: null,
-    },
-    {
-      id: 30,
-      landplot_id: 50,
-      landplot_area: "209005",
-      landplot_description: null,
-      species_name: "Nombre especie",
-      description: null,
-      comments: null,
-      start_date: "2023-08-10T03:00:00.000Z",
-      finish_date: null,
-      weight_in_tons: null,
-      deleted: null,
-    },
-    {
-      id: 31,
-      landplot_id: 55,
-      landplot_area: "305796",
-      landplot_description: null,
-      species_name: "Jengibre",
-      description: null,
-      comments: null,
-      start_date: "2023-08-11T03:00:00.000Z",
-      finish_date: null,
-      weight_in_tons: null,
-      deleted: null,
-    },
-    {
-      id: 29,
-      landplot_id: 44,
-      landplot_area: "29587",
-      landplot_description: null,
-      species_name: "Cebollita verdeo",
-      description: null,
-      comments: null,
-      start_date: "2023-08-09T03:00:00.000Z",
-      finish_date: null,
-      weight_in_tons: null,
-      deleted: null,
-    },
-    {
-      id: 32,
-      landplot_id: 43,
-      landplot_area: "4943",
-      landplot_description: null,
-      species_name: "Mandioca",
-      description: null,
-      comments: null,
-      start_date: "2023-09-01T03:00:00.000Z",
-      finish_date: null,
-      weight_in_tons: null,
-      deleted: null,
-    },
-    {
-      id: 33,
-      landplot_id: 42,
-      landplot_area: "4773",
-      landplot_description: null,
-      species_name: "Cebollita verdeo",
-      description: null,
-      comments: null,
-      start_date: "2023-09-06T03:00:00.000Z",
-      finish_date: null,
-      weight_in_tons: null,
-      deleted: null,
-    },
-    {
-      id: 34,
-      landplot_id: 88,
-      landplot_area: "11973",
-      landplot_description: null,
-      species_name: "Nombre especie",
-      description: null,
-      comments: null,
-      start_date: "2023-09-06T03:00:00.000Z",
-      finish_date: null,
-      weight_in_tons: null,
-      deleted: null,
-    },
-  ];
-
   return (
     <Fragment>
       <h1>Cultivos</h1>
       {crops.length > 0 ? (
         <Box sx={{ height: 400, width: "100%" }}>
           <DataGrid
-            rows={rows}
+            rows={crops}
             columns={columns}
             initialState={{
               pagination: {

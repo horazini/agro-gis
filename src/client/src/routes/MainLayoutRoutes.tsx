@@ -26,6 +26,7 @@ import LandplotManagementMap from "../layouts/maps/landplotmanagementmap";
 import CropLandplotsMap from "../layouts/maps/croplandplotsmap";
 import CropRegisterMap from "../layouts/crops/cropregistermap";
 import CropDetails from "../layouts/crops/cropdetails";
+import CropsList from "../layouts/crops/cropslist";
 
 import Calendar from "../layouts/tasks/taskcalendar";
 
@@ -78,6 +79,11 @@ const routeList = [
   {
     path: "/croplandplots",
     element: <CropLandplotsMap />,
+    allowed: [2, 3, 4, 6],
+  },
+  {
+    path: "/crops",
+    element: <CropsList />,
     allowed: [2, 3, 4, 6],
   },
   {

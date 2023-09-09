@@ -148,7 +148,7 @@ export const getSpeciesData = async (id: string) => {
   return data;
 };
 
-export const getTenantSpecies = async (tenantId: number | null) => {
+export const getTenantSpecies = async (tenantId: number) => {
   const response = await fetch(`${API}/tenantspecies/${tenantId}`);
   const data = await response.json();
   return data;
@@ -177,21 +177,19 @@ export const putSpeciesData = async (
 
 // Landplots
 
-export const getTenantGeo = async (tenantId: number | null) => {
+export const getTenantGeo = async (tenantId: number) => {
   const response = await fetch(`${API}/tenantGeo/${tenantId}`);
   const data = await response.json();
   return data;
 };
 
-export const getAvailableAndOccupiedTenantGeo = async (
-  tenantId: number | null
-) => {
+export const getAvailableAndOccupiedTenantGeo = async (tenantId: number) => {
   const response = await fetch(`${API}/availabletenantGeo/${tenantId}`);
   const data = await response.json();
   return data;
 };
 
-export const getTenantGeoData = async (tenantId: number | null) => {
+export const getTenantGeoData = async (tenantId: number) => {
   const response = await fetch(`${API}/tenantgeocurrentdata/${tenantId}`);
   const data = await response.json();
   return data;
@@ -220,6 +218,12 @@ export const postCrop = async (crop: any) => {
 export const getCropById = async (id: string) => {
   const res = await fetch(`${API}/cropdata/${id}`);
   const data = await res.json();
+  return data;
+};
+
+export const getTenantCrops = async (tenantId: number) => {
+  const response = await fetch(`${API}/tenantcropdata/${tenantId}`);
+  const data = await response.json();
   return data;
 };
 

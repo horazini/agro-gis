@@ -44,6 +44,7 @@ import {
   Layers as LayersIcon,
   Groups as GroupsIcon,
   BarChart as BarChartIcon,
+  Agriculture as AgricultureIcon,
 } from "@mui/icons-material";
 
 const drawerWidth = 240;
@@ -166,6 +167,12 @@ const routeList = [
     text: "Alta de cultivos",
     icon: <MapIcon />,
     to: "/cropregister",
+    allowed: [3, 6],
+  },
+  {
+    text: "Cultivos",
+    icon: <AgricultureIcon />,
+    to: "/crops",
     allowed: [3, 6],
   },
   {

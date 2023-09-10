@@ -59,14 +59,11 @@ import {
   CircularProgressBackdrop,
   SnackBarAlert,
   TimeIntervalToReadableString,
+  formatedDate,
 } from "../../components/customComponents";
 
 import { DateCalendar } from "@mui/x-date-pickers";
 import PageTitle from "../../components/title";
-
-function formatedDate(date: string) {
-  return new Date(date).toLocaleDateString("en-GB");
-}
 
 function sortedEvents(
   events: { due_date: string; done_date: string | undefined }[]

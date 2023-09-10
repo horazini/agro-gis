@@ -366,3 +366,7 @@ export function UsertypeIDToString(id: number): string {
 
   return usertypeString || "";
 }
+
+export function formatedDate(date: string) {
+  return new Date(date).toLocaleDateString("en-GB");
+}

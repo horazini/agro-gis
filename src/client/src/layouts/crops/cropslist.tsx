@@ -1,33 +1,10 @@
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Collapse,
-  Divider,
-  IconButton,
-  Typography,
-} from "@mui/material";
+import { Box } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  PersonOff as PersonOffIcon,
-  HowToReg as HowToRegIcon,
-  FormatListBulleted,
-  KeyboardArrowDown,
-  KeyboardArrowUp,
-  DeleteRounded,
-} from "@mui/icons-material";
+import { FormatListBulleted } from "@mui/icons-material";
 
 import { getTenantCrops } from "../../services/services";
-import {
-  ConfirmDialog,
-  UsertypeIDToString,
-} from "../../components/customComponents";
 import PageTitle from "../../components/title";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
@@ -36,23 +13,9 @@ import {
   GridColDef,
   GridRenderCellParams,
   GridValueFormatterParams,
-  GridValueGetterParams,
 } from "@mui/x-data-grid";
 import { FormattedArea } from "../../components/mapcomponents";
-
-interface user {
-  id: number;
-  usertype_id: number;
-  mail_address: string;
-  username: string;
-  names: string;
-  surname: string;
-  deleted: boolean;
-}
-
-function formatedDate(date: string) {
-  return new Date(date).toLocaleDateString("en-GB");
-}
+import { formatedDate } from "../../components/customComponents";
 
 const CropsList = (crops: any[]) => {
   const navigate = useNavigate();

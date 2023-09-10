@@ -155,7 +155,11 @@ export const getGeoWithCrops = async (
     const response: QueryResult = await pool.query(
       `
       SELECT l.id AS landplot_id, ${shape_data_query_l}, l.description, 
-      c.id, c.species_id, c.description, c.start_date, c.finish_date
+      CASE 
+        WHEN l.circle_radius IS NULL THEN ROUND(st_area(l.area, true)::numeric)
+        ELSE ROUND((pi() * l.circle_radius * l.circle_radius)::numeric)
+      END AS area,
+      c.id, c.species_id, c.species_name, c.description, c.comments, c.start_date, c.finish_date, c.weight_in_tons
       FROM landplot l
       LEFT JOIN crop c ON l.id = c.landplot_id
       WHERE l.id = $1 
@@ -169,6 +173,7 @@ export const getGeoWithCrops = async (
       geometry: response.rows[0].geometry,
       center: response.rows[0].center,
       circle_radius: response.rows[0].circle_radius,
+      area: response.rows[0].area,
     };
 
     let crops: any[] = [];
@@ -177,15 +182,19 @@ export const getGeoWithCrops = async (
       crops = response.rows.map((row) => ({
         id: row.id,
         species_id: row.species_id,
+        species_name: row.species_name,
         description: row.description,
+        comments: row.comments,
         start_date: row.start_date,
         finish_date: row.finish_date,
+        weight_in_tons: row.weight_in_tons,
       }));
     }
 
-    const result = { landplot, crops };
+    const properties = { crops };
+    const Feature = PostGISToGeoJSONFeature(landplot, properties);
 
-    return res.status(200).json("Unfinished function");
+    return res.status(200).json(Feature);
   } catch (e) {
     next(e);
   }

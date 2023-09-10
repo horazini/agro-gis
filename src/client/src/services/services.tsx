@@ -204,6 +204,12 @@ export const putFeatures = async (features: any) => {
   return res.status;
 };
 
+export const getGeoData = async (tenantId: number) => {
+  const response = await fetch(`${API}/geodata/${tenantId}`);
+  const data = await response.json();
+  return data;
+};
+
 // Crops
 
 export const postCrop = async (crop: any) => {

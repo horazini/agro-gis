@@ -120,14 +120,18 @@ const CropInfo = (crop: Crop, navigate: NavigateFunction) => {
       )}
       <p>Fecha de plantación: {startDate}</p>
       {crop.finish_date && <p>Fecha de cosecha: {finishDate}</p>}
-      <p>Especie: {crop.species_name}</p>
-      {crop.description && <p>description: {crop.description}</p>}
-      <Button
-        variant="outlined"
-        onClick={() => navigate(`/cropdetails/${crop.id}`)}
-      >
-        Ver detalles del cultivo
-      </Button>
+      <Box style={{ display: "flex", justifyContent: "space-between" }}>
+        <p>Especie: {crop.species_name}</p>
+        {crop.description && <p>description: {crop.description}</p>}
+        <Box>
+          <Button
+            variant="outlined"
+            onClick={() => navigate(`/cropdetails/${crop.id}`)}
+          >
+            detalles del cultivo
+          </Button>
+        </Box>
+      </Box>
     </Box>
   );
 };
@@ -137,11 +141,20 @@ export const FeatureInfo = (
   navigate: NavigateFunction
 ) => {
   const { landplot, crop } = featureProperties;
-
   return (
     <Box>
       <h2>Información seleccionada:</h2>
-      <p>Parcela N.° {landplot.id}</p>
+      <Box style={{ display: "flex", justifyContent: "space-between" }}>
+        <p>Parcela N.° {landplot.id}</p>
+        <Box>
+          <Button
+            variant="outlined"
+            onClick={() => navigate(`/landplotdetails/${landplot.id}`)}
+          >
+            detalles de la parcela
+          </Button>
+        </Box>
+      </Box>
       {landplot.description && <p>Descripción: {landplot.description}</p>}
       {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
       {(crop && CropInfo(crop, navigate)) || (

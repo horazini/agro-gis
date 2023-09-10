@@ -33,7 +33,6 @@ import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import {
   Menu as MenuIcon,
   ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
   Settings as SettingsIcon,
   AccountCircle as AccountCircleIcon,
   Logout as LogoutIcon,
@@ -152,22 +151,16 @@ const routeList = [
     allowed: [3, 5, 6],
   },
   {
-    text: "Parcelas y cultivos",
-    icon: <MapIcon />,
-    to: "/croplandplots",
-    allowed: [3, 4, 6],
-  },
-  {
     text: "Administración de parcelas",
     icon: <LayersIcon />,
     to: "/landplotmanagement",
     allowed: [3, 4],
   },
   {
-    text: "Alta de cultivos",
+    text: "Parcelas y cultivos",
     icon: <MapIcon />,
-    to: "/cropregister",
-    allowed: [3, 6],
+    to: "/croplandplots",
+    allowed: [3, 4, 6],
   },
   {
     text: "Cultivos",

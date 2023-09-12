@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MapContainer,
   Circle,
@@ -8,11 +8,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-import {
-  getGeoData,
-  setDoneCropEvent,
-  setFinishedCropStage,
-} from "../../services/services";
+import { getGeoData } from "../../services/services";
 import { Feature } from "geojson";
 
 import {
@@ -20,50 +16,13 @@ import {
   LayerControler,
   FormattedArea,
 } from "../../components/mapcomponents";
-import {
-  AlertColor,
-  Box,
-  Button,
-  Card,
-  Chip,
-  Collapse,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  IconButton,
-  InputAdornment,
-  Menu,
-  Paper,
-  SelectChangeEvent,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, Card } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { LatLngExpression } from "leaflet";
 import L from "leaflet";
-import {
-  KeyboardArrowDown,
-  KeyboardArrowUp,
-  Today as TodayIcon,
-  PlaylistAdd as PlaylistAddIcon,
-  FormatListBulleted,
-} from "@mui/icons-material";
-import {
-  CircularProgressBackdrop,
-  SnackBarAlert,
-  TimeIntervalToReadableString,
-  formatedDate,
-} from "../../components/customComponents";
+import { FormatListBulleted } from "@mui/icons-material";
+import { formatedDate } from "../../components/customComponents";
 
-import { DateCalendar } from "@mui/x-date-pickers";
 import PageTitle from "../../components/title";
 import { DataGrid } from "@mui/x-data-grid/DataGrid";
 import {

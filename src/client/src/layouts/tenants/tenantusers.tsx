@@ -5,29 +5,20 @@ import {
   CardContent,
   Chip,
   Collapse,
-  Divider,
   IconButton,
   Typography,
 } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  PersonOff as PersonOffIcon,
-  HowToReg as HowToRegIcon,
   FormatListBulleted,
   KeyboardArrowDown,
   KeyboardArrowUp,
-  DeleteRounded,
 } from "@mui/icons-material";
 
 import { getTenantUsers } from "../../services/services";
-import {
-  ConfirmDialog,
-  UsertypeIDToString,
-} from "../../components/customComponents";
+import { UsertypeIDToString } from "../../components/customComponents";
 import PageTitle from "../../components/title";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";

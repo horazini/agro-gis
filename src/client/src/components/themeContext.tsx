@@ -2,7 +2,6 @@ import { createContext, useContext, useState } from "react";
 import {
   createTheme,
   ThemeProvider as MuiThemeProvider,
-  Theme,
 } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 

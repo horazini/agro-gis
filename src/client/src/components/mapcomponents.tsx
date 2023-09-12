@@ -11,7 +11,7 @@ import { LatLngExpression } from "leaflet";
 
 import L from "leaflet";
 import { Box, Button } from "@mui/material";
-import { NavigateFunction, useNavigate } from "react-router-dom";
+import { NavigateFunction } from "react-router-dom";
 
 export const position: LatLngExpression = [-29, -58];
 
@@ -83,12 +83,6 @@ export function LayerControler(): JSX.Element {
     </LayersControl>
   );
 }
-
-type Species = {
-  id: number;
-  name: string;
-  description: string;
-};
 
 export type Crop = {
   id: number;

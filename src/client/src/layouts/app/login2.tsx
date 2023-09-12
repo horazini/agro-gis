@@ -1,5 +1,5 @@
 import { useDispatch } from "react-redux";
-import { login, logout } from "../../redux/authSlice";
+import { logout } from "../../redux/authSlice";
 import bcrypt from "bcryptjs";
 
 // función para codificar la contraseña

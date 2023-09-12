@@ -117,13 +117,6 @@ const Drawer = styled(MuiDrawer, {
   }),
 }));
 
-type itemType = {
-  text: string;
-  icon: JSX.Element;
-  to: string;
-  allowed?: number[];
-};
-
 const routeList = [
   {
     text: "Clientes",
@@ -251,7 +244,7 @@ const SettingsMenu = () => {
 
 const UserMenu = () => {
   const dispatch = useDispatch();
-  const { username, surname, names, userTypeId } = useSelector(
+  const { username, surname, names } = useSelector(
     (state: RootState) => state.auth
   );
 

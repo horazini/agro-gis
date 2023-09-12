@@ -8,7 +8,7 @@ import {
   Popup,
 } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
-import type { FeatureCollection, Feature, GeoJsonObject } from "geojson";
+import type { FeatureCollection, Feature } from "geojson";
 import { useEffect, useRef, useState } from "react";
 import { LayerControler, position } from "../../components/mapcomponents";
 import {

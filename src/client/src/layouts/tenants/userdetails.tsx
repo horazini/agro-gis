@@ -1,19 +1,8 @@
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Collapse,
-  Divider,
-  IconButton,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Divider } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
   PersonOff as PersonOffIcon,
   HowToReg as HowToRegIcon,
 } from "@mui/icons-material";

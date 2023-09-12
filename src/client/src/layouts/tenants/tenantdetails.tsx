@@ -12,8 +12,6 @@ import { Fragment, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
   PersonOff as PersonOffIcon,
   HowToReg as HowToRegIcon,
   FormatListBulleted,
@@ -152,8 +150,6 @@ const TenantHeader = (tenantInfo: any) => {
 };
 
 const UserList = (users: user[]) => {
-  const navigate = useNavigate();
-
   const [open, setOpen] = useState(-1);
 
   return (

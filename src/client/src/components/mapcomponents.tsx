@@ -1,17 +1,24 @@
 import { Fragment, useState } from "react";
+import { NavigateFunction } from "react-router-dom";
+
 import {
   LayersControl,
   Marker,
   Popup,
   TileLayer,
+  WMSTileLayer,
   useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { LatLngExpression } from "leaflet";
+import L, { LatLngExpression } from "leaflet";
 
-import L from "leaflet";
-import { Box, Button } from "@mui/material";
-import { NavigateFunction } from "react-router-dom";
+import { Box, Button, Menu, Switch } from "@mui/material";
+import { Today as TodayIcon } from "@mui/icons-material";
+
+import { DateCalendar } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
+import { format } from "date-fns";
+import { SENTINEL_HUB_API_URL, SENTINEL_HUB_BASE_URL } from "../config";
 
 export const position: LatLngExpression = [-29, -58];
 
@@ -49,19 +56,169 @@ function LocationMarker() {
   );
 }
 
+//#region WMSOptions workaround
+declare module "leaflet" {
+  interface WMSOptions {
+    urlProcessingApi?: string;
+    maxcc?: number;
+    preset?: string;
+    time?: string;
+  }
+}
+//#endregion
+
+// Mapa actualización frecuente
+function SentinelHub() {
+  const [sentinelIsSelected, setSentinelIsSelected] = useState<boolean>(false);
+
+  //#region ALternative to first WMSOptions workaround
+
+  /* interface CustomWMSOptions extends L.WMSOptions {
+  maxcc?: string;
+  preset?: string;
+  time?: string;
+}
+
+let sentinelHub = L.tileLayer.wms(baseUrl, {
+  tileSize: 512,
+  attribution: '&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>',
+  urlProcessingApi: "https://services.sentinel-hub.com/ogc/wms/1d4de4a3-2f50-493c-abd8-861dec3ae6b2",
+  maxcc: 20,
+  minZoom: 6,
+  maxZoom: 16,
+  preset: "NDVI",
+  layers: "NDVI",
+  time: "2023-03-01/2023-09-13",
+} as unknown as CustomWMSOptions); */
+
+  //#endregion
+
+  // Date handle
+
+  const today = new Date();
+  const [selectedDate, setSelectedDate] = useState(today);
+  const formatedDate = format(selectedDate, "yyyy-MM-dd");
+
+  const [WMSreloadTrigger, setWMSreloadTrigger] = useState(0);
+
+  const handleDateChange = (date: any) => {
+    setSelectedDate(date);
+    setWMSreloadTrigger((prevCount) => prevCount + 1);
+  };
+
+  // Date selector
+
+  const [anchorDateEl, setAnchorDateEl] = useState(null);
+  const openDateSelector = Boolean(anchorDateEl);
+  const handleOpenDateSelector = (event: any) => {
+    setAnchorDateEl(event.currentTarget);
+  };
+  const handleCloseDateSelector = () => {
+    setAnchorDateEl(null);
+  };
+
+  //
+
+  const [showAcquisitionDates, setShowAcquisitionDates] =
+    useState<boolean>(false);
+
+  const showDate = showAcquisitionDates ? ",DATE" : "";
+
+  const handleShowDatesChange = () => {
+    setShowAcquisitionDates((prev) => !prev);
+    setWMSreloadTrigger((prevCount) => prevCount + 1);
+  };
+
+  return (
+    <>
+      <WMSTileLayer
+        key={WMSreloadTrigger}
+        url={SENTINEL_HUB_BASE_URL}
+        tileSize={512}
+        attribution='&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>'
+        urlProcessingApi={SENTINEL_HUB_API_URL}
+        maxcc={5}
+        minZoom={7}
+        maxZoom={16}
+        preset="TRUE-COLOR-S2L2A"
+        layers={`TRUE-COLOR-S2L2A${showDate}`}
+        time={formatedDate}
+        eventHandlers={{
+          add: () => {
+            setSentinelIsSelected(true);
+          },
+          remove: () => {
+            setSentinelIsSelected(false);
+          },
+        }}
+      />
+      <div className={"leaflet-bottom leaflet-left"}>
+        <div className="leaflet-control leaflet-bar">
+          {sentinelIsSelected ? (
+            <Box
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Button
+                variant="contained"
+                onClick={handleOpenDateSelector}
+                endIcon={<TodayIcon />}
+                color="inherit"
+                sx={{ color: "black" }}
+              >
+                {format(selectedDate, "dd/MM/yyyy")}
+              </Button>
+              <Switch
+                //color="default"
+                onClick={handleShowDatesChange}
+              />
+            </Box>
+          ) : null}
+        </div>
+      </div>
+      <Menu
+        id="date-menu"
+        anchorEl={anchorDateEl}
+        open={openDateSelector}
+        onClose={handleCloseDateSelector}
+        MenuListProps={{ "aria-labelledby": "basic-button" }}
+      >
+        <DateCalendar
+          showDaysOutsideCurrentMonth
+          value={dayjs(selectedDate)}
+          minDate={dayjs("2017-01-01")}
+          maxDate={dayjs(today)}
+          onChange={(newValue: any) => {
+            handleDateChange(new Date(newValue));
+            handleCloseDateSelector();
+          }}
+        />
+      </Menu>
+    </>
+  );
+}
+
 export function LayerControler(): JSX.Element {
   return (
     <LayersControl position="topright">
-      <LayersControl.BaseLayer checked name="Esri.WorldImagery">
+      <LayersControl.BaseLayer checked name="Sentinel Hub - S2 L2A">
+        <SentinelHub />
+      </LayersControl.BaseLayer>
+      <LayersControl.BaseLayer name="Esri - WorldImagery">
         <TileLayer
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+          maxZoom={17}
         />
       </LayersControl.BaseLayer>
       <LayersControl.BaseLayer name="Open Topo Map">
         <TileLayer
           url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
           attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+          maxZoom={15}
         />
       </LayersControl.BaseLayer>
       <LayersControl.BaseLayer name="Open Street Map">

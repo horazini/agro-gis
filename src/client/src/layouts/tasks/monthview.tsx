@@ -139,8 +139,8 @@ function MonthModeView(props: any) {
       );
       if (dayInd !== -1) {
         let day = rowsCopy[rowInd]?.days[dayInd];
-        let splittedDate = transfert.item?.date?.split("-");
-        if (!transfert.item?.day) {
+        let splittedDate = transfert.item.date?.split("-");
+        if (!transfert.item.day) {
           // Get day of the date (DD)
           transfert.item.day = parseInt(splittedDate[2]);
         }

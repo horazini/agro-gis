@@ -157,7 +157,7 @@ const LandplotsAndCrops = () => {
       <div>
         <h3>ID: {properties.landplot.id}</h3>
         <p>Descripción: {properties.landplot.description}</p>
-        {properties?.landplot.radius && (
+        {properties.landplot.radius && (
           <p>Radio: {properties.landplot.radius} m.</p>
         )}
       </div>

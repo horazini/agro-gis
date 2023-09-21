@@ -1,12 +1,6 @@
 import { Fragment, useState } from "react";
 
-import {
-  MapContainer,
-  FeatureGroup,
-  Popup,
-  Circle,
-  Polygon,
-} from "react-leaflet";
+import { MapContainer, FeatureGroup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 import { EditControl } from "react-leaflet-draw";

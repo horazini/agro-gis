@@ -30,11 +30,13 @@ function TimeLineModeView(props: any) {
     );
   }
 
-  fileredEvents.sort((a: any, b: any) => {
-    const dateA = parse(a.date, "yyyy-MM-dd", new Date());
-    const dateB = parse(b.date, "yyyy-MM-dd", new Date());
-    return dateA.getTime() - dateB.getTime();
-  });
+  if (fileredEvents) {
+    fileredEvents.sort((a: any, b: any) => {
+      const dateA = parse(a.date, "yyyy-MM-dd", new Date());
+      const dateB = parse(b.date, "yyyy-MM-dd", new Date());
+      return dateA.getTime() - dateB.getTime();
+    });
+  }
 
   return (
     <Timeline position="alternate">

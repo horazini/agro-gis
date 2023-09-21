@@ -38,7 +38,7 @@ function TimeLineModeView(props: any) {
 
   return (
     <Timeline position="alternate">
-      {fileredEvents?.map((task: any, index: any) => {
+      {fileredEvents.map((task: any, index: any) => {
         return (
           <TimelineItem
             key={`timeline-${index}`}

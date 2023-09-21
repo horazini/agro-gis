@@ -23,7 +23,6 @@ import {
 import SchedulerToolbar from "./toolbar";
 import MonthModeView from "./monthview";
 import TimeLineModeView from "./timelineview";
-import es from "date-fns/locale/es";
 import PageTitle from "../../components/title";
 
 function Taskcalendar() {
@@ -32,7 +31,6 @@ function Taskcalendar() {
   const today = new Date();
 
   const [state, setState] = useState<any>({});
-  let dateFnsLocale = es;
 
   const [options] = useState({
     minWidth: 540,
@@ -53,14 +51,10 @@ function Taskcalendar() {
 
   // Date handle
 
-  const [selectedDay, setSelectedDay] = useState(today);
-  const [daysInMonth, setDaysInMonth] = useState(getDaysInMonth(today));
-  const [selectedDate, setSelectedDate] = useState(format(today, "MMMM-yyyy"));
+  const [selectedDate, setSelectedDate] = useState(today);
 
-  const handleDateChange = (day: any, date: any) => {
-    setDaysInMonth(day);
-    setSelectedDay(date);
-    setSelectedDate(format(date, "MMMM-yyyy"));
+  const handleDateChange = (date: any) => {
+    setSelectedDate(date);
   };
 
   // searchResult handle
@@ -122,8 +116,8 @@ function Taskcalendar() {
     let rows: any = [],
       daysBefore = [];
 
-    let iteration = getWeeksInMonth(selectedDay);
-    let monthStartDate = startOfMonth(selectedDay); // First day of month
+    let iteration = getWeeksInMonth(selectedDate);
+    let monthStartDate = startOfMonth(selectedDate); // First day of month
     let monthStartDay = getDay(monthStartDate); // Index of the day in week
     let dateDay = parseInt(format(monthStartDate, "dd")); // Month start day
 
@@ -159,11 +153,12 @@ function Taskcalendar() {
       for (
         let j = 0;
         // substract inserted days in the first line to 7 and ensure that days will not exceed 31
-        j < (i === 0 ? 7 - daysBefore.length : 7) && dateDay <= daysInMonth;
+        j < (i === 0 ? 7 - daysBefore.length : 7) &&
+        dateDay <= getDaysInMonth(selectedDate);
         j++
       ) {
         let date = parse(
-          `${dateDay}-${selectedDate}`,
+          `${dateDay}-${format(selectedDate, "MMMM-yyyy")}`,
           "dd-MMMM-yyyy",
           new Date()
         );
@@ -194,7 +189,7 @@ function Taskcalendar() {
     let lastDaysData = [];
 
     if (lastRowDaysdiff > 0) {
-      let day = lastRow.days[lastRow?.days?.length - 1];
+      let day = lastRow.days[lastRow.days.length - 1];
       let addDate = day.date;
       for (let i = dateDay; i < dateDay + lastRowDaysdiff; i++) {
         addDate = add(addDate, { days: 1 });
@@ -219,7 +214,7 @@ function Taskcalendar() {
   const getTimeLineRows = () =>
     /* events.filter((event: any) => {
     let eventDate = parse(event?.date, 'yyyy-MM-dd', new Date())
-    return isSameDay(selectedDay, eventDate)
+    return isSameDay(selectedDate, eventDate)
     }) */
     events;
 
@@ -236,7 +231,7 @@ function Taskcalendar() {
         rows: getTimeLineRows(),
       });
     }
-  }, [mode, daysInMonth, selectedDay, selectedDate, dateFnsLocale]);
+  }, [mode, selectedDate]);
 
   // Cells and events handlers
 
@@ -267,8 +262,8 @@ function Taskcalendar() {
         <DialogContent>
           <p>{eventDialogItem?.groupLabel}</p>
           <p>{eventDialogItem?.landplot}</p>
-          <p> {eventDialogItem?.createdBy}</p>
-          <p> {eventDialogItem?.date}</p>
+          <p>{eventDialogItem?.createdBy}</p>
+          <p>{eventDialogItem?.date}</p>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEventDialogOpen(false)}>Cancelar</Button>
@@ -306,7 +301,7 @@ function Taskcalendar() {
           <Fade in>
             <Grid item xs={12}>
               <MonthModeView
-                //date={selectedDate}
+                selectedDate={selectedDate}
                 rows={state?.rows}
                 options={options}
                 searchResult={searchResult}

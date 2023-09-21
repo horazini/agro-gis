@@ -53,11 +53,10 @@ function SchedulerToolbar(props: any) {
   const [inputValue, setInputValue] = useState("");
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [daysInMonth, setDaysInMonth] = useState(getDaysInMonth(selectedDate));
 
   useEffect(() => {
-    onDateChange && onDateChange(daysInMonth, selectedDate);
-  }, [daysInMonth, selectedDate]);
+    onDateChange && onDateChange(selectedDate);
+  }, [selectedDate]);
 
   const handleOnChange = (event: any, newValue: any) => {
     setValue(newValue);
@@ -68,8 +67,8 @@ function SchedulerToolbar(props: any) {
       newDate = parse(newValue.date, "yyyy-MM-dd", new Date());
     }
 
-    setDaysInMonth(getDaysInMonth(newDate));
     setSelectedDate(newDate);
+    onDateChange(newDate);
   };
 
   // Mode selector
@@ -129,9 +128,6 @@ function SchedulerToolbar(props: any) {
                 if (newInputValue?.date) {
                   newDate = parse(newInputValue.date, "yyyy-MM-dd", new Date());
                 }
-
-                setDaysInMonth(getDaysInMonth(newDate));
-                setSelectedDate(newDate);
               }}
               renderOption={(props: any, option: any) => (
                 <Box component="li" sx={{ fontSize: 12 }} {...props}>

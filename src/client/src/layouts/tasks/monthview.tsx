@@ -65,6 +65,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 function MonthModeView(props: any) {
   const {
+    selectedDate,
     rows,
     options,
     searchResult,
@@ -138,8 +139,8 @@ function MonthModeView(props: any) {
       );
       if (dayInd !== -1) {
         let day = rowsCopy[rowInd]?.days[dayInd];
-        let splittedDate = transfert?.item?.date?.split("-");
-        if (!transfert?.item?.day) {
+        let splittedDate = transfert.item?.date?.split("-");
+        if (!transfert.item?.day) {
           // Get day of the date (DD)
           transfert.item.day = parseInt(splittedDate[2]);
         }
@@ -160,8 +161,8 @@ function MonthModeView(props: any) {
               return;
             }
             prevDayEvents?.data?.splice(itemIndexToRemove, 1);
-            transfert.item.day = day?.day;
-            transfert.item.date = format(day?.date, "yyyy-MM-dd");
+            transfert.item.day = day.day;
+            transfert.item.date = format(day.date, "yyyy-MM-dd");
             day.data.push(transfert.item);
             setState({
               ...state,
@@ -200,7 +201,7 @@ function MonthModeView(props: any) {
             my: 0.3,
             color: "#fff",
             display: "inline-flex",
-            backgroundColor: task?.color || theme.palette.primary.light,
+            backgroundColor: task.color || theme.palette.primary.light,
           }}
           draggable
           onClick={(e) => handleTaskClick(e, task)}
@@ -237,19 +238,11 @@ function MonthModeView(props: any) {
 
   // Date selection setting
 
-  const [selectedDate, setSelectedDate] = useState(today || new Date());
-  const [daysInMonth, setDaysInMonth] = useState(getDaysInMonth(selectedDate));
-
   const handleChangeDate = (method: Function) => {
     let options: any = { months: 1 };
     let newDate = method(selectedDate, options);
-    setDaysInMonth(getDaysInMonth(newDate));
-    setSelectedDate(newDate);
+    onDateChange(newDate);
   };
-
-  useEffect(() => {
-    onDateChange && onDateChange(daysInMonth, selectedDate);
-  }, [daysInMonth, selectedDate]);
 
   return (
     <Fragment>
@@ -316,8 +309,7 @@ function MonthModeView(props: any) {
                   showDaysOutsideCurrentMonth
                   value={dayjs(selectedDate)}
                   onChange={(newValue: any) => {
-                    setDaysInMonth(getDaysInMonth(new Date(newValue)));
-                    setSelectedDate(new Date(newValue));
+                    onDateChange(new Date(newValue));
                     handleCloseDateSelector();
                   }}
                   //renderInput={(params: any) => <TextField {...params} />}
@@ -349,7 +341,7 @@ function MonthModeView(props: any) {
                   },
                 }}
               >
-                {row?.days?.map((day: any, indexD: any) => {
+                {row.days.map((day: any, indexD: any) => {
                   const currentDay =
                     day.day === today.getUTCDate() &&
                     isSameMonth(day.date, today);
@@ -387,7 +379,7 @@ function MonthModeView(props: any) {
                         >
                           {day.day}
                         </Typography>
-                        {day?.data?.length > 0 && renderTask(day?.data, row.id)}
+                        {day.data?.length > 0 && renderTask(day.data, row.id)}
                         {day.outmonthday && <div className="overlay" />}
                       </Box>
                     </StyledTableCell>
@@ -403,6 +395,7 @@ function MonthModeView(props: any) {
 }
 
 MonthModeView.propTypes = {
+  selectedDate: PropTypes.object,
   rows: PropTypes.array,
   options: PropTypes.object,
   onDateChange: PropTypes.func.isRequired,

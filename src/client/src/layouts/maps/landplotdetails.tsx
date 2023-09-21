@@ -41,7 +41,6 @@ const CropDetails = () => {
     try {
       const data = await getGeoData(Number(id));
       setLandplotData(data);
-      console.log(data);
     } catch (error) {
       console.log(error);
     }

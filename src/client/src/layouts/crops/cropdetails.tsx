@@ -226,7 +226,7 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
         {crop.description && <p>description: {crop.description}</p>}
         <p>Fecha de plantación: {formatedDate(crop.start_date)}</p>
         {crop.finish_date && (
-          <p>Fecha de cosecha: {formatedDate(crop.finish_date || "")}</p>
+          <p>Fecha de cosecha: {formatedDate(crop.finish_date)}</p>
         )}
       </Box>
       <h3>Etapas de cultivo:</h3>
@@ -270,7 +270,7 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
                       {start_date && formatedDate(start_date)}
                     </TableCell>
                     <TableCell>
-                      {finish_date && formatedDate(finish_date || null)}
+                      {finish_date && formatedDate(finish_date)}
                     </TableCell>
                     <TableCell align="right">
                       <IconButton
@@ -735,9 +735,9 @@ const PeriodicEvent = ({ event, handleOpenDateSelector, start_date }: any) => {
       <Divider />
 
       {periodicEvents[0].due_date ? (
-        periodicEvents.map((event: any) => {
+        periodicEvents.map((event: any, index) => {
           return (
-            <Fragment>
+            <Fragment key={index}>
               <Typography mt={2}>
                 Fecha estimada: {formatedDate(event.due_date)}
               </Typography>

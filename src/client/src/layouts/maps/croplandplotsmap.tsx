@@ -118,6 +118,8 @@ const LandplotsAndCrops = () => {
   // Comportamiento de las Layers
 
   const CustomLayer = ({ feature }: any) => {
+    const { properties, geometry } = feature;
+
     const [highlightedLayerId, setHighlightedLayerId] = useState<number | null>(
       null
     );
@@ -129,12 +131,11 @@ const LandplotsAndCrops = () => {
       setHighlightedLayerId(null);
     };
 
-    const isHighlighted = highlightedLayerId === feature.properties.landplot.id;
+    const isHighlighted = highlightedLayerId === properties.landplot.id;
     const isSelected =
       (selectedFeature?.properties?.landplot.id ?? null) ===
-      feature.properties.landplot.id;
-    const isOccupied =
-      feature.properties.crop && feature.properties.crop?.finish_date === null;
+      properties.landplot.id;
+    const isOccupied = properties.crop && properties.crop?.finish_date === null;
 
     const pathOptions = {
       color: isSelected
@@ -147,33 +148,30 @@ const LandplotsAndCrops = () => {
       weight: isSelected ? 4 : isHighlighted ? 4 : 3,
     };
 
-    const handleLayerClick = (event: LayerEvent, feature: any) => {
-      handleLandplotChange(feature.properties?.landplot.id);
-    };
-
     const eventHandlers = {
-      click: (event: LayerEvent) => handleLayerClick(event, feature),
-      mouseover: () => handleLayerMouseOver(feature.properties.landplot.id),
+      click: () => handleLandplotChange(properties.landplot.id),
+      mouseover: () => handleLayerMouseOver(properties.landplot.id),
       mouseout: handleLayerMouseOut,
     };
 
     const PopUp = (
       <div>
-        <h3>ID: {feature.properties.landplot.id}</h3>
-        <p>Descripción: {feature.properties.landplot.description}</p>
-        {feature.properties?.landplot.radius && (
-          <p>Radio: {feature.properties.landplot.radius} m.</p>
+        <h3>ID: {properties.landplot.id}</h3>
+        <p>Descripción: {properties.landplot.description}</p>
+        {properties?.landplot.radius && (
+          <p>Radio: {properties.landplot.radius} m.</p>
         )}
       </div>
     );
 
-    if (feature.geometry.type === "Polygon") {
-      const coordinates = feature.geometry.coordinates[0].map(
-        ([lng, lat]: any) => [lat, lng]
-      );
+    if (geometry.type === "Polygon") {
+      const coordinates = geometry.coordinates[0].map(([lng, lat]: any) => [
+        lat,
+        lng,
+      ]);
       return (
         <Polygon
-          key={feature.properties.landplot.id}
+          key={properties.landplot.id}
           positions={coordinates}
           pathOptions={pathOptions}
           eventHandlers={eventHandlers}
@@ -182,14 +180,14 @@ const LandplotsAndCrops = () => {
         </Polygon>
       );
     } else if (
-      feature.geometry.type === "Point" &&
-      feature.properties.landplot.subType === "Circle"
+      geometry.type === "Point" &&
+      properties.landplot.subType === "Circle"
     ) {
       return (
         <Circle
-          key={feature.properties.landplot.id}
-          center={feature.geometry.coordinates}
-          radius={feature.properties.landplot.radius}
+          key={properties.landplot.id}
+          center={geometry.coordinates}
+          radius={properties.landplot.radius}
           pathOptions={pathOptions}
           eventHandlers={eventHandlers}
         >

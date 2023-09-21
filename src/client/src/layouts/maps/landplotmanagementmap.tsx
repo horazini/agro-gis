@@ -92,7 +92,7 @@ export default function EditControlFC() {
             layer instanceof L.Marker)
         ) {
           if (
-            layer?.feature?.properties.landplot.radius &&
+            layer.feature?.properties.landplot.radius &&
             featureGroup.current
           ) {
             const circle = new L.Circle(layer.feature.geometry.coordinates, {
@@ -178,7 +178,7 @@ export default function EditControlFC() {
     Object.values(_layers).forEach((layer: any) => {
       let FeatureToEditId = layer._leaflet_id;
       let status = "added";
-      if (layer?.feature) {
+      if (layer.feature) {
         FeatureToEditId = layer.feature.properties.landplot.id;
         status = "modified";
         layer.feature.properties.status = status;
@@ -274,6 +274,8 @@ export default function EditControlFC() {
   };
 
   const CustomLayer = ({ feature }: any) => {
+    const { properties, geometry } = feature;
+
     const pathOptions = {
       color: "#ff4019",
     };
@@ -281,21 +283,22 @@ export default function EditControlFC() {
     const PopUp = (
       <div>
         <h3>Parcela ocupada</h3>
-        <p>ID: {feature.properties.landplot.id}</p>
-        <p>Descripción: {feature.properties.landplot.description}</p>
-        {feature.properties?.landplot.radius && (
-          <p>Radio: {feature.properties.landplot.radius} m.</p>
+        <p>ID: {properties.landplot.id}</p>
+        <p>Descripción: {properties.landplot.description}</p>
+        {properties.landplot.radius && (
+          <p>Radio: {properties.landplot.radius} m.</p>
         )}
       </div>
     );
 
-    if (feature.geometry.type === "Polygon") {
-      const coordinates = feature.geometry.coordinates[0].map(
-        ([lng, lat]: any) => [lat, lng]
-      );
+    if (geometry.type === "Polygon") {
+      const coordinates = geometry.coordinates[0].map(([lng, lat]: any) => [
+        lat,
+        lng,
+      ]);
       return (
         <Polygon
-          key={feature.properties.landplot.id}
+          key={properties.landplot.id}
           positions={coordinates}
           pathOptions={pathOptions}
         >
@@ -303,14 +306,14 @@ export default function EditControlFC() {
         </Polygon>
       );
     } else if (
-      feature.geometry.type === "Point" &&
-      feature.properties.landplot.subType === "Circle"
+      geometry.type === "Point" &&
+      properties.landplot.subType === "Circle"
     ) {
       return (
         <Circle
-          key={feature.properties.landplot.id}
-          center={feature.geometry.coordinates}
-          radius={feature.properties.landplot.radius}
+          key={properties.landplot.id}
+          center={geometry.coordinates}
+          radius={properties.landplot.radius}
           pathOptions={pathOptions}
         >
           <Popup>{PopUp}</Popup>

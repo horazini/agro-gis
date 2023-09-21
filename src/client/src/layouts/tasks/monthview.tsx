@@ -341,7 +341,7 @@ function MonthModeView(props: any) {
                   },
                 }}
               >
-                {row.days.map((day: any, indexD: any) => {
+                {row.days?.map((day: any, indexD: any) => {
                   const currentDay =
                     day.day === today.getUTCDate() &&
                     isSameMonth(day.date, today);

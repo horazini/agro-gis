@@ -36,49 +36,49 @@ function TimeLineModeView(props: any) {
       const dateB = parse(b.date, "yyyy-MM-dd", new Date());
       return dateA.getTime() - dateB.getTime();
     });
-  }
 
-  return (
-    <Timeline position="alternate">
-      {fileredEvents.map((task: any, index: any) => {
-        return (
-          <TimelineItem
-            key={`timeline-${index}`}
-            sx={{ cursor: "pointer" }}
-            onClick={(event) => handleTaskClick(event, task)}
-          >
-            <TimelineOppositeContent
-              sx={{ m: "auto 0" }}
-              align="right"
-              variant="body2"
-              color="text.secondary"
+    return (
+      <Timeline position="alternate">
+        {fileredEvents.map((task: any, index: any) => {
+          return (
+            <TimelineItem
+              key={`timeline-${index}`}
+              sx={{ cursor: "pointer" }}
+              onClick={(event) => handleTaskClick(event, task)}
             >
-              {task?.date &&
-                format(parse(task?.date, "yyyy-MM-dd", new Date()), "PPP", {
-                  locale: es,
-                })}
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineConnector />
-              <TimelineDot
-                color="secondary"
-                sx={{ backgroundColor: task?.color }}
+              <TimelineOppositeContent
+                sx={{ m: "auto 0" }}
+                align="right"
+                variant="body2"
+                color="text.secondary"
               >
-                {task?.icon || <ScheduleIcon />}
-              </TimelineDot>
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent sx={{ py: "12px", px: 2 }}>
-              <Typography variant="body1" component="span">
-                {task?.label}
-              </Typography>
-              <Typography>{task?.groupLabel}</Typography>
-            </TimelineContent>
-          </TimelineItem>
-        );
-      })}
-    </Timeline>
-  );
+                {task?.date &&
+                  format(parse(task?.date, "yyyy-MM-dd", new Date()), "PPP", {
+                    locale: es,
+                  })}
+              </TimelineOppositeContent>
+              <TimelineSeparator>
+                <TimelineConnector />
+                <TimelineDot
+                  color="secondary"
+                  sx={{ backgroundColor: task?.color }}
+                >
+                  {task?.icon || <ScheduleIcon />}
+                </TimelineDot>
+                <TimelineConnector />
+              </TimelineSeparator>
+              <TimelineContent sx={{ py: "12px", px: 2 }}>
+                <Typography variant="body1" component="span">
+                  {task?.label}
+                </Typography>
+                <Typography>{task?.groupLabel}</Typography>
+              </TimelineContent>
+            </TimelineItem>
+          );
+        })}
+      </Timeline>
+    );
+  } else return null;
 }
 
 TimeLineModeView.propTypes = {

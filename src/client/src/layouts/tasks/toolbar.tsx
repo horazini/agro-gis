@@ -120,7 +120,7 @@ function SchedulerToolbar(props: any) {
               isOptionEqualToValue={(option: any, value: any) =>
                 option.id === value.id
               }
-              onInputChange={(newInputValue: any) => {
+              onInputChange={(event, newInputValue: any) => {
                 setInputValue(newInputValue);
                 setSearchResult(newInputValue);
               }}

@@ -249,10 +249,7 @@ export const updateTenant = async (
   try {
     const id = parseInt(req.params.id);
     const { name } = req.body;
-    const response: QueryResult = await pool.query(
-      "UPDATE tenant SET name = $1 WHERE id = $2",
-      [name, id]
-    );
+    await pool.query("UPDATE tenant SET name = $1 WHERE id = $2", [name, id]);
     return res.status(204).send("Tenant ${id} updated succesfully");
   } catch (e) {
     next(e);

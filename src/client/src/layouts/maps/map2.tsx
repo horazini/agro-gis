@@ -1,20 +1,13 @@
-import React, { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 
 import {
   MapContainer,
-  TileLayer,
   FeatureGroup,
-  LayersControl,
   Popup,
-  useMapEvents,
-  GeoJSON,
-  LayerGroup,
   Circle,
   Polygon,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-
-import { ConfirmButton } from "../../components/customComponents";
 
 import { EditControl } from "react-leaflet-draw";
 import "leaflet/dist/leaflet.css";
@@ -136,53 +129,6 @@ const MapView = () => {
     });
   };
 
-  const handleSubmit: () => Promise<void> = async () => {
-    try {
-      //await postFeatures(geoJSONFeatures);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const msg: string = "Se registrarán todos los cambios realizados.";
-
-  const CustomLayer = ({ feature }: any) => {
-    const PopUp = (
-      <div>
-        <h3>ID: {feature.properties.id}</h3>
-        <p>Descripción: {feature.properties.description}</p>
-        {feature.properties?.radius && (
-          <p>Radio: {feature.properties.radius} m.</p>
-        )}
-      </div>
-    );
-
-    if (feature.geometry.type === "Polygon") {
-      const coordinates = feature.geometry.coordinates[0].map(
-        ([lng, lat]: any) => [lat, lng]
-      );
-      return (
-        <Polygon key={feature.properties.id} positions={coordinates}>
-          <Popup>{PopUp}</Popup>
-        </Polygon>
-      );
-    } else if (
-      feature.geometry.type === "Point" &&
-      feature.properties.subType === "Circle"
-    ) {
-      return (
-        <Circle
-          key={feature.properties.id}
-          center={feature.geometry.coordinates}
-          radius={feature.properties.radius}
-        >
-          <Popup>{PopUp}</Popup>
-        </Circle>
-      );
-    }
-    return null;
-  };
-
   return (
     <Fragment>
       <div className="row">
@@ -217,13 +163,6 @@ const MapView = () => {
             <pre className="text-left">
               {JSON.stringify(geoJSONFeatures, null, 2)}
             </pre>
-
-            {/* <ConfirmButton
-              msg={msg}
-              onConfirm={handleSubmit}
-              navigateDir={"/map"}
-              disabled={false}
-            /> */}
           </div>
         </div>
       </div>

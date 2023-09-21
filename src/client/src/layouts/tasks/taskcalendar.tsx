@@ -280,11 +280,12 @@ function Taskcalendar() {
   };
 
   const handleEventsChange = async (item: any) => {
-    // Do something...
     let eventIndex = events.findIndex((e: any) => e.id === item?.id);
     if (eventIndex !== -1) {
       let oldObject = Object.assign({}, events[eventIndex]);
+      console.log(oldObject);
     }
+    // Do something...
   };
 
   return (
@@ -321,7 +322,6 @@ function Taskcalendar() {
             <Grid item xs={12}>
               <TimeLineModeView
                 rows={state?.rows}
-                options={options}
                 searchResult={searchResult}
                 onTaskClick={handleEventClick}
                 //date={selectedDate}

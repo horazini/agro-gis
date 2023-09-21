@@ -55,7 +55,7 @@ export const createUser = async (
       surname,
       password_hash,
     } = req.body;
-    const response: QueryResult = await pool.query(
+    await pool.query(
       "INSERT INTO user_account (tenant_id, usertype_id, mail_address, username, names, surname, password_hash) VALUES ($1, $2, $3, $4, $5, $6, $7)",
       [
         tenant_id,

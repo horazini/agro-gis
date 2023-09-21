@@ -15,7 +15,7 @@ import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 
 function TimeLineModeView(props: any) {
-  const { options, rows, searchResult, onTaskClick } = props;
+  const { rows, searchResult, onTaskClick } = props;
 
   const handleTaskClick = (event: any, task: any) => {
     event.preventDefault();
@@ -81,7 +81,6 @@ function TimeLineModeView(props: any) {
 
 TimeLineModeView.propTypes = {
   rows: PropTypes.array,
-  options: PropTypes.object,
   searchResult: PropTypes.object,
   onTaskClick: PropTypes.func.isRequired,
 };

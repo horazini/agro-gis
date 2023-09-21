@@ -7,7 +7,6 @@ import {
   Polygon,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { LayerEvent } from "leaflet";
 
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";

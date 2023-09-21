@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from "react";
+import { useState, Fragment } from "react";
 import PropTypes from "prop-types";
 import { useTheme, styled, alpha } from "@mui/material/styles";
 import {
@@ -26,7 +26,7 @@ import TodayIcon from "@mui/icons-material/Today";
 import { es } from "date-fns/locale";
 import { DateCalendar } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import { format, add, sub, getDaysInMonth, isSameMonth } from "date-fns";
+import { format, add, sub, isSameMonth } from "date-fns";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -108,7 +108,7 @@ function MonthModeView(props: any) {
     e.preventDefault();
   };
 
-  const onCellDragStart = (e: any, item: any, rowIndex: number) => {
+  const onCellDragStart = (item: any, rowIndex: number) => {
     setState({
       ...state,
       itemTransfert: { item, rowIndex },
@@ -205,7 +205,7 @@ function MonthModeView(props: any) {
           }}
           draggable
           onClick={(e) => handleTaskClick(e, task)}
-          onDragStart={(e: any) => onCellDragStart(e, task, rowId)}
+          onDragStart={() => onCellDragStart(task, rowId)}
           elevation={0}
           key={`item-d-${task.id}-${rowId}`}
         >

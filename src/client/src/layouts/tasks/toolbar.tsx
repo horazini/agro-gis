@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { format, parse, getDaysInMonth } from "date-fns";
+import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Toolbar,
@@ -120,14 +120,9 @@ function SchedulerToolbar(props: any) {
               isOptionEqualToValue={(option: any, value: any) =>
                 option.id === value.id
               }
-              onInputChange={(event, newInputValue: any) => {
+              onInputChange={(newInputValue: any) => {
                 setInputValue(newInputValue);
                 setSearchResult(newInputValue);
-
-                let newDate = new Date();
-                if (newInputValue?.date) {
-                  newDate = parse(newInputValue.date, "yyyy-MM-dd", new Date());
-                }
               }}
               renderOption={(props: any, option: any) => (
                 <Box component="li" sx={{ fontSize: 12 }} {...props}>

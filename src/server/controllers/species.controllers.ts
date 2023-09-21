@@ -146,7 +146,7 @@ export const createSpecies = async (
 ) => {
   try {
     const { name, description, tenant_id } = req.body;
-    const response: QueryResult = await pool.query(
+    await pool.query(
       "INSERT INTO species (name, description, tenant_id) VALUES ($1, $2, $3)",
       [name, description, tenant_id]
     );
@@ -274,7 +274,7 @@ export const updateSpecies = async (
       let stage_db_id = stageData.id;
 
       if (stage_db_id) {
-        const res: QueryResult = await client.query(
+        await client.query(
           `
           UPDATE species_growth_stage SET name = $1, description = $2, estimated_time = $3, sequence_number = $4  WHERE id = $5
           `,

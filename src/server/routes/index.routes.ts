@@ -110,6 +110,8 @@ import {
   setDoneCropEvent,
   setFinishedCropStage,
   getTenantCropData,
+  getCropTasksById,
+  getAllTenantTasks,
 } from "../controllers/crop.controllers";
 
 router.get("/crop", getCrops);
@@ -118,5 +120,7 @@ router.get("/cropdata/:id", getCropDataById);
 router.put("/donecropevent/:id", setDoneCropEvent);
 router.put("/donecropstage/:id", setFinishedCropStage);
 router.get("/tenantcropdata/:tenantId", getTenantCropData);
+router.get("/croptasks/:id", getCropTasksById);
+router.get("/alltenanttasks/:tenantId", getAllTenantTasks);
 
 export default router;

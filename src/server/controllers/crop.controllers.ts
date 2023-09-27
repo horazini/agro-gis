@@ -3,6 +3,45 @@ import { QueryResult } from "pg";
 import pool from "../database";
 import { PostGISToGeoJSONFeature } from "./geo.controllers";
 
+const formatUniqueAndPeriodicEvents = (events: any) => {
+  const formattedEvents: any = {};
+
+  for (const event of events) {
+    const {
+      id,
+      due_date,
+      done_date,
+      species_growth_event_id,
+      species_growth_event_time_period,
+      ...eventData
+    } = event;
+    const eventMainData = {
+      id,
+      due_date,
+      done_date,
+    };
+
+    if (species_growth_event_time_period) {
+      if (formattedEvents[species_growth_event_id]?.periodic_events) {
+        formattedEvents[species_growth_event_id].periodic_events.push(
+          eventMainData
+        );
+      } else {
+        formattedEvents[species_growth_event_id] = {
+          ...eventData,
+          species_growth_event_id,
+          species_growth_event_time_period,
+          periodic_events: [eventMainData],
+        };
+      }
+    } else {
+      formattedEvents[species_growth_event_id] = event;
+    }
+  }
+
+  return Object.values(formattedEvents);
+};
+
 export const getCrops = async (
   req: Request,
   res: Response,
@@ -290,43 +329,7 @@ export const getCropDataById = async (
         ]);
         const rows = eventsResponse.rows;
 
-        const formattedEvents: any = {};
-        const individualEvents: any = [];
-
-        for (const row of rows) {
-          const {
-            id,
-            due_date,
-            done_date,
-            species_growth_event_id,
-            species_growth_event_time_period,
-            ...eventData
-          } = row;
-          const eventMainData = {
-            id,
-            due_date,
-            done_date,
-          };
-
-          if (species_growth_event_time_period) {
-            if (formattedEvents[species_growth_event_id]?.periodic_events) {
-              formattedEvents[species_growth_event_id].periodic_events.push(
-                eventMainData
-              );
-            } else {
-              formattedEvents[species_growth_event_id] = {
-                ...eventData,
-                species_growth_event_id,
-                species_growth_event_time_period,
-                periodic_events: [eventMainData],
-              };
-            }
-          } else {
-            formattedEvents[species_growth_event_id] = row;
-          }
-        }
-
-        const events = Object.values(formattedEvents).concat(individualEvents);
+        const events = formatUniqueAndPeriodicEvents(rows);
 
         return {
           ...stage,
@@ -554,3 +557,117 @@ export const getTenantCropData = async (
     next(e);
   }
 };
+
+async function cropTasksById(id: number) {
+  const cropQuery = `
+      SELECT id,
+      landplot_id, landplot_description,
+      species_name, 
+      start_date  
+      FROM crop WHERE id = $1
+    `;
+  const cropResponse = (await pool.query(cropQuery, [id])).rows[0];
+
+  const stagesQuery = `
+    SELECT id, 
+     species_growth_stage_name, 
+     start_date, species_growth_stage_estimated_time, finish_date
+     FROM crop_stage 
+     WHERE crop_id = $1 AND start_date IS NOT NULL;
+   `;
+
+  const stagesResponse: QueryResult = await pool.query(stagesQuery, [id]);
+
+  const stages = await Promise.all(
+    stagesResponse.rows.map(async (stage: any) => {
+      const eventsQuery = `
+         SELECT 
+         id,
+         species_growth_event_id, 
+         name, description,
+         species_growth_event_et_from_stage_start, species_growth_event_time_period,
+         due_date, done_date
+         FROM crop_event
+         WHERE crop_stage_id = $1
+       `;
+
+      const eventsResponse: QueryResult = await pool.query(eventsQuery, [
+        stage.id,
+      ]);
+      const rows = eventsResponse.rows;
+
+      const events = formatUniqueAndPeriodicEvents(rows);
+
+      return {
+        ...stage,
+        events,
+      };
+    })
+  );
+
+  const crop = {
+    ...cropResponse,
+    stages,
+  };
+
+  return crop;
+}
+
+export const getCropTasksById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    const cropTasks = await cropTasksById(id);
+
+    return res.status(200).json(cropTasks);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const getAllTenantTasks = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
+
+    const cropsQuery = `
+    SELECT id
+    FROM crop 
+    WHERE tenant_id = $1 AND (deleted IS NULL OR deleted = 'false')
+    ;
+  `;
+
+    const cropsResponse: QueryResult = await pool.query(cropsQuery, [tenantId]);
+
+    const cropsTasks = await Promise.all(
+      cropsResponse.rows.map(async (crop: any) => {
+        const cropTasks = await cropTasksById(crop.id);
+
+        return cropTasks;
+      })
+    );
+
+    return res.status(200).json(cropsTasks);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const getTenantCurrentCropsTasks = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {};
+
+export const getTenantPendingTasks = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {};

@@ -1,4 +1,6 @@
 import { API } from "../config";
+import { format, parseISO } from "date-fns";
+import convert from "color-convert";
 
 // Tenants
 
@@ -255,4 +257,97 @@ export const setFinishedCropStage = async (
     headers: { "Content-type": "application/json" },
   });
   return res.status;
+};
+
+export const getCropTasks = async (id: number) => {
+  const response = await fetch(`${API}/croptasks/${id}`);
+  const data = await response.json();
+  return data;
+};
+
+export const getAllTenantTasks = async (tenantId: number) => {
+  const response = await fetch(`${API}/alltenanttasks/${tenantId}`);
+  const data = await response.json();
+  return data;
+};
+
+function restructureTasks(inputCrops: any): any[] {
+  function formattedDate(dateString: string) {
+    if (dateString === null) {
+      return "";
+    }
+    const dateObject = parseISO(dateString);
+    const formattedDate = format(dateObject, "yyyy-MM-dd");
+    return formattedDate;
+  }
+
+  const restructuredData: any[] = [];
+  inputCrops.forEach((crop: any, index: number) => {
+    const hue = (index * 360) / inputCrops.length;
+    const cropColor = `#${convert.hsv.hex([hue, 85, 75])}`;
+
+    crop.stages.forEach((stage: any) => {
+      const stageId = stage.id;
+      const stageName = stage.species_growth_stage_name;
+
+      stage.events.forEach((event: any) => {
+        const eventId = event.id;
+        const eventName = event.name;
+
+        const formattedCropStartDate = formattedDate(crop.start_date);
+
+        if (event.periodic_events && event.periodic_events.length > 0) {
+          event.periodic_events.forEach((periodicEvent: any) => {
+            const periodicEventId = periodicEvent.id;
+
+            const formattedDueDate = formattedDate(periodicEvent.due_date);
+            const formattedDoneDate = formattedDate(periodicEvent.done_date);
+
+            const restructuredEvent = {
+              id: periodicEventId,
+              name: eventName,
+              crop_id: crop.id,
+              landplot: crop.landplot_id,
+              species_name: crop.species_name,
+              crop_start_date: formattedCropStartDate,
+              color: cropColor,
+              stage_name: stageName,
+              due_date: formattedDueDate,
+              done_date: formattedDoneDate,
+            };
+
+            restructuredData.push(restructuredEvent);
+          });
+        } else {
+          const formattedDueDate = formattedDate(event.due_date);
+          const formattedDoneDate = formattedDate(event.done_date);
+
+          const restructuredEvent = {
+            id: eventId,
+            name: eventName,
+            crop_id: crop.id,
+            landplot: crop.landplot_id,
+            species_name: crop.species_name,
+            crop_start_date: formattedCropStartDate,
+            color: cropColor,
+            stage_name: stageName,
+            due_date: formattedDueDate,
+            done_date: formattedDoneDate,
+          };
+
+          restructuredData.push(restructuredEvent);
+        }
+      });
+    });
+  });
+
+  return restructuredData;
+}
+
+export const getAllTenantTasksStructuredForCalendar = async (
+  tenantId: number
+) => {
+  const data = await getAllTenantTasks(tenantId);
+  const tasks = restructureTasks(data);
+  return tasks;
 };

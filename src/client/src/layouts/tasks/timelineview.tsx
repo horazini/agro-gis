@@ -9,10 +9,15 @@ import {
   Timeline,
   TimelineItem,
 } from "@mui/lab";
-import ScheduleIcon from "@mui/icons-material/Schedule";
+
+import {
+  Schedule as ScheduleIcon,
+  Check as CheckIcon,
+} from "@mui/icons-material";
 
 import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
+import { TaskType } from "./taskcalendar";
 
 function TimeLineModeView(props: any) {
   const { rows, searchResult, onTaskClick } = props;
@@ -26,14 +31,16 @@ function TimeLineModeView(props: any) {
   let fileredEvents = rows;
   if (searchResult) {
     fileredEvents = fileredEvents?.filter(
-      (event: any) => event?.groupLabel === searchResult?.groupLabel
+      (event: TaskType) => event?.crop_id === searchResult?.crop_id
     );
   }
 
   if (fileredEvents) {
     fileredEvents.sort((a: any, b: any) => {
-      const dateA = parse(a.date, "yyyy-MM-dd", new Date());
-      const dateB = parse(b.date, "yyyy-MM-dd", new Date());
+      let eventADate = a.done_date || a.due_date;
+      let eventBDate = b.done_date || b.due_date;
+      const dateA = parse(eventADate, "yyyy-MM-dd", new Date());
+      const dateB = parse(eventBDate, "yyyy-MM-dd", new Date());
       return dateA.getTime() - dateB.getTime();
     });
 
@@ -52,10 +59,18 @@ function TimeLineModeView(props: any) {
                 variant="body2"
                 color="text.secondary"
               >
-                {task?.date &&
-                  format(parse(task?.date, "yyyy-MM-dd", new Date()), "PPP", {
-                    locale: es,
-                  })}
+                {task?.due_date &&
+                  format(
+                    parse(
+                      task?.done_date || task?.due_date,
+                      "yyyy-MM-dd",
+                      new Date()
+                    ),
+                    "PPP",
+                    {
+                      locale: es,
+                    }
+                  )}
               </TimelineOppositeContent>
               <TimelineSeparator>
                 <TimelineConnector />
@@ -63,15 +78,17 @@ function TimeLineModeView(props: any) {
                   color="secondary"
                   sx={{ backgroundColor: task?.color }}
                 >
-                  {task?.icon || <ScheduleIcon />}
+                  {task.done_date ? <CheckIcon /> : <ScheduleIcon />}
                 </TimelineDot>
                 <TimelineConnector />
               </TimelineSeparator>
               <TimelineContent sx={{ py: "12px", px: 2 }}>
                 <Typography variant="body1" component="span">
-                  {task?.label}
+                  {task?.name}
                 </Typography>
-                <Typography>{task?.groupLabel}</Typography>
+                <Typography>
+                  Parcela N° {task.landplot} - {task.species_name}
+                </Typography>
               </TimelineContent>
             </TimelineItem>
           );

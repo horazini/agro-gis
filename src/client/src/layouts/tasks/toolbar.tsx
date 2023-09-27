@@ -17,6 +17,7 @@ import {
 import { useTheme, styled } from "@mui/material/styles";
 
 import GridViewIcon from "@mui/icons-material/GridView";
+import { TaskType } from "./taskcalendar";
 
 const StyledAutoComplete = styled(Autocomplete)(({ theme }) => ({
   color: "inherit",
@@ -35,7 +36,15 @@ const StyledAutoComplete = styled(Autocomplete)(({ theme }) => ({
   },
 }));
 
-function SchedulerToolbar(props: any) {
+export type SchedulerToolbarProps = {
+  events: TaskType[];
+  onSearchResult: any;
+  switchMode: any;
+  onModeChange: any;
+  onDateChange: any;
+};
+
+function SchedulerToolbar(props: SchedulerToolbarProps) {
   const { events, onSearchResult, switchMode, onModeChange, onDateChange } =
     props;
 
@@ -63,8 +72,10 @@ function SchedulerToolbar(props: any) {
     setSearchResult(newValue);
 
     let newDate = new Date();
-    if (newValue?.date) {
-      newDate = parse(newValue.date, "yyyy-MM-dd", new Date());
+
+    let eventDate = newValue?.done_date || newValue?.due_date;
+    if (eventDate) {
+      newDate = parse(eventDate, "yyyy-MM-dd", new Date());
     }
 
     setSelectedDate(newDate);
@@ -110,12 +121,16 @@ function SchedulerToolbar(props: any) {
               inputValue={inputValue}
               sx={{ mb: 0, display: "inline-flex" }}
               onChange={handleOnChange}
-              options={events?.sort(
-                (a: any, b: any) => -b.groupLabel.localeCompare(a.groupLabel)
-              )}
-              groupBy={(option: any) => (option ? option?.groupLabel : null)}
+              options={events?.sort((a: any, b: any) => b.crop_id - a.crop_id)}
+              groupBy={(option: any) =>
+                option
+                  ? `Parcela N° ${option.landplot} - ${option.species_name}`
+                  : ""
+              }
               getOptionLabel={(option: any) =>
-                option ? `${option.groupLabel || ""}` : ""
+                option
+                  ? `Parcela N° ${option.landplot} - ${option.species_name}`
+                  : ""
               }
               isOptionEqualToValue={(option: any, value: any) =>
                 option.id === value.id
@@ -124,17 +139,16 @@ function SchedulerToolbar(props: any) {
                 setInputValue(newInputValue);
                 setSearchResult(newInputValue);
               }}
-              renderOption={(props: any, option: any) => (
-                <Box component="li" sx={{ fontSize: 12 }} {...props}>
-                  {format(
-                    parse(option?.date, "yyyy-MM-dd", new Date()),
-                    "PPP",
-                    {
+              renderOption={(props: any, option: any) => {
+                let eventDate = option.done_date || option.due_date;
+                return (
+                  <Box component="li" sx={{ fontSize: 12 }} {...props}>
+                    {format(parse(eventDate, "yyyy-MM-dd", new Date()), "PPP", {
                       locale: es,
-                    }
-                  )}
-                </Box>
-              )}
+                    })}
+                  </Box>
+                );
+              }}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -188,13 +202,5 @@ function SchedulerToolbar(props: any) {
     </Toolbar>
   );
 }
-
-SchedulerToolbar.propTypes = {
-  events: PropTypes.array.isRequired,
-  switchMode: PropTypes.string.isRequired,
-  onModeChange: PropTypes.func.isRequired,
-  onSearchResult: PropTypes.func.isRequired,
-  onDateChange: PropTypes.func.isRequired,
-};
 
 export default SchedulerToolbar;

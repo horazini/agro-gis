@@ -24,9 +24,27 @@ import SchedulerToolbar from "./toolbar";
 import MonthModeView from "./monthview";
 import TimeLineModeView from "./timelineview";
 import PageTitle from "../../components/title";
+import { useNavigate } from "react-router-dom";
+import { getAllTenantTasksStructuredForCalendar } from "../../services/services";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
+
+export type TaskType = {
+  id: number;
+  name: string;
+  crop_id: number;
+  landplot: number;
+  species_name: string;
+  crop_start_date?: string;
+  stage_name: string;
+  color: string;
+  due_date: string;
+  done_date?: string;
+};
 
 function Taskcalendar() {
   PageTitle("Calendario");
+  const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const today = new Date();
 
@@ -65,50 +83,24 @@ function Taskcalendar() {
     setSearchResult(item);
   };
 
-  // hardcoded static events, to replace with a GET fetch from the 'services' file
+  // Tasks load
 
-  const events = [
-    {
-      id: 1,
-      label: "Evento N° 1",
-      groupLabel: "Cultivo 1",
-      landplot: "Parcela 32",
-      species: "Tomate",
-      color: "#f28f6a",
-      date: "2022-05-05",
-      createdBy: "Juan Perez",
-    },
-    {
-      id: 2,
-      label: "Evento N° 2: Riego",
-      groupLabel: "Cultivo 2",
-      landplot: "Parcela 45",
-      species: "Morron",
-      color: "#099ce5",
-      date: "2022-05-09",
-      createdBy: "Juan Perez",
-    },
-    {
-      id: 3,
-      label: "Evento N° 3: Fertilización",
-      groupLabel: "Cultivo 3",
-      landplot: "Parclea 17",
-      species: "Cebolla",
-      color: "#263686",
-      date: "2023-08-03",
-      createdBy: "Juan Perez",
-    },
-    {
-      id: 4,
-      label: "Evento N° 4: Cosecha",
-      groupLabel: "Cultivo 1",
-      landplot: "Parcela 32",
-      species: "Tomate",
-      color: "#f28f6a",
-      date: "2023-06-29",
-      createdBy: "Juan Perez",
-    },
-  ];
+  const [cropTasks, setCropTasks] = useState<TaskType[]>([]);
+
+  const loadTasks = async (id: number) => {
+    try {
+      const tasks = await getAllTenantTasksStructuredForCalendar(id);
+      setCropTasks(tasks);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    if (tenantId) {
+      loadTasks(tenantId);
+    }
+  }, [tenantId]);
 
   // Calendar and TimeLine data getters
 
@@ -129,8 +121,11 @@ function Taskcalendar() {
           days: monthStartDay - i + 1,
         });
         let day = parseInt(format(subDate, "dd"));
-        let data = events.filter((event: any) =>
-          isSameDay(subDate, parse(event?.date, "yyyy-MM-dd", new Date()))
+        let data = cropTasks.filter((event: any) =>
+          isSameDay(
+            subDate,
+            parse(event?.done_date || event?.due_date, "yyyy-MM-dd", new Date())
+          )
         );
         daysBefore.push({
           id: `day_-${day}`,
@@ -162,8 +157,11 @@ function Taskcalendar() {
           "dd-MMMM-yyyy",
           new Date()
         );
-        let data = events.filter((event: any) =>
-          isSameDay(date, parse(event?.date, "yyyy-MM-dd", new Date()))
+        let data = cropTasks.filter((event: any) =>
+          isSameDay(
+            date,
+            parse(event?.done_date || event?.due_date, "yyyy-MM-dd", new Date())
+          )
         );
         obj.push({
           id: `day_-${dateDay}`,
@@ -194,8 +192,11 @@ function Taskcalendar() {
       for (let i = dateDay; i < dateDay + lastRowDaysdiff; i++) {
         addDate = add(addDate, { days: 1 });
         let d = format(addDate, "dd");
-        let data = events.filter((event: any) =>
-          isSameDay(addDate, parse(event?.date, "yyyy-MM-dd", new Date()))
+        let data = cropTasks.filter((event: any) =>
+          isSameDay(
+            addDate,
+            parse(event?.done_date || event?.due_date, "yyyy-MM-dd", new Date())
+          )
         );
         lastDaysData.push({
           id: `day_-${d}`,
@@ -213,10 +214,10 @@ function Taskcalendar() {
 
   const getTimeLineRows = () =>
     /* events.filter((event: any) => {
-    let eventDate = parse(event?.date, 'yyyy-MM-dd', new Date())
+    let eventDate = parse(event?.due_date, 'yyyy-MM-dd', new Date())
     return isSameDay(selectedDate, eventDate)
     }) */
-    events;
+    cropTasks;
 
   useEffect(() => {
     if (isMonthMode) {
@@ -231,7 +232,7 @@ function Taskcalendar() {
         rows: getTimeLineRows(),
       });
     }
-  }, [mode, selectedDate]);
+  }, [cropTasks, mode, selectedDate]);
 
   // Cells and events handlers
 
@@ -240,7 +241,16 @@ function Taskcalendar() {
   };
 
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
-  const [eventDialogItem, setEventDialogItem] = useState<any>();
+  const [eventDialogItem, setEventDialogItem] = useState<TaskType>({
+    id: 0,
+    name: "",
+    crop_id: 0,
+    landplot: 0,
+    species_name: "",
+    stage_name: "",
+    color: "",
+    due_date: "",
+  });
 
   const handleEventClick = (event: any, item: any) => {
     setEventDialogOpen(true);
@@ -249,6 +259,18 @@ function Taskcalendar() {
   };
 
   const EventDialog = () => {
+    const navigate = useNavigate();
+    const {
+      id,
+      name,
+      crop_id,
+      landplot,
+      species_name,
+      stage_name,
+      due_date,
+      done_date,
+    } = eventDialogItem;
+
     return (
       <Dialog
         open={eventDialogOpen}
@@ -256,19 +278,25 @@ function Taskcalendar() {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">
-          {eventDialogItem?.label}
-        </DialogTitle>
+        <DialogTitle id="alert-dialog-title">{name}</DialogTitle>
         <DialogContent>
-          <p>{eventDialogItem?.groupLabel}</p>
-          <p>{eventDialogItem?.landplot}</p>
-          <p>{eventDialogItem?.createdBy}</p>
-          <p>{eventDialogItem?.date}</p>
+          <p>
+            Parcela N° {landplot} - {species_name}
+          </p>
+          <p>Etapa: {stage_name}</p>
+          <p>Fecha estimada: {due_date}</p>
+          {done_date ? <p>Fecha de realización: {done_date}</p> : null}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEventDialogOpen(false)}>Cancelar</Button>
-          <Button onClick={handleEventDialogConfirm} autoFocus>
-            Confirmar
+        <DialogActions
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Button onClick={() => setEventDialogOpen(false)}>Cerrar</Button>
+          <Button onClick={() => navigate(`/cropdetails/${crop_id}`)} autoFocus>
+            Ver cultivo
           </Button>
         </DialogActions>
       </Dialog>
@@ -280,18 +308,19 @@ function Taskcalendar() {
   };
 
   const handleEventsChange = async (item: any) => {
-    let eventIndex = events.findIndex((e: any) => e.id === item?.id);
+    console.log(item);
+    /* let eventIndex = events.findIndex((e: any) => e.id === item?.id);
     if (eventIndex !== -1) {
       let oldObject = Object.assign({}, events[eventIndex]);
       console.log(oldObject);
-    }
+    } */
     // Do something...
   };
 
   return (
     <Paper variant="outlined" elevation={0} sx={{ p: 0 }}>
       <SchedulerToolbar
-        events={events}
+        events={cropTasks}
         switchMode={mode}
         onModeChange={handleModeChange}
         onSearchResult={onSearchResult}

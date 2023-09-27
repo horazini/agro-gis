@@ -19,14 +19,18 @@ import {
   Toolbar,
 } from "@mui/material";
 
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import TodayIcon from "@mui/icons-material/Today";
+import {
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  Today as TodayIcon,
+  Check as CheckIcon,
+} from "@mui/icons-material";
 
 import { es } from "date-fns/locale";
 import { DateCalendar } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { format, add, sub, isSameMonth } from "date-fns";
+import { TaskType } from "./taskcalendar";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -139,7 +143,7 @@ function MonthModeView(props: any) {
       );
       if (dayInd !== -1) {
         let day = rowsCopy[rowInd]?.days[dayInd];
-        let splittedDate = transfert.item.date?.split("-");
+        let splittedDate = transfert.item.due_date?.split("-");
         if (!transfert.item.day) {
           // Get day of the date (DD)
           transfert.item.day = parseInt(splittedDate[2]);
@@ -148,7 +152,7 @@ function MonthModeView(props: any) {
           let itemCheck = day.data.findIndex(
             (item: any) =>
               item.day === transfert.item.day &&
-              item.label === transfert.item.label
+              item.name === transfert.item.name
           );
           if (itemCheck === -1) {
             let prevDayEvents = rowsCopy[transfert.rowIndex].days.find(
@@ -162,7 +166,7 @@ function MonthModeView(props: any) {
             }
             prevDayEvents?.data?.splice(itemIndexToRemove, 1);
             transfert.item.day = day.day;
-            transfert.item.date = format(day.date, "yyyy-MM-dd");
+            transfert.item.due_date = format(day.date, "yyyy-MM-dd");
             day.data.push(transfert.item);
             setState({
               ...state,
@@ -185,11 +189,11 @@ function MonthModeView(props: any) {
     }
   };
 
-  const renderTask = (tasks: any, rowId: number) => {
-    return tasks?.map((task: any, index: any) => {
+  const renderTask = (tasks: TaskType[], rowId: number) => {
+    return tasks?.map((task: TaskType, index: any) => {
       // To show only events of the selected group
       /* let condition = searchResult
-        ? task?.groupLabel === searchResult?.groupLabel ||
+        ? task?.crop_id === searchResult?.crop_id ||
           task?.user === searchResult?.user
         : !searchResult; */
       return (
@@ -201,18 +205,20 @@ function MonthModeView(props: any) {
             my: 0.3,
             color: "#fff",
             display: "inline-flex",
+            justifyContent: "center",
             backgroundColor: task.color || theme.palette.primary.light,
           }}
-          draggable
+          draggable={!task.done_date}
           onClick={(e) => handleTaskClick(e, task)}
           onDragStart={() => onCellDragStart(task, rowId)}
           elevation={0}
           key={`item-d-${task.id}-${rowId}`}
         >
           <Box sx={{ px: 0.5 }}>
-            <Typography variant="body2" sx={{ fontSize: 11 }}>
-              {task.label}
+            <Typography variant="body2" sx={{ fontSize: 13 }}>
+              {task.name}
             </Typography>
+            {task.done_date ? <CheckIcon sx={{ fontSize: 20 }} /> : null}
           </Box>
         </Paper>
       );

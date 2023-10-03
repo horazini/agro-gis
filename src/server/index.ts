@@ -11,7 +11,7 @@ const port = 4000;
 
 app.use(
   cors({
-    origin: [`${REACT_CLIENT_URL}:3000`, "http://localhost:3000"],
+    origin: [`${REACT_CLIENT_URL}`, "http://localhost:3000"],
   })
 );
 app.use(morgan("dev"));

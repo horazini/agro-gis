@@ -26,6 +26,7 @@ import Footer from "./components/footer";
 // Routes
 import Login from "./layouts/app/login";
 import Login2 from "./layouts/app/login2";
+import Home from "./layouts/app/home";
 import MainLayoutRoutes from "./routes/MainLayoutRoutes";
 
 function RouteAuthLogic(): JSX.Element {
@@ -85,9 +86,18 @@ function RouteAuthLogic(): JSX.Element {
         >
           <DrawerHeader />
 
-          <Container sx={{ paddingBottom: 6 }}>
-            <MainLayoutRoutes />
-          </Container>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Navigate to="/" />} />;
+            <Route
+              path="*"
+              element={
+                <Container sx={{ paddingBottom: 6 }}>
+                  <MainLayoutRoutes />{" "}
+                </Container>
+              }
+            />
+          </Routes>
 
           <Footer />
         </Box>

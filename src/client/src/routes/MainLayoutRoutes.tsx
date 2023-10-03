@@ -1,12 +1,10 @@
 // Navigation
 import { Route, Routes } from "react-router";
-import { Navigate } from "react-router-dom";
 
 // Auth state
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 
-import Home from "../layouts/app/home";
 import NoMatch from "../layouts/app/nomatch";
 
 import TenantList from "../layouts/tenants/tenantslist";
@@ -121,8 +119,6 @@ export default function MainLayoutRoutes(): JSX.Element {
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Navigate to="/" />} />;
       {allowedRoutes.map((route, index) => (
         <Route key={index} path={route.path} element={route.element} />
       ))}

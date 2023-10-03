@@ -5,27 +5,27 @@ const Home = () => {
   PageTitle("Inicio");
 
   return (
-    <Container maxWidth="xl">
+    <Container maxWidth="xl" sx={{ paddingBottom: 3 }}>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={8} lg={7}>
+        <Grid item xs={12} md={8} lg={5}>
           <Paper
             sx={{
               p: 2,
               display: "flex",
               flexDirection: "column",
-              height: 240,
+              height: 290,
             }}
           >
             {/* <Chart /> */}
           </Paper>
         </Grid>
-        <Grid item xs={12} md={4} lg={5}>
+        <Grid item xs={12} md={4} lg={7}>
           <Paper
             sx={{
               p: 2,
               display: "flex",
               flexDirection: "column",
-              height: 240,
+              height: 290,
             }}
           >
             {/* <Deposits /> */}
@@ -33,7 +33,7 @@ const Home = () => {
         </Grid>
         <Grid item xs={12}>
           <Paper
-            sx={{ p: 2, display: "flex", flexDirection: "column", height: 240 }}
+            sx={{ p: 2, display: "flex", flexDirection: "column", height: 290 }}
           >
             {/* <Orders /> */}
           </Paper>

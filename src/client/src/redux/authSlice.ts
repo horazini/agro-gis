@@ -93,10 +93,6 @@ export const login =
       if (authToken) {
         headers["Authorization"] = `Bearer ${authToken}`;
       }
-      /* 
-      // Attempt to log in outside dev environment fails on next 
-      // fetch, may have something to do with CORS or env var 
-      */
       const response = await fetch(`${API}/login`, {
         method: "POST",
         headers: { "Content-type": "application/json" },

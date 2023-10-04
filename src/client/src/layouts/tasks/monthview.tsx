@@ -1,5 +1,4 @@
 import { useState, Fragment } from "react";
-import PropTypes from "prop-types";
 import { useTheme, styled, alpha } from "@mui/material/styles";
 import {
   Paper,
@@ -228,7 +227,7 @@ function MonthModeView(props: any) {
   const handleTaskClick = (event: any, task: any) => {
     event.preventDefault();
     event.stopPropagation();
-    onTaskClick && onTaskClick(event, task);
+    onTaskClick(task);
   };
 
   // Date selector
@@ -266,13 +265,14 @@ function MonthModeView(props: any) {
               component="div"
               sx={{ display: "flex", justifyContent: "center" }}
             >
+              <IconButton
+                sx={{ ml: 0, mr: -0.1 }}
+                onClick={() => handleChangeDate(sub)}
+              >
+                <ChevronLeftIcon />
+              </IconButton>
+
               <Hidden smDown>
-                <IconButton
-                  sx={{ ml: 0, mr: -0.1 }}
-                  onClick={() => handleChangeDate(sub)}
-                >
-                  <ChevronLeftIcon />
-                </IconButton>
                 <Button
                   size="small"
                   id="basic-button"
@@ -287,12 +287,6 @@ function MonthModeView(props: any) {
                     locale: es,
                   })}
                 </Button>
-                <IconButton
-                  sx={{ ml: 0.2 }}
-                  onClick={() => handleChangeDate(add)}
-                >
-                  <ChevronRightIcon />
-                </IconButton>
               </Hidden>
               <Hidden smUp>
                 <IconButton
@@ -303,6 +297,13 @@ function MonthModeView(props: any) {
                   <TodayIcon />
                 </IconButton>
               </Hidden>
+
+              <IconButton
+                sx={{ ml: 0.2 }}
+                onClick={() => handleChangeDate(add)}
+              >
+                <ChevronRightIcon />
+              </IconButton>
               <Menu
                 id="date-menu"
                 anchorEl={anchorDateEl}
@@ -399,19 +400,5 @@ function MonthModeView(props: any) {
     </Fragment>
   );
 }
-
-MonthModeView.propTypes = {
-  selectedDate: PropTypes.object,
-  rows: PropTypes.array,
-  options: PropTypes.object,
-  onDateChange: PropTypes.func.isRequired,
-  searchResult: PropTypes.object,
-  onTaskClick: PropTypes.func,
-  onCellClick: PropTypes.func,
-};
-
-MonthModeView.defaultProps = {
-  rows: [],
-};
 
 export default MonthModeView;

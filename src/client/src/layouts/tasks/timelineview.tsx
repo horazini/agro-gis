@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import { Typography } from "@mui/material";
 import {
   TimelineDot,
@@ -25,7 +24,7 @@ function TimeLineModeView(props: any) {
   const handleTaskClick = (event: any, task: any) => {
     event.preventDefault();
     event.stopPropagation();
-    onTaskClick && onTaskClick(event, task);
+    onTaskClick(task);
   };
 
   let fileredEvents = rows;
@@ -97,13 +96,5 @@ function TimeLineModeView(props: any) {
     );
   } else return null;
 }
-
-TimeLineModeView.propTypes = {
-  rows: PropTypes.array,
-  searchResult: PropTypes.object,
-  onTaskClick: PropTypes.func.isRequired,
-};
-
-TimeLineModeView.defaultProps = {};
 
 export default TimeLineModeView;

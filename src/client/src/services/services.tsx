@@ -283,41 +283,56 @@ function restructureTasks(inputCrops: any): any[] {
 
   const restructuredData: any[] = [];
   inputCrops.forEach((crop: any, index: number) => {
+    const formattedCropStartDate = formattedDate(crop.start_date);
+
     const hue = (index * 360) / inputCrops.length;
     const cropColor = `#${convert.hsv.hex([hue, 85, 75])}`;
 
     crop.stages.forEach((stage: any) => {
       const stageId = stage.id;
       const stageName = stage.species_growth_stage_name;
+      const formattedStageStartDate = formattedDate(stage.start_date);
 
       stage.events.forEach((event: any) => {
         const eventId = event.id;
         const eventName = event.name;
 
-        const formattedCropStartDate = formattedDate(crop.start_date);
+        // Assigns the stage start as the minimum done date
+        let min_date = formattedStageStartDate;
 
         if (event.periodic_events && event.periodic_events.length > 0) {
-          event.periodic_events.forEach((periodicEvent: any) => {
-            const periodicEventId = periodicEvent.id;
+          event.periodic_events
+            .sort((a: any, b: any) => a.id - b.id)
+            .forEach((periodicEvent: any, index: number, array: any[]) => {
+              const periodicEventId = periodicEvent.id;
 
-            const formattedDueDate = formattedDate(periodicEvent.due_date);
-            const formattedDoneDate = formattedDate(periodicEvent.done_date);
+              const formattedDueDate = formattedDate(periodicEvent.due_date);
+              const formattedDoneDate = formattedDate(periodicEvent.done_date);
 
-            const restructuredEvent = {
-              id: periodicEventId,
-              name: eventName,
-              crop_id: crop.id,
-              landplot: crop.landplot_id,
-              species_name: crop.species_name,
-              crop_start_date: formattedCropStartDate,
-              color: cropColor,
-              stage_name: stageName,
-              due_date: formattedDueDate,
-              done_date: formattedDoneDate,
-            };
+              if (index === array.length - 1 && array.length > 1) {
+                // If an array of periodic tasks exist,
+                // assigns the done date of the previous item as the min done date of the last one
+                min_date = formattedDate(array[index - 1].done_date);
+              } else {
+              }
 
-            restructuredData.push(restructuredEvent);
-          });
+              const restructuredEvent = {
+                id: periodicEventId,
+                name: eventName,
+                crop_id: crop.id,
+                landplot: crop.landplot_id,
+                species_name: crop.species_name,
+                crop_start_date: formattedCropStartDate,
+                stage_start_date: formattedStageStartDate,
+                color: cropColor,
+                stage_name: stageName,
+                due_date: formattedDueDate,
+                done_date: formattedDoneDate,
+                min_date,
+              };
+
+              restructuredData.push(restructuredEvent);
+            });
         } else {
           const formattedDueDate = formattedDate(event.due_date);
           const formattedDoneDate = formattedDate(event.done_date);
@@ -333,6 +348,7 @@ function restructureTasks(inputCrops: any): any[] {
             stage_name: stageName,
             due_date: formattedDueDate,
             done_date: formattedDoneDate,
+            min_date,
           };
 
           restructuredData.push(restructuredEvent);

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import PropTypes from "prop-types";
 import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import {

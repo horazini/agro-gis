@@ -367,3 +367,12 @@ export const getAllTenantTasksStructuredForCalendar = async (
   const tasks = restructureTasks(data);
   return tasks;
 };
+
+export const postLandplotSnapshot = async (snapshotData: any) => {
+  const res = await fetch(`${API}/snapshot`, {
+    method: "POST",
+    body: JSON.stringify(snapshotData),
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};

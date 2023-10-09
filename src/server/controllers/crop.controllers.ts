@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { QueryResult } from "pg";
 import pool from "../database";
-import { PostGISToGeoJSONFeature } from "./geo.controllers";
+import { PostGISToGeoJSONFeature } from "./landplot.controllers";
 
 const formatUniqueAndPeriodicEvents = (events: any) => {
   const formattedEvents: any = {};

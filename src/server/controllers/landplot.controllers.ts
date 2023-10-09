@@ -423,3 +423,46 @@ export const updateFeatures = async (
     client.release();
   }
 };
+
+export const createSnapshot = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { image, landplot_id, crop_id, crop_stage_id, date } = req.body;
+
+    // Convierte la imagen en base64 a Buffer.
+    const bufferImage = Buffer.from(image, "base64");
+
+    const response = await pool.query(
+      "INSERT INTO landplot_snapshot (image, landplot_id, crop_id, crop_stage_id, date) VALUES ($1, $2, $3, $4, $5)",
+      [bufferImage, landplot_id, crop_id, crop_stage_id, date]
+    );
+    return res.status(200).json(response);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const getSnapshot = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = 1;
+    const queryResponse: QueryResult = await pool.query(
+      "SELECT image, landplot_id, crop_id, crop_stage_id, date FROM landplot_snapshot"
+    );
+    const { image, ...rest } = queryResponse.rows[0];
+    const base64Image = image.toString("base64");
+    const response = {
+      image: base64Image,
+      ...rest,
+    };
+    return res.status(200).json(response);
+  } catch (e) {
+    next(e);
+  }
+};

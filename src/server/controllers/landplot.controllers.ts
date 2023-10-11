@@ -432,13 +432,14 @@ export const createSnapshot = async (
   try {
     const { image, landplot_id, crop_id, crop_stage_id, date } = req.body;
 
-    // Convierte la imagen en base64 a Buffer.
-    const bufferImage = Buffer.from(image, "base64");
+    const base64Data = image.replace(/^data:image\/png;base64,/, "");
+    const binaryData = Buffer.from(base64Data, "base64");
 
-    const response = await pool.query(
-      "INSERT INTO landplot_snapshot (image, landplot_id, crop_id, crop_stage_id, date) VALUES ($1, $2, $3, $4, $5)",
-      [bufferImage, landplot_id, crop_id, crop_stage_id, date]
-    );
+    const queryText = `
+    INSERT INTO landplot_snapshot (image, landplot_id, crop_id, crop_stage_id, date) VALUES ($1, $2, $3, $4, $5)`;
+    const values = [binaryData, landplot_id, crop_id, crop_stage_id, date];
+    const response = await pool.query(queryText, values);
+
     return res.status(200).json(response);
   } catch (e) {
     next(e);
@@ -452,13 +453,16 @@ export const getSnapshot = async (
 ) => {
   try {
     const id = 1;
+
     const queryResponse: QueryResult = await pool.query(
-      "SELECT image, landplot_id, crop_id, crop_stage_id, date FROM landplot_snapshot"
+      "SELECT image, id, landplot_id, crop_id, crop_stage_id, date FROM landplot_snapshot"
     );
-    const { image, ...rest } = queryResponse.rows[0];
+    const { image, ...rest } = queryResponse.rows[6];
     const base64Image = image.toString("base64");
+    const imageDataUri = `data:image/png;base64,${base64Image}`;
+
     const response = {
-      image: base64Image,
+      imageDataUri,
       ...rest,
     };
     return res.status(200).json(response);

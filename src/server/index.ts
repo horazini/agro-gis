@@ -21,6 +21,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(indexRoutes);
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  console.log(err);
   return res.status(err.statusCode || 500).json({
     message: err.message,
   });

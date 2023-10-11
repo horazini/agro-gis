@@ -1,11 +1,4 @@
 import { Fragment, useEffect, useState } from "react";
-import {
-  MapContainer,
-  Circle,
-  LayerGroup,
-  Polygon,
-  useMapEvents,
-} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 import {
@@ -19,6 +12,7 @@ import {
   position,
   LayerControler,
   FormattedArea,
+  SentinelSnapshoter,
 } from "../../components/mapcomponents";
 import {
   AlertColor,
@@ -47,8 +41,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useParams } from "react-router-dom";
-import { LatLngExpression } from "leaflet";
-import L from "leaflet";
 import {
   KeyboardArrowDown,
   KeyboardArrowUp,
@@ -112,7 +104,7 @@ const CropDetails = () => {
       <h1>
         Cultivo en curso - Parcela N.° {cropFeature?.properties?.landplot.id}
       </h1>
-      <MapView cropFeature={cropFeature} />
+      <SentinelSnapshoter landplot={cropFeature} />
 
       {cropFeature && (
         <CropInfo
@@ -121,88 +113,6 @@ const CropDetails = () => {
         />
       )}
     </Box>
-  );
-};
-
-const MapView = ({ cropFeature }: any) => {
-  const CustomLayer = ({ feature }: any) => {
-    const { landplot } = feature.properties;
-    const { type, coordinates } = feature.geometry;
-
-    const [isHighlighted, setIsHighlighted] = useState<boolean>(false);
-
-    const handleLayerMouseOver = () => {
-      setIsHighlighted(true);
-    };
-
-    const handleLayerMouseOut = () => {
-      setIsHighlighted(false);
-    };
-
-    const pathOptions = {
-      color: isHighlighted ? "#33ff33" : "#3388ff",
-    };
-
-    const eventHandlers = {
-      mouseover: handleLayerMouseOver,
-      mouseout: handleLayerMouseOut,
-    };
-
-    if (type === "Polygon") {
-      const LatLngsCoordinates = coordinates[0].map(([lng, lat]: number[]) => [
-        lat,
-        lng,
-      ]);
-      return (
-        <Polygon
-          positions={LatLngsCoordinates}
-          pathOptions={pathOptions}
-          eventHandlers={eventHandlers}
-        />
-      );
-    } else if (type === "Point" && landplot.subType === "Circle") {
-      return (
-        <Circle
-          center={coordinates}
-          radius={landplot.radius}
-          pathOptions={pathOptions}
-          eventHandlers={eventHandlers}
-        />
-      );
-    }
-    return null;
-  };
-
-  function FlyToLayer() {
-    let coords: LatLngExpression = position;
-    if (cropFeature?.geometry.type === "Point") {
-      coords = cropFeature.geometry.coordinates as LatLngExpression;
-    }
-    if (cropFeature?.geometry.type === "Polygon") {
-      const LatLngsCoordinates: LatLngExpression[] =
-        cropFeature.geometry.coordinates[0].map(([lng, lat]: number[]) => [
-          lat,
-          lng,
-        ]);
-
-      coords = L.polygon(LatLngsCoordinates).getBounds().getCenter();
-    }
-    const map = useMapEvents({
-      layeradd() {
-        map.flyTo(coords, 13);
-      },
-    });
-    return null;
-  }
-
-  return (
-    <MapContainer center={position} zoom={7}>
-      <LayerControler />
-      <FlyToLayer />
-      <LayerGroup>
-        {cropFeature && <CustomLayer feature={cropFeature} />}
-      </LayerGroup>
-    </MapContainer>
   );
 };
 

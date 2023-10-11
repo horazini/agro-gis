@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect, useRef } from "react";
 import { NavigateFunction } from "react-router-dom";
 
 import {
@@ -8,9 +8,15 @@ import {
   TileLayer,
   WMSTileLayer,
   useMapEvents,
+  MapContainer,
+  Circle,
+  Polygon,
+  useMap,
+  Pane,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L, { LatLngExpression } from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 import { Box, Button, Menu, Switch } from "@mui/material";
 import { Today as TodayIcon } from "@mui/icons-material";
@@ -19,6 +25,9 @@ import { DateCalendar } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { format } from "date-fns";
 import { SENTINEL_HUB_API_URL, SENTINEL_HUB_BASE_URL } from "../config";
+
+import { SimpleMapScreenshoter } from "leaflet-simple-map-screenshoter";
+import { postLandplotSnapshot } from "../services/services";
 
 export const position: LatLngExpression = [-29, -58];
 
@@ -66,9 +75,136 @@ declare module "leaflet" {
   }
 }
 //#endregion
+export function SentinelHubSnapshoter({
+  tilesAreLoaded,
+  selectedDate,
+  setSelectedDate,
+}: {
+  tilesAreLoaded?: any;
+  selectedDate?: any;
+  setSelectedDate?: any;
+}) {
+  const [sentinelIsSelected, setSentinelIsSelected] = useState<boolean>(false);
+
+  // Date handle
+
+  const today = new Date();
+  const formatedDate = format(selectedDate, "yyyy-MM-dd");
+
+  const [WMSreloadTrigger, setWMSreloadTrigger] = useState(0);
+
+  const handleDateChange = (date: any) => {
+    setSelectedDate(date);
+    setWMSreloadTrigger((prevCount) => prevCount + 1);
+  };
+
+  // Date selector
+
+  const [anchorDateEl, setAnchorDateEl] = useState(null);
+  const openDateSelector = Boolean(anchorDateEl);
+  const handleOpenDateSelector = (event: any) => {
+    setAnchorDateEl(event.currentTarget);
+  };
+  const handleCloseDateSelector = () => {
+    setAnchorDateEl(null);
+  };
+
+  //
+
+  const [showAcquisitionDates, setShowAcquisitionDates] =
+    useState<boolean>(false);
+
+  const showDate = showAcquisitionDates ? ",DATE" : "";
+
+  const handleShowDatesChange = () => {
+    setShowAcquisitionDates((prev) => !prev);
+    setWMSreloadTrigger((prevCount) => prevCount + 1);
+  };
+
+  return (
+    <>
+      <WMSTileLayer
+        key={WMSreloadTrigger}
+        url={SENTINEL_HUB_BASE_URL}
+        tileSize={512}
+        attribution='&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>'
+        urlProcessingApi={SENTINEL_HUB_API_URL}
+        maxcc={3}
+        minZoom={7}
+        maxZoom={16}
+        preset="TRUE-COLOR-S2L2A"
+        layers={`TRUE-COLOR-S2L2A${showDate}`}
+        time={formatedDate}
+        eventHandlers={{
+          add: () => {
+            setSentinelIsSelected(true);
+          },
+          remove: () => {
+            setSentinelIsSelected(false);
+          },
+          tileloadstart: () => {
+            if (typeof tilesAreLoaded === "function") {
+              tilesAreLoaded(false);
+            }
+          },
+          load: () => {
+            if (typeof tilesAreLoaded === "function") {
+              tilesAreLoaded(true);
+            }
+          },
+        }}
+      />
+      <div className={"leaflet-bottom leaflet-left"} id="time-controller">
+        <div className="leaflet-control leaflet-bar">
+          {sentinelIsSelected ? (
+            <Box
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Button
+                variant="contained"
+                onClick={handleOpenDateSelector}
+                endIcon={<TodayIcon />}
+                color="inherit"
+                sx={{ color: "black" }}
+              >
+                {format(selectedDate, "dd/MM/yyyy")}
+              </Button>
+              <Switch
+                //color="default"
+                onClick={handleShowDatesChange}
+              />
+            </Box>
+          ) : null}
+        </div>
+      </div>
+      <Menu
+        id="date-menu"
+        anchorEl={anchorDateEl}
+        open={openDateSelector}
+        onClose={handleCloseDateSelector}
+        MenuListProps={{ "aria-labelledby": "basic-button" }}
+      >
+        <DateCalendar
+          showDaysOutsideCurrentMonth
+          value={dayjs(selectedDate)}
+          minDate={dayjs("2017-01-01")}
+          maxDate={dayjs(today)}
+          onChange={(newValue: any) => {
+            handleDateChange(new Date(newValue));
+            handleCloseDateSelector();
+          }}
+        />
+      </Menu>
+    </>
+  );
+}
 
 // Mapa actualización frecuente
-function SentinelHub() {
+export function SentinelHub() {
   const [sentinelIsSelected, setSentinelIsSelected] = useState<boolean>(false);
 
   //#region ALternative to first WMSOptions workaround
@@ -79,10 +215,10 @@ function SentinelHub() {
   time?: string;
 }
 
-let sentinelHub = L.tileLayer.wms(baseUrl, {
+let sentinelHub = L.tileLayer.wms({SENTINEL_HUB_BASE_URL}, {
   tileSize: 512,
   attribution: '&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>',
-  urlProcessingApi: "https://services.sentinel-hub.com/ogc/wms/1d4de4a3-2f50-493c-abd8-861dec3ae6b2",
+  urlProcessingApi: {SENTINEL_HUB_API_URL},
   maxcc: 20,
   minZoom: 6,
   maxZoom: 16,
@@ -137,7 +273,7 @@ let sentinelHub = L.tileLayer.wms(baseUrl, {
         tileSize={512}
         attribution='&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>'
         urlProcessingApi={SENTINEL_HUB_API_URL}
-        maxcc={5}
+        maxcc={3}
         minZoom={7}
         maxZoom={16}
         preset="TRUE-COLOR-S2L2A"
@@ -152,7 +288,7 @@ let sentinelHub = L.tileLayer.wms(baseUrl, {
           },
         }}
       />
-      <div className={"leaflet-bottom leaflet-left"}>
+      <div className={"leaflet-bottom leaflet-left"} id="time-controller">
         <div className="leaflet-control leaflet-bar">
           {sentinelIsSelected ? (
             <Box
@@ -330,3 +466,316 @@ export function FormattedArea(area: number): string {
   }
   return formatedArea;
 }
+
+const snapshotOptions = {
+  hideElementsWithSelectors: [
+    ".leaflet-control-container",
+    ".leaflet-dont-include-pane",
+    "#snapshot-button",
+    "#time-controller",
+  ],
+  hidden: true,
+};
+
+const screenshotter = new SimpleMapScreenshoter(snapshotOptions);
+
+export const SentinelSnapshoter = ({ landplot }: any) => {
+  const [mapref, setMapref] = useState<any>(null);
+  const featureRef = useRef<any>();
+  const [tilesAreLoaded, setTilesAreLoaded] = useState<boolean>(false);
+
+  const [featureBoundsCoords, setFeatureBoundsCoords] = useState<any>(position);
+  const [featureBoundsZoom, setFeatureBoundsZoom] = useState<number>(7);
+  const [alreadyFlyed, setAlreadyFlyed] = useState<boolean>(false);
+
+  const [snapshotButtonIsClicked, setSnapshotButtonIsClicked] =
+    useState<boolean>(false);
+
+  useEffect(() => {
+    if (mapref) {
+      screenshotter.addTo(mapref);
+    }
+  }, [mapref]);
+
+  //#region snapshot trigger mechanism
+
+  useEffect(() => {
+    snapshotButtonIsClicked && tilesAreLoaded && TakeSnapshot();
+  }, [snapshotButtonIsClicked, tilesAreLoaded]);
+
+  const SnapshotClick = async () => {
+    setSnapshotButtonIsClicked(true);
+    mapref.setView(featureBoundsCoords, featureBoundsZoom);
+
+    mapref.zoomControl.disable();
+    mapref.dragging.disable();
+    mapref.scrollWheelZoom.disable();
+    mapref.touchZoom.disable();
+    mapref.doubleClickZoom.disable();
+    mapref.boxZoom.disable();
+    mapref.keyboard.disable();
+    // Alt to mapref.setView
+    // mapref.fitBounds(feature.getBounds());
+  };
+
+  const TakeSnapshot = () => {
+    const feature = featureRef.current;
+    // Get bounds of feature
+    const featureBounds = feature.getBounds();
+    // Get pixel position on screen of top left and bottom right of the bounds of the feature
+    const nw = featureBounds.getNorthWest();
+    const se = featureBounds.getSouthEast();
+    const topLeft = mapref.latLngToContainerPoint(nw);
+    const bottomRight = mapref.latLngToContainerPoint(se);
+    // Get the resulting image size that contains the feature
+    const imageSize = bottomRight.subtract(topLeft);
+
+    // timeout for the Leaflet loaded tiles white-to-color animation
+    setTimeout(() => {
+      screenshotter
+        .takeScreen("image")
+        .then((image: any) => {
+          // Create <img> element to render img data
+          var img = new Image();
+
+          // once the image loads, do the following:
+          img.onload = async () => {
+            // Create canvas to process image data
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            if (ctx === null) {
+              return;
+            }
+
+            // Set canvas size to the size of your resultant image
+            canvas.width = imageSize.x;
+            canvas.height = imageSize.y;
+
+            // Draw the Leaflet map bounding box image on the canvas
+            ctx.drawImage(
+              img,
+              topLeft.x,
+              topLeft.y,
+              imageSize.x,
+              imageSize.y,
+              0,
+              0,
+              imageSize.x,
+              imageSize.y
+            );
+
+            if (feature instanceof L.Polygon) {
+              ctx.globalCompositeOperation = "destination-in";
+
+              const coordinates = feature.getLatLngs()[0];
+
+              if (!Array.isArray(coordinates)) {
+                return;
+              }
+              // draw the polygon
+              ctx.beginPath();
+              coordinates.forEach((coord: any, index: number) => {
+                const point = mapref.latLngToContainerPoint(
+                  L.latLng(coord.lat, coord.lng)
+                );
+                const x = point.x - topLeft.x;
+                const y = point.y - topLeft.y;
+                if (index === 0) {
+                  ctx.moveTo(x, y);
+                } else {
+                  ctx.lineTo(x, y);
+                }
+              });
+              ctx.closePath();
+              ctx.fill();
+            } else if (feature instanceof L.Circle) {
+              ctx.globalCompositeOperation = "destination-in";
+
+              // get screen radius of the circle
+              const rad = imageSize.x / 2;
+
+              // get screen center of circle
+              const x = rad; //- topLeft.x;
+              const y = rad; //- topLeft.x;
+
+              // draw the circle
+              ctx.beginPath();
+              ctx.arc(x, y, rad, 0, 2 * Math.PI);
+              ctx.closePath();
+              ctx.fill();
+            }
+
+            const base64Canvas = canvas.toDataURL("image/png");
+
+            const cropId = landplot.properties?.crop?.id || null;
+            const formJSON = {
+              image: base64Canvas,
+              landplot_id: landplot.properties.landplot.id,
+              crop_id: cropId,
+              date: selectedDate,
+            };
+            console.log(formJSON);
+
+            const res = await postLandplotSnapshot(formJSON);
+            console.log(res);
+          };
+
+          // set the image source to what the snapshotter captured
+          // img.onload will fire AFTER this
+          img.src = image;
+
+          setSnapshotButtonIsClicked(false);
+          mapref.zoomControl.enable();
+          mapref.dragging.enable();
+          mapref.scrollWheelZoom.enable();
+          mapref.touchZoom.enable();
+          mapref.doubleClickZoom.enable();
+          mapref.boxZoom.enable();
+          mapref.keyboard.enable();
+        })
+        .catch((e: { toString: () => any }) => {
+          alert(e.toString());
+        });
+    }, 500);
+  };
+
+  //#endregion
+
+  const CustomLayer = ({ feature }: any) => {
+    const { landplot } = feature.properties;
+    const { type, coordinates } = feature.geometry;
+
+    const [isHighlighted, setIsHighlighted] = useState<boolean>(false);
+
+    const handleLayerMouseOver = () => {
+      setIsHighlighted(true);
+    };
+
+    const handleLayerMouseOut = () => {
+      setIsHighlighted(false);
+    };
+
+    const pathOptions = {
+      color: isHighlighted ? "#33ff33" : "#3388ff",
+    };
+
+    const eventHandlers = {
+      mouseover: handleLayerMouseOver,
+      mouseout: handleLayerMouseOut,
+    };
+
+    if (type === "Polygon") {
+      const LatLngsCoordinates = coordinates[0].map(([lng, lat]: number[]) => [
+        lat,
+        lng,
+      ]);
+      return (
+        <Polygon
+          positions={LatLngsCoordinates}
+          pathOptions={pathOptions}
+          eventHandlers={eventHandlers}
+          ref={featureRef}
+        />
+      );
+    } else if (type === "Point" && landplot.subType === "Circle") {
+      return (
+        <Circle
+          center={coordinates}
+          radius={landplot.radius}
+          pathOptions={pathOptions}
+          eventHandlers={eventHandlers}
+          ref={featureRef}
+        />
+      );
+    }
+    return null;
+  };
+
+  function FlyToLayer() {
+    const feature = featureRef.current;
+    // Get bounds of feature
+    const featureBounds = feature.getBounds();
+    let coords: LatLngExpression = position;
+    let zoom = 13;
+
+    let map = useMap();
+
+    if (feature instanceof L.Circle) {
+      coords = landplot.geometry.coordinates as LatLngExpression;
+
+      const radius = landplot.properties.landplot.radius as number;
+
+      const c = L.circle(coords, { radius }).addTo(map);
+      const bounds = c.getBounds();
+      zoom = map.getBoundsZoom(bounds);
+      c.remove();
+    }
+    if (feature instanceof L.Polygon) {
+      coords = featureBounds.getCenter();
+      zoom = map.getBoundsZoom(featureBounds);
+    }
+
+    map = useMapEvents({
+      layeradd() {
+        map.setView(coords, zoom);
+        if (!alreadyFlyed) {
+          setAlreadyFlyed(true);
+        }
+        setFeatureBoundsCoords(coords);
+        setFeatureBoundsZoom(zoom);
+      },
+    });
+
+    return null;
+  }
+
+  const today = new Date();
+  const [selectedDate, setSelectedDate] = useState(today);
+
+  const handleDateChange = (date: any) => {
+    setSelectedDate(date);
+  };
+
+  useEffect(() => {
+    console.log(selectedDate);
+  }, [selectedDate]);
+
+  return (
+    <Box mb={2}>
+      <MapContainer
+        doubleClickZoom={false}
+        id="mapId"
+        center={position}
+        zoom={7}
+        preferCanvas={true}
+        ref={setMapref}
+      >
+        <SentinelHubSnapshoter
+          tilesAreLoaded={setTilesAreLoaded}
+          selectedDate={selectedDate}
+          setSelectedDate={handleDateChange}
+        />
+
+        {mapref && featureRef.current && !alreadyFlyed && <FlyToLayer />}
+
+        <Pane name="dont-include">
+          {landplot && <CustomLayer feature={landplot} />}
+        </Pane>
+
+        <div className={"leaflet-bottom leaflet-right"} id="snapshot-button">
+          <div className="leaflet-control leaflet-bar">
+            <Button
+              variant="contained"
+              color="inherit"
+              sx={{ color: "black" }}
+              disabled={snapshotButtonIsClicked}
+              onClick={() => SnapshotClick()}
+            >
+              Tomar Snapshot
+            </Button>
+          </div>
+        </div>
+      </MapContainer>
+    </Box>
+  );
+};

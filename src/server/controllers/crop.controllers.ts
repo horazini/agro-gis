@@ -265,6 +265,7 @@ export const getCropDataById = async (
 
     const cropQuery = `
       SELECT 
+      id,
       landplot_id, 
       ST_AsGeoJSON(landplot_area) as landplot_geometry, 
       CASE 
@@ -295,6 +296,7 @@ export const getCropDataById = async (
     };
 
     const crop = {
+      id: cropResponse.id,
       description: cropResponse.description,
       comments: cropResponse.comments,
       start_date: cropResponse.start_date,

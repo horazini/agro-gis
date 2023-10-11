@@ -1,25 +1,15 @@
 import { useEffect, useState } from "react";
-import {
-  MapContainer,
-  Circle,
-  LayerGroup,
-  Polygon,
-  useMapEvents,
-} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 import { getGeoData } from "../../services/services";
 import { Feature } from "geojson";
 
 import {
-  position,
-  LayerControler,
   FormattedArea,
+  SentinelSnapshoter,
 } from "../../components/mapcomponents";
 import { Box, Card } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { LatLngExpression } from "leaflet";
-import L from "leaflet";
 import { FormatListBulleted } from "@mui/icons-material";
 import { formatedDate } from "../../components/customComponents";
 
@@ -62,97 +52,13 @@ const CropDetails = () => {
       {landplotData && (
         <h1>Parcela N.° {landplotData.properties?.landplot.id}</h1>
       )}
-      <MapView landplot={landplotData} />
+      <SentinelSnapshoter landplot={landplotData} />
 
       {landplotData && (
         <LandplotData landplot={landplotData.properties?.landplot} />
       )}
 
       {landplotData && <CropsDataGrid crops={landplotData.properties?.crops} />}
-    </Box>
-  );
-};
-
-const MapView = ({ landplot }: any) => {
-  const CustomLayer = ({ feature }: any) => {
-    const { landplot } = feature.properties;
-    const { type, coordinates } = feature.geometry;
-
-    const [isHighlighted, setIsHighlighted] = useState<boolean>(false);
-
-    const handleLayerMouseOver = () => {
-      setIsHighlighted(true);
-    };
-
-    const handleLayerMouseOut = () => {
-      setIsHighlighted(false);
-    };
-
-    const pathOptions = {
-      color: isHighlighted ? "#33ff33" : "#3388ff",
-    };
-
-    const eventHandlers = {
-      mouseover: handleLayerMouseOver,
-      mouseout: handleLayerMouseOut,
-    };
-
-    if (type === "Polygon") {
-      const LatLngsCoordinates = coordinates[0].map(([lng, lat]: number[]) => [
-        lat,
-        lng,
-      ]);
-      return (
-        <Polygon
-          positions={LatLngsCoordinates}
-          pathOptions={pathOptions}
-          eventHandlers={eventHandlers}
-        />
-      );
-    } else if (type === "Point" && landplot.subType === "Circle") {
-      return (
-        <Circle
-          center={coordinates}
-          radius={landplot.radius}
-          pathOptions={pathOptions}
-          eventHandlers={eventHandlers}
-        />
-      );
-    }
-    return null;
-  };
-
-  function FlyToLayer() {
-    let coords: LatLngExpression = position;
-    if (landplot?.geometry.type === "Point") {
-      coords = landplot.geometry.coordinates as LatLngExpression;
-    }
-    if (landplot?.geometry.type === "Polygon") {
-      const LatLngsCoordinates: LatLngExpression[] =
-        landplot.geometry.coordinates[0].map(([lng, lat]: number[]) => [
-          lat,
-          lng,
-        ]);
-
-      coords = L.polygon(LatLngsCoordinates).getBounds().getCenter();
-    }
-    const map = useMapEvents({
-      layeradd() {
-        map.flyTo(coords, 13);
-      },
-    });
-    return null;
-  }
-
-  return (
-    <Box mb={2}>
-      <MapContainer center={position} zoom={7}>
-        <LayerControler />
-        <FlyToLayer />
-        <LayerGroup>
-          {landplot && <CustomLayer feature={landplot} />}
-        </LayerGroup>
-      </MapContainer>
     </Box>
   );
 };
@@ -265,4 +171,5 @@ const CropsDataGrid = ({ crops }: any) => {
     </Card>
   );
 };
+
 export default CropDetails;

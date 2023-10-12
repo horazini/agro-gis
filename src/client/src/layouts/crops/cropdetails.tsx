@@ -40,7 +40,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   KeyboardArrowDown,
   KeyboardArrowUp,
@@ -121,11 +121,22 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
 
   const [open, setOpen] = useState(-1);
 
+  const navigate = useNavigate();
   return (
     <Box>
       <Box>
         <h2>Parcela:</h2>
-        <p>Parcela N.° {landplot.id}</p>
+        <Box style={{ display: "flex", justifyContent: "space-between" }}>
+          <p>Parcela N.° {landplot.id}</p>
+          <Box>
+            <Button
+              variant="outlined"
+              onClick={() => navigate(`/landplotdetails/${landplot.id}`)}
+            >
+              detalles de la parcela
+            </Button>
+          </Box>
+        </Box>
         {landplot.description && <p>Descripción: {landplot.description}</p>}
         {landplot.area && <p>Área: {FormattedArea(landplot.area)} </p>}
         {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}

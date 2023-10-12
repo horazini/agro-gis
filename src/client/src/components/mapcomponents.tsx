@@ -443,6 +443,7 @@ export const FeatureInfo = (
         </Box>
       </Box>
       {landplot.description && <p>Descripción: {landplot.description}</p>}
+      {landplot.area && <p>Área: {FormattedArea(landplot.area)} </p>}
       {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
       {(crop && CropInfo(crop, navigate)) || (
         <Fragment>
@@ -735,10 +736,6 @@ export const SentinelSnapshoter = ({ landplot }: any) => {
   const handleDateChange = (date: any) => {
     setSelectedDate(date);
   };
-
-  useEffect(() => {
-    console.log(selectedDate);
-  }, [selectedDate]);
 
   return (
     <Box mb={2}>

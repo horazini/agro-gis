@@ -276,6 +276,10 @@ export const getTenantGeoWithCurrentCrops = async (
     const response: QueryResult = await pool.query(
       `
       SELECT l.id AS id, ${shape_data_query_l}, l.description, 
+      CASE 
+        WHEN l.circle_radius IS NULL THEN ROUND(st_area(l.area, true)::numeric)
+        ELSE ROUND((pi() * l.circle_radius * l.circle_radius)::numeric)
+      END AS area,
       c.id AS crop_id, c.species_id, c.species_name, c.species_description, c.description AS crop_description, c.comments, c.start_date, c.finish_date, c.weight_in_tons
       FROM landplot l
       LEFT JOIN crop c ON l.id = c.landplot_id
@@ -296,13 +300,21 @@ export const getTenantGeoWithCurrentCrops = async (
     );
 
     const features = response.rows.map((row: any) => {
-      const { id, description, geometry, center, circle_radius, ...cropData } =
-        row;
+      const {
+        id,
+        description,
+        geometry,
+        center,
+        circle_radius,
+        area,
+        ...cropData
+      } = row;
       const landplot = {
         id,
         description,
         geometry,
         center,
+        area,
         circle_radius,
       };
 

@@ -8,6 +8,7 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
+import { Add as AddIcon } from "@mui/icons-material";
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -33,6 +34,37 @@ interface user {
   deleted: boolean;
 }
 
+const UserListLoad = () => {
+  PageTitle("Usuarios");
+
+  const { tenantId } = useSelector((state: RootState) => state.auth);
+
+  const [tenantData, setTenantData] = useState<{
+    tenantName: string;
+    users: never[];
+  }>({
+    tenantName: "",
+    users: [],
+  });
+
+  const loadTenant = async (id: number) => {
+    try {
+      const data = await getTenantUsers(id);
+      setTenantData(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    if (tenantId) {
+      loadTenant(tenantId);
+    }
+  }, [tenantId]);
+
+  return <Fragment>{UserList(tenantData.users)}</Fragment>;
+};
+
 const UserList = (users: user[]) => {
   const navigate = useNavigate();
 
@@ -40,7 +72,19 @@ const UserList = (users: user[]) => {
 
   return (
     <Fragment>
-      <h1>Usuarios</h1>
+      <Box
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <h1>Usuarios</h1>
+        <Button variant="outlined" onClick={() => navigate(`/`)}>
+          <AddIcon sx={{ mr: 1 }} />
+          Crear nuevo usuario
+        </Button>
+      </Box>
       {users.length > 0 ? (
         <Fragment>
           {users.map((user) => (
@@ -112,35 +156,4 @@ const UserList = (users: user[]) => {
   );
 };
 
-const TenantDetails = () => {
-  PageTitle("Usuarios");
-
-  const { tenantId } = useSelector((state: RootState) => state.auth);
-
-  const [tenantData, setTenantData] = useState<{
-    tenantName: string;
-    users: never[];
-  }>({
-    tenantName: "",
-    users: [],
-  });
-
-  const loadTenant = async (id: number) => {
-    try {
-      const data = await getTenantUsers(id);
-      setTenantData(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    if (tenantId) {
-      loadTenant(tenantId);
-    }
-  }, [tenantId]);
-
-  return <Fragment>{UserList(tenantData.users)}</Fragment>;
-};
-
-export default TenantDetails;
+export default UserListLoad;

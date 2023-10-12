@@ -17,6 +17,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 
 interface user {
+  id: number;
   usertype_id: number;
   mail_address: string;
   username: string;
@@ -25,23 +26,11 @@ interface user {
   deleted: boolean;
 }
 
-const TenantDetails = () => {
-  PageTitle("Cliente");
-  const { userId } = useSelector((state: RootState) => state.auth);
-
+const UserLoader = () => {
   const params = useParams();
+  PageTitle("Cliente");
 
-  const [userData, setUserData] = useState<user>({
-    usertype_id: 0,
-    mail_address: "",
-    username: "",
-    names: "",
-    surname: "",
-    deleted: false,
-  });
-
-  const { usertype_id, mail_address, username, names, surname, deleted } =
-    userData;
+  const [userData, setUserData] = useState<user>();
 
   const loadTenant = async (id: string) => {
     try {
@@ -57,6 +46,17 @@ const TenantDetails = () => {
       loadTenant(params.id);
     }
   }, [params.id]);
+
+  return (
+    <Fragment>{userData && <UserDetails userData={userData} />} </Fragment>
+  );
+};
+
+const UserDetails = ({ userData }: any) => {
+  const { userId } = useSelector((state: RootState) => state.auth);
+
+  const { id, usertype_id, mail_address, username, names, surname, deleted } =
+    userData;
 
   const [openDisable, setOpenDisable] = useState(false);
   const [openEnable, setOpenEnsable] = useState(false);
@@ -76,7 +76,7 @@ const TenantDetails = () => {
 
   const handleDisableUser: () => Promise<number> = async () => {
     try {
-      return disableUser(Number(params.id));
+      return disableUser(id);
     } catch (error) {
       console.log(error);
       return 400;
@@ -85,7 +85,7 @@ const TenantDetails = () => {
 
   const handleEnableUser: () => Promise<number> = async () => {
     try {
-      return enableUser(Number(params.id));
+      return enableUser(id);
     } catch (error) {
       console.log(error);
       return 400;
@@ -107,7 +107,7 @@ const TenantDetails = () => {
 
         {deleted ? (
           <Button
-            disabled={Number(params.id) === userId}
+            disabled={id === userId}
             startIcon={<HowToRegIcon />}
             variant="contained"
             color="success"
@@ -118,7 +118,7 @@ const TenantDetails = () => {
           </Button>
         ) : (
           <Button
-            disabled={Number(params.id) === userId}
+            disabled={id === userId}
             startIcon={<PersonOffIcon />}
             variant="contained"
             color="error"
@@ -154,4 +154,4 @@ const TenantDetails = () => {
   );
 };
 
-export default TenantDetails;
+export default UserLoader;

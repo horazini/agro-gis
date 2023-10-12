@@ -313,7 +313,7 @@ const LandplotsAndCrops = () => {
               <ConfirmButton
                 msg={"Se dará de alta al cultivo en la parcela seleccionada."}
                 onConfirm={handleSubmitForm}
-                navigateDir={"/croplandplots"}
+                navigateDir={"/"}
                 disabled={
                   !Object.values(crop).every((value) => !!value) ||
                   (selectedFeature?.properties?.crop &&

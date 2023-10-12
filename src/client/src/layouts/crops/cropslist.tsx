@@ -39,21 +39,22 @@ const CropsList = (crops: any[]) => {
     },
     {
       field: "landplot_id",
-      headerName: "ID parcela",
-      type: "number",
-      width: 90,
-    },
-    {
-      field: "landplot_description",
-      headerName: "Descripción parcela",
-      width: 110,
-      sortable: false,
+      headerName: "Parcela",
+      width: 100,
+      renderCell: (params: GridRenderCellParams<any>) => (
+        <p>
+          {params.id}
+          {params.row.landplot_description
+            ? " - " + params.row.landplot_description
+            : null}
+        </p>
+      ),
     },
     {
       field: "landplot_area",
       headerName: "Área",
       type: "number",
-      width: 90,
+      width: 120,
       valueFormatter: (params: GridValueFormatterParams<string>) => {
         if (params.value == null) {
           return "";

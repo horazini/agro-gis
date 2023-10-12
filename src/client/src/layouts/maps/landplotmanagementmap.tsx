@@ -284,7 +284,9 @@ export default function EditControlFC() {
       <div>
         <h3>Parcela ocupada</h3>
         <p>ID: {properties.landplot.id}</p>
-        <p>Descripción: {properties.landplot.description}</p>
+        {properties.landplot.description ? (
+          <p>Descripción: {properties.landplot.description}</p>
+        ) : null}
         {properties.landplot.radius && (
           <p>Radio: {properties.landplot.radius} m.</p>
         )}

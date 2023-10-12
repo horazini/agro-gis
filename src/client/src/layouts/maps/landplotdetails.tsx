@@ -149,24 +149,28 @@ const CropsDataGrid = ({ crops }: any) => {
     >
       <Box ml={2} mb={2} mr={2}>
         <h2>Cultivos</h2>
-        <Box style={{ display: "flex", justifyContent: "space-between" }}></Box>
-        <DataGrid
-          rows={crops}
-          columns={columns}
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 5,
+
+        {crops.length > 0 ? (
+          <DataGrid
+            rows={crops}
+            columns={columns}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: 5,
+                },
               },
-            },
-          }}
-          pageSizeOptions={[5]}
-          disableRowSelectionOnClick
-          sx={{
-            backgroundColor: (theme) =>
-              theme.palette.mode === "light" ? theme.palette.grey[50] : null,
-          }}
-        />
+            }}
+            pageSizeOptions={[5]}
+            disableRowSelectionOnClick
+            sx={{
+              backgroundColor: (theme) =>
+                theme.palette.mode === "light" ? theme.palette.grey[50] : null,
+            }}
+          />
+        ) : (
+          <h3>La parcela no registra cultivos</h3>
+        )}
       </Box>
     </Card>
   );

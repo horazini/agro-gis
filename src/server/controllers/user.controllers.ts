@@ -210,7 +210,7 @@ export const getUserData = async (
     const queryResponse: QueryResult = await pool.query(
       `
       SELECT 
-      usertype_id, mail_address, username, names, surname, deleted
+      id, usertype_id, mail_address, username, names, surname, deleted
       FROM user_account 
       WHERE id = $1
       `,
@@ -232,7 +232,6 @@ export const disableUser = async (
 ) => {
   try {
     const id = parseInt(req.params.id);
-    console.log(id);
     await pool.query("UPDATE user_account SET deleted = true WHERE id = $1", [
       id,
     ]);

@@ -49,7 +49,7 @@ function SpeciesList() {
           alignItems: "center",
         }}
       >
-        <h1>Lista de especies</h1>
+        <h1>Especies</h1>
         <Button variant="outlined" onClick={() => navigate(`/species/new`)}>
           <AddIcon sx={{ mr: 1 }} />
           Agregar nueva especie

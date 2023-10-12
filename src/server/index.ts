@@ -3,18 +3,17 @@ import morgan from "morgan";
 import cors from "cors";
 import indexRoutes from "./routes/index.routes";
 import { REACT_CLIENT_URL } from "./config";
+import bodyParser from "body-parser";
 
 const app = express();
 const port = 4000;
 
 // middlewares
 
-app.use(
-  cors({
-    origin: [`${REACT_CLIENT_URL}`, "http://localhost:3000"],
-  })
-);
+app.use(cors());
 app.use(morgan("dev"));
+app.use(bodyParser.json({ limit: "5mb" }));
+app.use(bodyParser.urlencoded({ limit: "5mb", extended: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

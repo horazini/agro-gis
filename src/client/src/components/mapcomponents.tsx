@@ -23,8 +23,13 @@ import { Today as TodayIcon } from "@mui/icons-material";
 
 import { DateCalendar } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import { format } from "date-fns";
-import { SENTINEL_HUB_API_URL, SENTINEL_HUB_BASE_URL } from "../config";
+import { format, sub } from "date-fns";
+import { es } from "date-fns/locale";
+import {
+  PLANET_LABS_API_KEY,
+  SENTINEL_HUB_API_URL,
+  SENTINEL_HUB_BASE_URL,
+} from "../config";
 
 import { SimpleMapScreenshoter } from "leaflet-simple-map-screenshoter";
 import { postLandplotSnapshot } from "../services/services";
@@ -173,144 +178,7 @@ export function SentinelHubSnapshoter({
               >
                 {format(selectedDate, "dd/MM/yyyy")}
               </Button>
-              <Switch
-                //color="default"
-                onClick={handleShowDatesChange}
-              />
-            </Box>
-          ) : null}
-        </div>
-      </div>
-      <Menu
-        id="date-menu"
-        anchorEl={anchorDateEl}
-        open={openDateSelector}
-        onClose={handleCloseDateSelector}
-        MenuListProps={{ "aria-labelledby": "basic-button" }}
-      >
-        <DateCalendar
-          showDaysOutsideCurrentMonth
-          value={dayjs(selectedDate)}
-          minDate={dayjs("2017-01-01")}
-          maxDate={dayjs(today)}
-          onChange={(newValue: any) => {
-            handleDateChange(new Date(newValue));
-            handleCloseDateSelector();
-          }}
-        />
-      </Menu>
-    </>
-  );
-}
-
-// Mapa actualización frecuente
-export function SentinelHub() {
-  const [sentinelIsSelected, setSentinelIsSelected] = useState<boolean>(false);
-
-  //#region ALternative to first WMSOptions workaround
-
-  /* interface CustomWMSOptions extends L.WMSOptions {
-  maxcc?: string;
-  preset?: string;
-  time?: string;
-}
-
-let sentinelHub = L.tileLayer.wms({SENTINEL_HUB_BASE_URL}, {
-  tileSize: 512,
-  attribution: '&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>',
-  urlProcessingApi: {SENTINEL_HUB_API_URL},
-  maxcc: 20,
-  minZoom: 6,
-  maxZoom: 16,
-  preset: "NDVI",
-  layers: "NDVI",
-  time: "2023-03-01/2023-09-13",
-} as unknown as CustomWMSOptions); */
-
-  //#endregion
-
-  // Date handle
-
-  const today = new Date();
-  const [selectedDate, setSelectedDate] = useState(today);
-  const formatedDate = format(selectedDate, "yyyy-MM-dd");
-
-  const [WMSreloadTrigger, setWMSreloadTrigger] = useState(0);
-
-  const handleDateChange = (date: any) => {
-    setSelectedDate(date);
-    setWMSreloadTrigger((prevCount) => prevCount + 1);
-  };
-
-  // Date selector
-
-  const [anchorDateEl, setAnchorDateEl] = useState(null);
-  const openDateSelector = Boolean(anchorDateEl);
-  const handleOpenDateSelector = (event: any) => {
-    setAnchorDateEl(event.currentTarget);
-  };
-  const handleCloseDateSelector = () => {
-    setAnchorDateEl(null);
-  };
-
-  //
-
-  const [showAcquisitionDates, setShowAcquisitionDates] =
-    useState<boolean>(false);
-
-  const showDate = showAcquisitionDates ? ",DATE" : "";
-
-  const handleShowDatesChange = () => {
-    setShowAcquisitionDates((prev) => !prev);
-    setWMSreloadTrigger((prevCount) => prevCount + 1);
-  };
-
-  return (
-    <>
-      <WMSTileLayer
-        key={WMSreloadTrigger}
-        url={SENTINEL_HUB_BASE_URL}
-        tileSize={512}
-        attribution='&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>'
-        urlProcessingApi={SENTINEL_HUB_API_URL}
-        maxcc={3}
-        minZoom={7}
-        maxZoom={16}
-        preset="TRUE-COLOR-S2L2A"
-        layers={`TRUE-COLOR-S2L2A${showDate}`}
-        time={formatedDate}
-        eventHandlers={{
-          add: () => {
-            setSentinelIsSelected(true);
-          },
-          remove: () => {
-            setSentinelIsSelected(false);
-          },
-        }}
-      />
-      <div className={"leaflet-bottom leaflet-left"} id="time-controller">
-        <div className="leaflet-control leaflet-bar">
-          {sentinelIsSelected ? (
-            <Box
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Button
-                variant="contained"
-                onClick={handleOpenDateSelector}
-                endIcon={<TodayIcon />}
-                color="inherit"
-                sx={{ color: "black" }}
-              >
-                {format(selectedDate, "dd/MM/yyyy")}
-              </Button>
-              <Switch
-                //color="default"
-                onClick={handleShowDatesChange}
-              />
+              <Switch onClick={handleShowDatesChange} />
             </Box>
           ) : null}
         </div>
@@ -338,42 +206,203 @@ let sentinelHub = L.tileLayer.wms({SENTINEL_HUB_BASE_URL}, {
 }
 
 export function LayerControler(): JSX.Element {
-  return (
-    <LayersControl position="topright">
-      <LayersControl.BaseLayer checked name="Sentinel Hub - S2 L2A">
-        <SentinelHub />
-      </LayersControl.BaseLayer>
-      <LayersControl.BaseLayer name="Esri - WorldImagery">
-        <TileLayer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
-          maxZoom={17}
-        />
-      </LayersControl.BaseLayer>
-      <LayersControl.BaseLayer name="Open Topo Map">
-        <TileLayer
-          url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-          attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-          maxZoom={15}
-        />
-      </LayersControl.BaseLayer>
-      <LayersControl.BaseLayer name="Open Street Map">
-        <TileLayer
-          url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        />
-      </LayersControl.BaseLayer>
-      <LayersControl.BaseLayer name="Stadia Alidade Smooth Dark">
-        <TileLayer
-          url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
-        />
-      </LayersControl.BaseLayer>
+  const [sentinelIsSelected, setSentinelIsSelected] = useState<boolean>(true);
+  const [planetLabsIsSelected, setPlanetLabsIsSelected] =
+    useState<boolean>(false);
 
-      <LayersControl.Overlay name="Posición actual">
-        <LocationMarker />
-      </LayersControl.Overlay>
-    </LayersControl>
+  // Date handle
+
+  const today = new Date();
+  const [selectedDate, setSelectedDate] = useState(today);
+  const SentinelHubFormatedDate = format(selectedDate, "yyyy-MM-dd");
+
+  const [SentinelHubReloadTrigger, setSentinelHubReloadTrigger] = useState(0);
+  //const [PlanetLabsReloadTrigger, setPlanetLabsReloadTrigger] = useState(0);
+
+  const handleDateChange = (date: any) => {
+    setSelectedDate(date);
+    setSentinelHubReloadTrigger((prevCount) => prevCount + 1);
+  };
+
+  // Date selector
+
+  const [anchorDateEl, setAnchorDateEl] = useState(null);
+  const openDateSelector = Boolean(anchorDateEl);
+  const handleOpenDateSelector = (event: any) => {
+    setAnchorDateEl(event.currentTarget);
+  };
+  const handleCloseDateSelector = () => {
+    setAnchorDateEl(null);
+  };
+
+  // Sentinel Hub acquisition date
+
+  const [showAcquisitionDates, setShowAcquisitionDates] =
+    useState<boolean>(false);
+
+  const showDate = showAcquisitionDates ? ",DATE" : "";
+
+  const handleShowDatesChange = () => {
+    setShowAcquisitionDates((prev) => !prev);
+    setSentinelHubReloadTrigger((prevCount) => prevCount + 1);
+  };
+
+  // Planet Labs
+
+  const PlanetLabsFormatedDate = format(selectedDate, "yyyy_MM");
+
+  const handlePlanetLabsSelect = () => {
+    setPlanetLabsIsSelected(true);
+    if (
+      selectedDate.getMonth() === today.getMonth() &&
+      selectedDate.getFullYear() === today.getFullYear()
+    ) {
+      let newDate = sub(selectedDate, { months: 1 });
+      setSelectedDate(newDate);
+    }
+  };
+
+  return (
+    <Fragment>
+      <LayersControl position="topright">
+        <LayersControl.BaseLayer
+          checked={sentinelIsSelected}
+          name="Sentinel Hub - S2 L2A"
+        >
+          <WMSTileLayer
+            key={SentinelHubReloadTrigger}
+            url={SENTINEL_HUB_BASE_URL}
+            tileSize={512}
+            attribution='&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>'
+            urlProcessingApi={SENTINEL_HUB_API_URL}
+            maxcc={3}
+            minZoom={7}
+            maxZoom={16}
+            preset="TRUE-COLOR-S2L2A"
+            layers={`TRUE-COLOR-S2L2A${showDate}`}
+            time={SentinelHubFormatedDate}
+            eventHandlers={{
+              add: () => {
+                setSentinelIsSelected(true);
+              },
+              remove: () => {
+                setSentinelIsSelected(false);
+              },
+            }}
+          />
+        </LayersControl.BaseLayer>
+
+        <LayersControl.BaseLayer name="Planet Labs PB - Global monthly maps">
+          <TileLayer
+            //key={PlanetLabsReloadTrigger}
+            url={`https://tiles.planet.com/basemaps/v1/planet-tiles/global_monthly_${PlanetLabsFormatedDate}_mosaic/gmap/{z}/{x}/{y}.png?api_key=${PLANET_LABS_API_KEY}`}
+            attribution='&copy; <a href="https://www.planet.com/">Planet Labs PBC</a> &mdash; Global monthly mosaic Basemaps'
+            eventHandlers={{
+              add: () => {
+                handlePlanetLabsSelect();
+              },
+              remove: () => {
+                setPlanetLabsIsSelected(false);
+              },
+            }}
+          />
+        </LayersControl.BaseLayer>
+
+        <LayersControl.BaseLayer name="Esri - WorldImagery">
+          <TileLayer
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+            maxZoom={17}
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Open Topo Map">
+          <TileLayer
+            url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+            attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) &copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            maxZoom={15}
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Open Street Map">
+          <TileLayer
+            url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Stadia Alidade Smooth Dark">
+          <TileLayer
+            url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+          />
+        </LayersControl.BaseLayer>
+
+        <LayersControl.Overlay name="Posición actual">
+          <LocationMarker />
+        </LayersControl.Overlay>
+      </LayersControl>
+
+      <Fragment>
+        <div className={"leaflet-bottom leaflet-left"} id="time-controller">
+          <div className="leaflet-control leaflet-bar">
+            {sentinelIsSelected || planetLabsIsSelected ? (
+              <Box
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Button
+                  variant="contained"
+                  onClick={handleOpenDateSelector}
+                  endIcon={<TodayIcon />}
+                  color="inherit"
+                  sx={{ color: "black" }}
+                >
+                  {sentinelIsSelected
+                    ? format(selectedDate, "dd/MM/yyyy")
+                    : format(selectedDate, "MMMM yyyy", {
+                        locale: es,
+                      })}
+                </Button>
+                {sentinelIsSelected ? (
+                  <Switch
+                    checked={showAcquisitionDates}
+                    onClick={handleShowDatesChange}
+                  />
+                ) : null}
+              </Box>
+            ) : null}
+          </div>
+        </div>
+        <Menu
+          id="date-menu"
+          anchorEl={anchorDateEl}
+          open={openDateSelector}
+          onClose={handleCloseDateSelector}
+          MenuListProps={{ "aria-labelledby": "basic-button" }}
+        >
+          <DateCalendar
+            showDaysOutsideCurrentMonth
+            views={
+              planetLabsIsSelected
+                ? ["month", "year"]
+                : ["year", "month", "day"]
+            }
+            value={dayjs(selectedDate)}
+            minDate={dayjs("2017-04-01")}
+            maxDate={
+              sentinelIsSelected
+                ? dayjs(today)
+                : dayjs(sub(today, { months: 1 }))
+            }
+            onChange={(newValue: any) => {
+              handleDateChange(new Date(newValue));
+              handleCloseDateSelector();
+            }}
+          />
+        </Menu>
+      </Fragment>
+    </Fragment>
   );
 }
 

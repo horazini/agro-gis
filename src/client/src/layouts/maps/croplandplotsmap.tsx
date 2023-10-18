@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   MapContainer,
   Popup,
@@ -17,7 +17,6 @@ import {
   postCrop,
   speciesMainData,
 } from "../../services/services";
-import { Feature } from "geojson";
 
 import {
   position,
@@ -26,17 +25,18 @@ import {
 } from "../../components/mapcomponents";
 import {
   FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  FormHelperText,
   Card,
   Box,
+  Autocomplete,
+  TextField,
+  Button,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import { ConfirmButton } from "../../components/customComponents";
 import { useNavigate } from "react-router";
 import PageTitle from "../../components/title";
+import { LatLngExpression } from "leaflet";
+import L from "leaflet";
 
 interface ICrop {
   landplot: number;
@@ -73,21 +73,6 @@ const LandplotsAndCrops = () => {
 
   // Manejo de alta de cultivo: parcela, especie y fecha inicial
 
-  const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
-
-  function handleLandplotChange(cropId: number) {
-    setCrop((prevCrop) => ({
-      ...prevCrop,
-      landplot: cropId,
-    }));
-    const found: Feature = geoData.features.find(
-      (feature: { properties: { landplot: { id: number } } }) =>
-        feature.properties.landplot.id === cropId
-    );
-    setSelectedFeature(found);
-    setLandplotError(false);
-  }
-
   const [crop, setCrop] = useState<ICrop>({
     landplot: 0,
     species: 0,
@@ -95,9 +80,56 @@ const LandplotsAndCrops = () => {
     date: "",
   });
 
-  const handleFormChange = (e: { target: { name: string; value: string } }) => {
-    setCrop({ ...crop, [e.target.name]: e.target.value });
-  };
+  const mapRef = useRef<any>();
+
+  useEffect(() => {
+    if (
+      mapRef === null ||
+      selectedFeature === null ||
+      selectedFeature === undefined
+    ) {
+      return;
+    }
+    const { properties, geometry } = selectedFeature;
+
+    let coords: LatLngExpression = position;
+    let zoom = 13;
+
+    if (geometry.type === "Polygon") {
+      const coordinates = geometry.coordinates[0].map(([lng, lat]: any) => [
+        lat,
+        lng,
+      ]);
+
+      const p = L.polygon(coordinates).addTo(mapRef.current);
+      const bounds = p.getBounds();
+      coords = bounds.getCenter();
+      zoom = mapRef.current.getBoundsZoom(bounds);
+      p.remove();
+    } else if (
+      geometry.type === "Point" &&
+      properties.landplot.subType === "Circle"
+    ) {
+      coords = geometry.coordinates as LatLngExpression;
+
+      const radius = properties.landplot.radius as number;
+
+      const c = L.circle(geometry.coordinates, { radius }).addTo(
+        mapRef.current
+      );
+      const bounds = c.getBounds();
+      zoom = mapRef.current.getBoundsZoom(bounds);
+      c.remove();
+    }
+    mapRef.current.flyTo(coords, zoom);
+  }, [crop.landplot]);
+
+  const selectedFeature = geoData
+    ? geoData.features.find(
+        (feature: { properties: { landplot: { id: number } } }) =>
+          feature.properties.landplot.id === crop.landplot
+      )
+    : null;
 
   const [isDateValid, setIsDateValid] = useState<boolean>(false);
 
@@ -131,9 +163,7 @@ const LandplotsAndCrops = () => {
     };
 
     const isHighlighted = highlightedLayerId === properties.landplot.id;
-    const isSelected =
-      (selectedFeature?.properties?.landplot.id ?? null) ===
-      properties.landplot.id;
+    const isSelected = crop.landplot === properties.landplot.id;
     const isOccupied = properties.crop && properties.crop?.finish_date === null;
 
     const pathOptions = {
@@ -148,7 +178,11 @@ const LandplotsAndCrops = () => {
     };
 
     const eventHandlers = {
-      click: () => handleLandplotChange(properties.landplot.id),
+      click: () =>
+        setCrop((prevCrop) => ({
+          ...prevCrop,
+          landplot: properties.landplot.id,
+        })),
       mouseover: () => handleLayerMouseOver(properties.landplot.id),
       mouseout: handleLayerMouseOut,
     };
@@ -199,8 +233,6 @@ const LandplotsAndCrops = () => {
 
   // Confirmar datos
 
-  const [landplotError, setLandplotError] = useState(false);
-
   const handleSubmitForm: () => Promise<number> = async () => {
     try {
       const res = await postCrop(crop);
@@ -221,7 +253,7 @@ const LandplotsAndCrops = () => {
       }}
     >
       <h1>Parcelas y cultivos</h1>
-      <MapContainer center={position} zoom={7}>
+      <MapContainer center={position} zoom={7} ref={mapRef}>
         <LayerControler />
         <LayerGroup>
           {geoData &&
@@ -253,53 +285,57 @@ const LandplotsAndCrops = () => {
         <Box ml={2} mb={2} mr={2}>
           <h2>Alta de cultivos</h2>
           <Box style={{ display: "flex", justifyContent: "space-between" }}>
-            <FormControl
-              variant="filled"
-              sx={{ m: 1, minWidth: 220 }}
-              error={landplotError}
-            >
-              <InputLabel>Parcela</InputLabel>
-              <Select
-                label="Landplot"
-                name="landplot"
-                value={crop.landplot.toString()}
-                onChange={(e) => handleLandplotChange(Number(e.target.value))}
-              >
-                <MenuItem value="0" disabled>
-                  Seleccione una parcela
-                </MenuItem>
-                {geoData &&
-                  geoData.features.map((feature: any) => (
-                    <MenuItem
-                      key={feature.properties.landplot.id}
-                      value={feature.properties.landplot.id}
-                    >
-                      Parcela {feature.properties.landplot.id + " "}{" "}
-                      {feature.properties.landplot.description}
-                    </MenuItem>
-                  ))}
-              </Select>
-              <FormHelperText>
-                {landplotError ? "Parcela actualmente ocupada" : ""}
-              </FormHelperText>
+            <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
+              {geoData ? (
+                <Autocomplete
+                  id="landplot-autocomplete"
+                  options={geoData.features}
+                  getOptionLabel={(option: any) =>
+                    "Parcela " +
+                    option.properties.landplot.id +
+                    (option.properties.landplot.description
+                      ? " - " + option.properties.landplot.description
+                      : "")
+                  }
+                  value={
+                    geoData.features.find(
+                      (feature: any) =>
+                        feature.properties.landplot.id === crop.landplot
+                    ) || null
+                  }
+                  onChange={(_, newValue) =>
+                    setCrop((prevCrop) => ({
+                      ...prevCrop,
+                      landplot: newValue?.properties.landplot.id || 0,
+                    }))
+                  }
+                  renderInput={(params) => (
+                    <TextField {...params} label="Parcela" />
+                  )}
+                />
+              ) : null}
             </FormControl>
             <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
-              <InputLabel>Especie</InputLabel>
-              <Select
-                label="Species"
-                name="species"
-                value={crop.species.toString()}
-                onChange={handleFormChange}
-              >
-                <MenuItem value="0" disabled>
-                  Seleccione una especie
-                </MenuItem>
-                {species.map((item) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {item.name}
-                  </MenuItem>
-                ))}
-              </Select>
+              {species ? (
+                <Autocomplete
+                  id="species-autocomplete"
+                  options={species}
+                  getOptionLabel={(option: any) => option.name}
+                  value={
+                    species.find((specie: any) => specie.id === crop.species) ||
+                    null
+                  }
+                  onChange={(_, newValue) =>
+                    setCrop((prevCrop) => ({
+                      ...prevCrop,
+                      species: newValue?.id || 0,
+                    }))
+                  }
+                  renderInput={(params) => (
+                    <TextField {...params} label="Especie" />
+                  )}
+                />
+              ) : null}
             </FormControl>
             <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
               <DatePicker

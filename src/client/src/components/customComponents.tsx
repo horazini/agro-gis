@@ -15,33 +15,20 @@ import {
 import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export type CancelFormProps = {
-  navigateDir: string;
-};
-
-export type ConfirmFormProps = {
-  msg: string;
-  onConfirm: () => Promise<number>;
-  navigateDir: string;
-  disabled: boolean;
-};
-
-export type DialogButtonProps = {
-  icon?: JSX.Element;
-  buttonText?: string;
+export type DialogComponentProps = {
+  component: JSX.Element;
   dialogTitle: string;
   dialogSubtitle: string;
   onConfirm: () => void;
 };
 
 // Opens a dialog component to confirm an action. Stays in the same page
-export const DialogButton = ({
-  icon,
-  buttonText,
+export const DialogComponent = ({
+  component,
   dialogTitle,
   dialogSubtitle,
   onConfirm,
-}: DialogButtonProps) => {
+}: DialogComponentProps) => {
   const [open, setOpen] = useState(false);
 
   const handleClickOpen = () => {
@@ -59,9 +46,7 @@ export const DialogButton = ({
 
   return (
     <Fragment>
-      <Button onClick={handleClickOpen}>
-        {icon} {buttonText}
-      </Button>
+      <span onClick={handleClickOpen}>{component}</span>
 
       <Dialog
         open={open}
@@ -86,6 +71,10 @@ export const DialogButton = ({
   );
 };
 
+export type CancelFormProps = {
+  navigateDir: string;
+};
+
 // Opens a dialog component to confirm the 'leave' of a form. Redirects to some other page
 export const CancelButton = ({ navigateDir }: CancelFormProps) => {
   const navigate = useNavigate();
@@ -107,7 +96,7 @@ export const CancelButton = ({ navigateDir }: CancelFormProps) => {
   return (
     <Fragment>
       <Button
-        variant="contained"
+        variant="outlined"
         color="primary"
         sx={{ mt: 3, ml: 1 }}
         onClick={handleCancelOpen}
@@ -216,6 +205,13 @@ export const ConfirmDialog = ({
       </Dialog>
     </Fragment>
   );
+};
+
+export type ConfirmFormProps = {
+  msg: string;
+  onConfirm: () => Promise<number>;
+  navigateDir: string;
+  disabled: boolean;
 };
 
 /**

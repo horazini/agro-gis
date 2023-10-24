@@ -26,12 +26,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import {
-  KeyboardDoubleArrowUp as DoubleUpIcon,
-  KeyboardArrowUp as UpIcon,
-  KeyboardArrowDown as DownIcon,
-  KeyboardDoubleArrowDown as DoubleDownIcon,
-} from "@mui/icons-material";
+import { Apps as AppsIcon } from "@mui/icons-material";
 
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import {
@@ -43,7 +38,7 @@ import {
 import {
   CancelButton,
   ConfirmButton,
-  DialogButton,
+  DialogComponent,
 } from "../../components/customComponents";
 import PageTitle from "../../components/title";
 
@@ -177,6 +172,12 @@ function SpeciesForm(): JSX.Element {
     return !(name && estimatedTime && estimatedTimeUnit);
   };
 
+  const disableStageClean = () => {
+    const { name, description, estimatedTime, estimatedTimeUnit } = stageData;
+
+    return !name && !description && !estimatedTime && !estimatedTimeUnit;
+  };
+
   const [stagesList, setStagesList] = useState<IStageData[]>([]);
 
   const [editingStageRowId, setEditingStageRowId] = useState<number | null>(
@@ -204,7 +205,6 @@ function SpeciesForm(): JSX.Element {
   };
 
   const handleDeleteStage = (index: number) => {
-    setSelectedStageIndex(null);
     if (isEditingForm) {
       const found = stagesList[index];
       if (found?.id) {
@@ -220,59 +220,61 @@ function SpeciesForm(): JSX.Element {
     clearAllFields();
   };
 
-  // Swap Rows
+  // Rearrange Rows
 
-  const [selectedStageIndex, setSelectedStageIndex] = useState<number | null>(
-    null
-  );
+  const [rearrangeRowsState, setRearrangeRowsState] = useState<{
+    transferOrigin: null | number;
+    transferTarget: null | number;
+  }>({
+    transferOrigin: null,
+    transferTarget: null,
+  });
 
-  const swapRows = (fromIndex: number, toIndex: number) => {
-    setStagesList(
-      stagesList.map((stage, index) =>
-        index === fromIndex
-          ? stagesList[toIndex]
-          : index === toIndex
-          ? stagesList[fromIndex]
-          : stage
-      )
+  const onDragStart = (e: any, index: number) => {
+    const rect = e.target.parentElement.parentElement.getBoundingClientRect(); // coords of the row in the screen
+    const xOffset = e.clientX - rect.x;
+    const yOffset = e.clientY - rect.y;
+
+    e.dataTransfer.setDragImage(
+      e.target.parentElement.parentElement,
+      xOffset,
+      yOffset
     );
+
+    setRearrangeRowsState({
+      ...rearrangeRowsState,
+      transferOrigin: index,
+    });
   };
 
-  const handleMoveUpClick = () => {
-    if (selectedStageIndex && selectedStageIndex > 0) {
-      swapRows(selectedStageIndex, selectedStageIndex - 1);
-      setSelectedStageIndex(selectedStageIndex - 1);
-    }
+  const onDragEnter = (e: any, index: number) => {
+    e.preventDefault();
+    setRearrangeRowsState({
+      ...rearrangeRowsState,
+      transferTarget: index,
+    });
   };
 
-  const handleMoveDownClick = () => {
-    if (
-      selectedStageIndex !== null &&
-      selectedStageIndex < stagesList.length - 1
-    ) {
-      swapRows(selectedStageIndex, selectedStageIndex + 1);
-      setSelectedStageIndex(selectedStageIndex + 1);
-    }
+  const onDragOver = (e: any) => {
+    e.preventDefault();
   };
 
-  const handleMoveTopClick = () => {
-    if (selectedStageIndex !== null && selectedStageIndex >= 0) {
-      const newStageslist = stagesList;
-      const element = newStageslist.splice(selectedStageIndex, 1)[0]; // Remove the element from the original position
-      newStageslist.unshift(element); // Add the element at the beginning
-      setStagesList(newStageslist);
-      setSelectedStageIndex(0);
-    }
-  };
+  const onDragEnd = (e: any) => {
+    e.preventDefault();
 
-  const handleMoveBottomClick = () => {
-    if (selectedStageIndex !== null && selectedStageIndex < stagesList.length) {
-      const newStageslist = stagesList;
-      const element = newStageslist.splice(selectedStageIndex, 1)[0]; // Remove the element from the original position
-      newStageslist.push(element); // Add the element at the end
-      setStagesList(newStageslist);
-      setSelectedStageIndex(stagesList.length - 1);
+    const { transferOrigin, transferTarget } = rearrangeRowsState;
+
+    if (transferOrigin === null || transferTarget === null) {
+      return;
     }
+
+    const updatedStagesList = [...stagesList]; // Copies stagesList so it doesnt modify directly the state
+    const movedStage = updatedStagesList[transferOrigin]; // Get element to move
+    updatedStagesList.splice(transferOrigin, 1); // Deletes element from original array
+    updatedStagesList.splice(transferTarget, 0, movedStage); // Inserts element in new position
+
+    setStagesList(updatedStagesList);
+    clearAllFields();
   };
 
   // Tareas
@@ -438,12 +440,6 @@ function SpeciesForm(): JSX.Element {
     }
   };
 
-  // ---
-
-  const handleOutsideClick = () => {
-    setSelectedStageIndex(null);
-  };
-
   const msg: string = isEditingForm
     ? "Se actualizará a la especie con todas sus fases y tareas."
     : "Se dará de alta a la especie con todas sus fases y tareas.";
@@ -459,7 +455,7 @@ function SpeciesForm(): JSX.Element {
         </Typography>
 
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <TextField
               required
               inputProps={{ maxLength: 100 }}
@@ -472,10 +468,8 @@ function SpeciesForm(): JSX.Element {
               onChange={handleSpeciesChange}
             />
           </Grid>
-        </Grid>
-        <br />
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
+          <br />
+          <Grid item xs={12}>
             <TextField
               inputProps={{ maxLength: 50 }}
               id="description"
@@ -495,7 +489,7 @@ function SpeciesForm(): JSX.Element {
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} style={{ padding: 10 }}>
               <Table>
                 <TableHead>
                   <TableRow>
@@ -503,46 +497,15 @@ function SpeciesForm(): JSX.Element {
                     <TableCell>Etapa</TableCell>
                     <TableCell>Descripción</TableCell>
                     <TableCell>Tiempo estimado</TableCell>
-                    <TableCell>Opciones</TableCell>
-                    <TableCell align="center">
-                      Mover fila seleccionada:
-                      <br />
-                      {[
-                        {
-                          icon: <DoubleUpIcon />,
-                          onClick: handleMoveTopClick,
-                        },
-
-                        { icon: <UpIcon />, onClick: handleMoveUpClick },
-                        {
-                          icon: <DownIcon />,
-                          onClick: handleMoveDownClick,
-                        },
-                        {
-                          icon: <DoubleDownIcon />,
-                          onClick: handleMoveBottomClick,
-                        },
-                      ].map((item, index) => {
-                        const { icon, onClick } = item;
-                        return (
-                          <IconButton
-                            disabled={selectedStageIndex === null}
-                            onClick={onClick}
-                            key={index}
-                          >
-                            {icon}
-                          </IconButton>
-                        );
-                      })}
-                    </TableCell>
+                    <TableCell align="center">Opciones</TableCell>
+                    <TableCell> </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {stagesList.map((row, index) => (
                     <TableRow
                       key={index}
-                      selected={index === selectedStageIndex}
-                      onClick={() => setSelectedStageIndex(index)}
+                      selected={index === editingStageRowId}
                     >
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{row.name}</TableCell>
@@ -555,12 +518,20 @@ function SpeciesForm(): JSX.Element {
                           )?.label
                         }
                       </TableCell>
-                      <TableCell>
-                        <Button onClick={() => handleEditStage(row, index)}>
-                          <EditIcon sx={{ mr: 1 }} />
-                        </Button>
-                        <DialogButton
-                          icon={<DeleteIcon sx={{ mr: 1 }} />}
+                      <TableCell align="center">
+                        <IconButton
+                          onClick={() => handleEditStage(row, index)}
+                          size="small"
+                        >
+                          <EditIcon color="primary" />
+                        </IconButton>
+
+                        <DialogComponent
+                          component={
+                            <IconButton size="small">
+                              <DeleteIcon color="primary" />
+                            </IconButton>
+                          }
                           dialogTitle={"¿Desea eliminar este elemento?"}
                           dialogSubtitle={
                             "Se eliminarán tambien sus tareas asignadas."
@@ -568,31 +539,57 @@ function SpeciesForm(): JSX.Element {
                           onConfirm={() => handleDeleteStage(index)}
                         />
                       </TableCell>
+                      <TableCell align="right" width={50}>
+                        <IconButton
+                          sx={{ cursor: "move" }}
+                          draggable={true}
+                          onDragStart={(e) => onDragStart(e, index)}
+                          onDragEnd={onDragEnd}
+                          onDragOver={onDragOver}
+                          onDragEnter={(e: any) => onDragEnter(e, index)}
+                          aria-label="expand row"
+                          size="small"
+                        >
+                          <AppsIcon />
+                        </IconButton>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
+            </TableContainer>
+          </Grid>
+        </Grid>
+
+        <br />
+        <Grid container>
+          <Grid item xs={12} component={Paper}>
+            <Box>
               <TextField
                 required
                 label="Nombre"
                 name="name"
                 value={stageData.name}
                 onChange={handleStageChange}
+                sx={{ margin: 1 }}
               />
+              <br />
               <TextField
                 label="Descripción"
                 name="description"
                 value={stageData.description}
                 onChange={handleStageChange}
+                sx={{ margin: 1 }}
               />
+              <br />
               <TextField
                 required
                 label="Tiempo estimado"
                 name="estimatedTime"
                 value={stageData.estimatedTime}
                 onChange={handleStageChange}
+                sx={{ margin: 1 }}
                 type="number"
-                fullWidth
                 onKeyPress={(event) => {
                   if (
                     event?.key === "-" ||
@@ -627,16 +624,36 @@ function SpeciesForm(): JSX.Element {
                   ),
                 }}
               />
-              <Button
-                type="submit"
-                onClick={handleStageSubmit}
-                disabled={disableStageSubmit()}
+              <Box
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
               >
-                {editingStageRowId !== null ? "Actualizar" : "Agregar"}
-              </Button>
-            </TableContainer>
+                <Button
+                  type="submit"
+                  color="error"
+                  sx={{ margin: 1 }}
+                  onClick={clearAllFields}
+                  disabled={disableStageClean()}
+                >
+                  {editingStageRowId !== null ? "Cancelar" : "Limpiar"}
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  sx={{ margin: 1 }}
+                  onClick={handleStageSubmit}
+                  disabled={disableStageSubmit()}
+                >
+                  {editingStageRowId !== null ? "Actualizar" : "Agregar"}
+                </Button>
+              </Box>
+            </Box>
           </Grid>
         </Grid>
+
         <br />
 
         <Typography variant="h6" gutterBottom>
@@ -645,7 +662,7 @@ function SpeciesForm(): JSX.Element {
 
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} style={{ padding: 10 }}>
               <Table>
                 <TableHead>
                   <TableRow>
@@ -653,7 +670,7 @@ function SpeciesForm(): JSX.Element {
                     <TableCell>Etapa</TableCell>
                     <TableCell>Tiempo desde inicio de etapa</TableCell>
                     <TableCell>Periodo de repetición</TableCell>
-                    <TableCell>Opciones</TableCell>
+                    <TableCell align="center">Opciones</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -707,7 +724,7 @@ function SpeciesForm(): JSX.Element {
                               ) : null}
                             </TableCell>
 
-                            <TableCell>
+                            <TableCell align="center">
                               <Button
                                 onClick={() =>
                                   handleEditEvent(event, [
@@ -718,8 +735,12 @@ function SpeciesForm(): JSX.Element {
                               >
                                 <EditIcon sx={{ mr: 1 }} />
                               </Button>
-                              <DialogButton
-                                icon={<DeleteIcon sx={{ mr: 1 }} />}
+                              <DialogComponent
+                                component={
+                                  <Button>
+                                    <DeleteIcon sx={{ mr: 1 }} />
+                                  </Button>
+                                }
                                 dialogTitle={"¿Desea eliminar este elemento?"}
                                 dialogSubtitle={
                                   "Se eliminará de la lista de tareas."
@@ -739,55 +760,69 @@ function SpeciesForm(): JSX.Element {
                   )}
                 </TableBody>
               </Table>
-              <Box>
-                <TextField
-                  required
-                  label="Nombre"
-                  name="name"
-                  value={growthEventData.name}
-                  onChange={handleEventChange}
-                />
-                <TextField
-                  label="Descripción"
-                  name="description"
-                  value={growthEventData.description}
-                  onChange={handleEventChange}
-                />
+            </TableContainer>
+          </Grid>
+        </Grid>
 
-                <FormControl
-                  required
-                  variant="filled"
-                  sx={{ m: 1, minWidth: 220 }}
+        <br />
+        <Grid container>
+          <Grid item xs={12} component={Paper}>
+            <Box>
+              <TextField
+                required
+                label="Nombre"
+                name="name"
+                sx={{ margin: 1 }}
+                value={growthEventData.name}
+                onChange={handleEventChange}
+              />
+              <TextField
+                label="Descripción"
+                name="description"
+                sx={{ margin: 1 }}
+                value={growthEventData.description}
+                onChange={handleEventChange}
+              />
+              <br />
+
+              <FormControl
+                required
+                variant="outlined"
+                sx={{ m: 1, minWidth: 220 }}
+              >
+                <InputLabel>Etapa</InputLabel>
+                <Select
+                  name="referenceStage"
+                  value={referenceStage}
+                  label="Etapa"
+                  onChange={(event) => setReferenceStage(event.target.value)}
                 >
-                  <InputLabel>Etapa</InputLabel>
-
-                  <Select
-                    name="referenceStage"
-                    value={referenceStage}
-                    onChange={(event) => setReferenceStage(event.target.value)}
-                    displayEmpty
-                    variant="standard"
-                  >
-                    {stagesList.length > 0 ? (
-                      stagesList.map((stage, index) => (
-                        <MenuItem key={index} value={index}>
-                          {stage.name}
-                        </MenuItem>
-                      ))
-                    ) : (
-                      <MenuItem disabled>{"Ingrese etapas"}</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-
+                  {stagesList.length > 0 ? (
+                    stagesList.map((stage, index) => (
+                      <MenuItem key={index} value={index}>
+                        {stage.name}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>{"Ingrese etapas"}</MenuItem>
+                  )}
+                </Select>
+              </FormControl>
+              <Box
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <TextField
                   required
                   label="Tiempo desde el inicio de la etapa"
                   name="ETFromStageStart"
+                  sx={{ m: 1, minWidth: 500 }}
                   value={growthEventData.ETFromStageStart}
                   onChange={handleEventChange}
                   type="number"
-                  fullWidth
                   error={timeFromStartError}
                   helperText={
                     timeFromStartError
@@ -827,10 +862,10 @@ function SpeciesForm(): JSX.Element {
                 <TextField
                   label="Periodo de repetición"
                   name="timePeriod"
+                  sx={{ m: 1, minWidth: 500 }}
                   value={growthEventData.timePeriod}
                   onChange={handleEventChange}
                   type="number"
-                  fullWidth
                   onKeyPress={(event) => {
                     if (
                       event?.key === "-" ||
@@ -869,17 +904,36 @@ function SpeciesForm(): JSX.Element {
                   }}
                 />
               </Box>
+            </Box>
+            <Box
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <Button
                 type="submit"
+                color="error"
+                sx={{ margin: 1 }}
+                onClick={clearAllFields}
+                //disabled={disableEventClean()}
+              >
+                {editingEventRowId !== null ? "Cancelar" : "Limpiar"}
+              </Button>
+
+              <Button
+                type="submit"
+                variant="contained"
+                sx={{ margin: 1 }}
                 onClick={handleEventValidation}
                 disabled={disableEventSubmit()}
               >
                 {editingEventRowId !== null ? "Actualizar" : "Agregar"}
               </Button>
-            </TableContainer>
+            </Box>
           </Grid>
         </Grid>
-
         <Box
           sx={{
             display: "flex",

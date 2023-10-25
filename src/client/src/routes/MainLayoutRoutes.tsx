@@ -8,11 +8,12 @@ import { RootState } from "../redux/store";
 import NoMatch from "../layouts/app/nomatch";
 
 import TenantList from "../layouts/tenants/tenantslist";
-import TenantForm from "../layouts/tenants/tenantform";
+import TenantForm from "../layouts/tenants/newtenantform/tenantform";
 import TenantDetails from "../layouts/tenants/tenantdetails";
 
-import TenantUsers from "../layouts/tenants/tenantusers";
+import TenantUsers from "../layouts/tenants/userlist";
 import UserDetails from "../layouts/tenants/userdetails";
+import UserForm from "../layouts/tenants/userform";
 
 import SpeciesList from "../layouts/species/specieslist";
 import SpeciesForm from "../layouts/species/speciesform";
@@ -50,9 +51,19 @@ const routeList = [
     allowed: [2, 3],
   },
   {
+    path: "/users/new",
+    element: <UserForm />,
+    allowed: [1, 2, 3],
+  },
+  {
     path: "/users/:id",
     element: <UserDetails />,
     allowed: [2, 3],
+  },
+  {
+    path: "/users/:id/edit",
+    element: <UserForm />,
+    allowed: [1, 2, 3],
   },
   {
     path: "/species/list",

@@ -34,10 +34,11 @@ router.put("/enabletenant/:id", enableTenant);
 import {
   getUsers,
   createUser,
+  updateUser,
   getUserTypes,
-  getTenantUserTypes,
   getUsersByTenant,
   usernameAlreadyExists,
+  renameUsernameAlreadyExists,
   getUserData,
   disableUser,
   enableUser,
@@ -45,10 +46,11 @@ import {
 
 router.get("/users", getUsers);
 router.post("/user", createUser);
+router.put("/user", updateUser);
 router.get("/usertypes", getUserTypes);
-router.get("/tenantusertypes", getTenantUserTypes);
 router.get("/tenantusers/:id", getUsersByTenant);
 router.post("/usernameexists", usernameAlreadyExists);
+router.post("/renameusernameexists", renameUsernameAlreadyExists);
 router.get("/userdata/:id", getUserData);
 router.put("/disableuser/:id", disableUser);
 router.put("/enableuser/:id", enableUser);

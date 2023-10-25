@@ -9,11 +9,12 @@ import {
   Typography,
 } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import {
   PersonOff as PersonOffIcon,
   HowToReg as HowToRegIcon,
+  Edit as EditIcon,
   FormatListBulleted,
   KeyboardArrowDown,
   KeyboardArrowUp,
@@ -90,6 +91,7 @@ const TenantHeader = (tenantInfo: any) => {
     }
   };
 
+  const navigate = useNavigate();
   return (
     <Fragment>
       <Box
@@ -101,27 +103,26 @@ const TenantHeader = (tenantInfo: any) => {
       >
         <h1>{name}</h1>
 
-        {deleted ? (
+        <Box>
           <Button
-            startIcon={<HowToRegIcon />}
+            startIcon={<EditIcon />}
             variant="contained"
-            color="success"
             sx={{ mr: 2 }}
-            onClick={handleClickOpenEnable}
+            onClick={() => navigate(`/`)}
           >
-            Habilitar
+            Editar
           </Button>
-        ) : (
+
           <Button
-            startIcon={<PersonOffIcon />}
+            startIcon={deleted ? <HowToRegIcon /> : <PersonOffIcon />}
             variant="contained"
-            color="error"
+            color={deleted ? "success" : "error"}
             sx={{ mr: 2 }}
-            onClick={handleClickOpenDisable}
+            onClick={deleted ? handleClickOpenEnable : handleClickOpenDisable}
           >
-            Inhabilitar
+            {deleted ? "Habilitar" : "Inhabilitar"}
           </Button>
-        )}
+        </Box>
       </Box>
 
       <Divider />
@@ -130,7 +131,7 @@ const TenantHeader = (tenantInfo: any) => {
         open={openDisable}
         handleClose={handleClose}
         msg={
-          "Se inhabilitara al cliente, impidiendo el acceso a todos sus usuarios."
+          "Se inhabilitará al cliente, impidiendo el acceso a todos sus usuarios."
         }
         navigateDir={"/tenants/list"}
         onConfirm={handleDisableTenant}
@@ -140,7 +141,7 @@ const TenantHeader = (tenantInfo: any) => {
         open={openEnable}
         handleClose={handleClose}
         msg={
-          "Se habilitara al cliente, devolviendo el acceso a todos sus usuarios."
+          "Se habilitará al cliente, devolviendo el acceso a todos sus usuarios."
         }
         navigateDir={"/tenants/list"}
         onConfirm={handleEnableTenant}

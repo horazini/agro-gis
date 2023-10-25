@@ -1,10 +1,11 @@
 import { Box, Button, Divider } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import {
   PersonOff as PersonOffIcon,
   HowToReg as HowToRegIcon,
+  Edit as EditIcon,
 } from "@mui/icons-material";
 
 import { disableUser, enableUser, getUserData } from "../../services/services";
@@ -92,6 +93,7 @@ const UserDetails = ({ userData }: any) => {
     }
   };
 
+  const navigate = useNavigate();
   return (
     <Fragment>
       <Box
@@ -105,29 +107,27 @@ const UserDetails = ({ userData }: any) => {
           {surname}, {names}
         </h1>
 
-        {deleted ? (
+        <Box>
           <Button
             disabled={id === userId}
-            startIcon={<HowToRegIcon />}
+            startIcon={<EditIcon />}
             variant="contained"
-            color="success"
             sx={{ mr: 2 }}
-            onClick={handleClickOpenEnable}
+            onClick={() => navigate(`/users/${id}/edit`)}
           >
-            Habilitar
+            Editar
           </Button>
-        ) : (
           <Button
             disabled={id === userId}
-            startIcon={<PersonOffIcon />}
+            startIcon={deleted ? <HowToRegIcon /> : <PersonOffIcon />}
             variant="contained"
-            color="error"
+            color={deleted ? "success" : "error"}
             sx={{ mr: 2 }}
-            onClick={handleClickOpenDisable}
+            onClick={deleted ? handleClickOpenEnable : handleClickOpenDisable}
           >
-            Inhabilitar
+            {deleted ? "Habilitar" : "Inhabilitar"}
           </Button>
-        )}
+        </Box>
       </Box>
 
       <Divider />

@@ -20,7 +20,8 @@ import {
 
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import React, { useState } from "react";
-import { usernameAlreadyExists } from "../../services/services";
+import { usernameAlreadyExists } from "../../../services/services";
+import { isValidEmail } from "../../../components/customComponents";
 
 export interface RowData {
   id: number;
@@ -32,7 +33,7 @@ export interface RowData {
 }
 
 export type SecondStepProps = {
-  usertypes: string[];
+  usertypes: { id: number; name: string }[];
   userList: RowData[];
   handleSubmitUser: (usersData: RowData, editingRowId: number | null) => void;
   handleDeleteUser: (id: number) => void;
@@ -100,11 +101,10 @@ const SecondStep = ({
 
   const handleValidation = async () => {
     // Regex's
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const usernameRegex = /^[a-z0-9._]+$/;
 
-    const isValidEmail = emailRegex.test(userData.mail_address);
-    setEmailError(!isValidEmail);
+    const isMailValid = isValidEmail(userData.mail_address);
+    setEmailError(!isMailValid);
 
     const isUsernameLengthValid = userData.username.length >= 6;
     const isUsernameRegexValid = usernameRegex.test(userData.username);
@@ -133,7 +133,7 @@ const SecondStep = ({
       setErrorMessage(usernameValidationErrors.duplicate);
     } else {
       setErrorMessage("");
-      if (isValidEmail) {
+      if (isMailValid) {
         handleSubmitForm();
       }
     }
@@ -179,77 +179,83 @@ const SecondStep = ({
                 ))}
               </TableBody>
             </Table>
-
-            <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
-              <InputLabel id="demo-simple-select-label">
-                Tipo de usuario
-              </InputLabel>
-              <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                label="Usertype"
-                name="usertype"
-                value={userData.usertype}
-                onChange={handleFormChange}
-              >
-                {usertypeslist.map((usertype) => (
-                  <MenuItem key={usertype} value={usertype}>
-                    {usertype}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              label="Apellido"
-              name="surname"
-              value={userData.surname}
-              onChange={handleFormChange}
-            />
-            <TextField
-              label="Nombres"
-              name="names"
-              value={userData.names}
-              onChange={handleFormChange}
-            />
-            <TextField
-              label="Email"
-              name="mail_address"
-              value={userData.mail_address}
-              onChange={handleFormChange}
-              error={emailError}
-              helperText={
-                emailError ? "El correo electrónico no es válido" : ""
-              }
-              onKeyDown={(e) => {
-                if (e.key === " ") {
-                  e.preventDefault();
-                }
-              }}
-            />
-            <TextField
-              label="Nombre de usuario"
-              name="username"
-              value={userData.username}
-              onChange={handleFormChange}
-              error={usernameError}
-              helperText={errorMessage}
-              onKeyDown={(e) => {
-                if (e.key === " ") {
-                  e.preventDefault();
-                }
-              }}
-            />
-            <Button
-              type="submit"
-              onClick={handleValidation}
-              disabled={disableSubmit()} // Habilita o deshabilita el botón según el resultado de la función
-            >
-              {editingRowId !== null ? "Actualizar" : "Agregar"}
-            </Button>
           </TableContainer>
         </Grid>
       </Grid>
 
+      <br />
+      <Grid container>
+        <Grid item xs={12} component={Paper}>
+          <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
+            <InputLabel id="demo-simple-select-label">
+              Tipo de usuario
+            </InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              label="Usertype"
+              name="usertype"
+              value={userData.usertype}
+              onChange={handleFormChange}
+            >
+              {usertypeslist.map((usertype) => (
+                <MenuItem key={usertype} value={usertype}>
+                  {usertype}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            label="Apellido"
+            name="surname"
+            sx={{ m: 1 }}
+            value={userData.surname}
+            onChange={handleFormChange}
+          />
+          <TextField
+            label="Nombres"
+            name="names"
+            sx={{ m: 1 }}
+            value={userData.names}
+            onChange={handleFormChange}
+          />
+          <TextField
+            label="Email"
+            name="mail_address"
+            sx={{ m: 1 }}
+            value={userData.mail_address}
+            onChange={handleFormChange}
+            error={emailError}
+            helperText={emailError ? "El correo electrónico no es válido" : ""}
+            onKeyDown={(e) => {
+              if (e.key === " ") {
+                e.preventDefault();
+              }
+            }}
+          />
+          <TextField
+            label="Nombre de usuario"
+            name="username"
+            sx={{ m: 1 }}
+            value={userData.username}
+            onChange={handleFormChange}
+            error={usernameError}
+            helperText={errorMessage}
+            onKeyDown={(e) => {
+              if (e.key === " ") {
+                e.preventDefault();
+              }
+            }}
+          />
+          <Button
+            type="submit"
+            onClick={handleValidation}
+            disabled={disableSubmit()} // Habilita o deshabilita el botón según el resultado de la función
+          >
+            {editingRowId !== null ? "Actualizar" : "Agregar"}
+          </Button>
+        </Grid>
+      </Grid>
       <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
         <Button sx={{ mt: 3, ml: 1 }} onClick={onBack}>
           Regresar

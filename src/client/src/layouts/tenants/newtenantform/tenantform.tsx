@@ -17,11 +17,12 @@ import ThirdStep from "./thirdstep";
 import { RowData } from "./secondstep";
 
 import {
-  getTenantUsertypes,
+  hashFunction,
   postTenantData,
   tenantDataType,
-} from "../../services/services";
-import PageTitle from "../../components/title";
+} from "../../../services/services";
+import PageTitle from "../../../components/title";
+import { tenantUserTypes } from "../../../components/customComponents";
 
 const MyForm = () => {
   PageTitle("Nuevo cliente");
@@ -50,19 +51,6 @@ const MyForm = () => {
     const { name, value } = event.target;
     setOrgData((prevState) => ({ ...prevState, [name]: value }));
   };
-
-  // Obtiene tipos de usuario desde la DB
-
-  const [usertypes, setUsertypes] = useState<any[]>([]);
-
-  const loadUserTypes = async () => {
-    const data = await getTenantUsertypes();
-    setUsertypes(data);
-  };
-
-  useEffect(() => {
-    loadUserTypes();
-  }, []);
 
   // Usuarios de la organizacion
 
@@ -94,7 +82,9 @@ const MyForm = () => {
     setUserList((prevRows) => prevRows.filter((row) => row.id !== id));
   };
 
-  const usertypeslist = Object.values(usertypes).map((item: any) => item.name);
+  const usertypeslist = Object.values(tenantUserTypes).map(
+    (item: any) => item.name
+  );
 
   const usersSummary: {
     usertype: string;
@@ -114,10 +104,11 @@ const MyForm = () => {
           name: orgData.tenantName,
         },
         users: userList.map((user: any) => {
-          const usertype = usertypes.find(
-            (type) => type.name === user.usertype
-          );
-          const password_hash = bcrypt.hashSync(user.username, 10);
+          const usertype =
+            tenantUserTypes.find((type) => type.name === user.usertype) ||
+            userList[0];
+
+          const password_hash = hashFunction(user.username);
 
           return {
             usertype_id: usertype?.id,
@@ -153,7 +144,7 @@ const MyForm = () => {
       case 1:
         return (
           <SecondStep
-            usertypes={usertypes}
+            usertypes={tenantUserTypes}
             userList={userList}
             handleSubmitUser={handleSubmitUser}
             handleDeleteUser={handleDeleteUser}

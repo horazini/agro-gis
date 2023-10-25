@@ -73,6 +73,32 @@ export const createUser = async (
   }
 };
 
+export const updateUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {
+      id,
+      tenant_id,
+      usertype_id,
+      mail_address,
+      username,
+      names,
+      surname,
+    } = req.body;
+    await pool.query(
+      "UPDATE user_account SET tenant_id = $1, usertype_id = $2, mail_address = $3, username = $4, names = $5, surname = $6 WHERE id = $7",
+      [tenant_id, usertype_id, mail_address, username, names, surname, id]
+    );
+
+    return res.status(201).send("User added");
+  } catch (e) {
+    next(e);
+  }
+};
+
 // Métodos de autenticación
 
 export async function verifyUserCredentials(
@@ -133,6 +159,29 @@ export const usernameAlreadyExists = async (
   }
 };
 
+export const renameUsernameAlreadyExists = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { username, currentUsernameId } = req.body;
+    const query: QueryResult = await pool.query(
+      "SELECT id FROM user_account WHERE username = $1",
+      [username]
+    );
+    let response = false;
+    query.rows.forEach((userId: any) => {
+      if (userId.id !== currentUsernameId) {
+        response = true;
+      }
+    });
+    return res.status(200).json(response);
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const login = async (
   req: { body: { username: any; password: any } },
   res: any
@@ -175,26 +224,6 @@ export const getUserTypes = async (
       "SELECT id, name FROM usertype"
     );
     return res.status(200).json(response.rows);
-  } catch (e) {
-    next(e);
-  }
-};
-
-// Obtener tipos de usuario sin el sysadmin
-
-export const getTenantUserTypes = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const response: QueryResult = await pool.query(
-      "SELECT id, name FROM usertype"
-    );
-
-    const filteredRows = response.rows.filter((row) => row.id > 1);
-
-    return res.status(200).json(filteredRows);
   } catch (e) {
     next(e);
   }

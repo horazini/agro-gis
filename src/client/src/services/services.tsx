@@ -1,6 +1,13 @@
 import { API } from "../config";
 import { format, parseISO } from "date-fns";
 import convert from "color-convert";
+import bcrypt from "bcryptjs";
+
+// Project hash function
+
+export function hashFunction(password: string) {
+  return bcrypt.hashSync(password, 10);
+}
 
 // Tenants
 
@@ -10,18 +17,22 @@ export type tenantMainData = {
   deleted: boolean;
 };
 
+export type userDataType = {
+  id?: number;
+  usertype_id: number;
+  mail_address: string;
+  username: string;
+  names: string;
+  surname: string;
+  password_hash: string;
+  deleted?: boolean;
+};
+
 export type tenantDataType = {
   tenant: {
     name: string;
   };
-  users: {
-    usertype_id: number;
-    mail_address: string;
-    username: string;
-    names: string;
-    surname: string;
-    password_hash: string;
-  }[];
+  users: userDataType[];
 };
 
 export const getTenants = async () => {
@@ -74,28 +85,55 @@ export type userType = {
   name: string;
 };
 
-export const getTenantUsertypes = async () => {
-  const response = await fetch(`${API}/tenantusertypes`);
-  const data: userType[] = await response.json();
-  return data;
-};
-
-export const usernameAlreadyExists = async (username: string) => {
-  const res = await fetch(`${API}/usernameexists`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ username }),
-  });
-  const bool = await res.json();
-  return bool;
+export const usernameAlreadyExists = async (
+  username: string,
+  currentUsernameId?: number
+) => {
+  if (currentUsernameId) {
+    const res = await fetch(`${API}/renameusernameexists`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, currentUsernameId }),
+    });
+    const bool = await res.json();
+    return bool;
+  } else {
+    const res = await fetch(`${API}/usernameexists`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username }),
+    });
+    const bool = await res.json();
+    return bool;
+  }
 };
 
 export const getUserData = async (id: string) => {
   const res = await fetch(`${API}/userdata/${id}`);
   const data = await res.json();
   return data;
+};
+
+export const postUser = async (userData: userDataType) => {
+  const res = await fetch(`${API}/user`, {
+    method: "POST",
+    body: JSON.stringify(userData),
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};
+
+export const putUser = async (userData: userDataType) => {
+  const res = await fetch(`${API}/user`, {
+    method: "PUT",
+    body: JSON.stringify(userData),
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
 };
 
 export const disableUser = async (userId: number) => {

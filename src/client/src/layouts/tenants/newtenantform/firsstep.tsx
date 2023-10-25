@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { isValidEmail } from "../../../components/customComponents";
 
 export type FirstStepProps = {
   orgData: {
@@ -43,10 +44,9 @@ const FirstStep = ({ orgData, handleInputChange, onNext }: FirstStepProps) => {
   const [emailError, setEmailError] = useState(false);
 
   const handleValidation = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isValidEmail = emailRegex.test(orgData.adminMailAddress);
+    const isMailValid = isValidEmail(orgData.adminMailAddress);
 
-    if (!isValidEmail) {
+    if (!isMailValid) {
       setEmailError(true);
       return;
     }

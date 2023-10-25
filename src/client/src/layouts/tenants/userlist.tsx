@@ -4,19 +4,11 @@ import {
   Card,
   CardContent,
   Chip,
-  Collapse,
-  IconButton,
   Typography,
 } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
+import { Add as AddIcon, FormatListBulleted } from "@mui/icons-material";
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import {
-  FormatListBulleted,
-  KeyboardArrowDown,
-  KeyboardArrowUp,
-} from "@mui/icons-material";
 
 import { getTenantUsers } from "../../services/services";
 import { UsertypeIDToString } from "../../components/customComponents";
@@ -68,8 +60,6 @@ const UserListLoad = () => {
 const UserList = (users: user[]) => {
   const navigate = useNavigate();
 
-  const [open, setOpen] = useState(-1);
-
   return (
     <Fragment>
       <Box
@@ -80,7 +70,7 @@ const UserList = (users: user[]) => {
         }}
       >
         <h1>Usuarios</h1>
-        <Button variant="outlined" onClick={() => navigate(`/`)}>
+        <Button variant="outlined" onClick={() => navigate(`/users/new`)}>
           <AddIcon sx={{ mr: 1 }} />
           Crear nuevo usuario
         </Button>
@@ -125,27 +115,8 @@ const UserList = (users: user[]) => {
                   >
                     Ver detalles
                   </Button>
-
-                  <IconButton
-                    aria-label="expand row"
-                    size="small"
-                    onClick={() => setOpen(open === user.id ? -1 : user.id)}
-                    style={{ marginLeft: ".5rem" }}
-                  >
-                    {open === user.id ? (
-                      <KeyboardArrowUp />
-                    ) : (
-                      <KeyboardArrowDown />
-                    )}
-                  </IconButton>
                 </Box>
               </CardContent>
-
-              <Collapse in={open === user.id} timeout="auto" unmountOnExit>
-                <CardContent>
-                  <Typography>Info</Typography>
-                </CardContent>
-              </Collapse>
             </Card>
           ))}
         </Fragment>

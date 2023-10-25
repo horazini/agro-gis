@@ -152,7 +152,7 @@ export const ConfirmDialog = ({
 
     setLoading(false);
     handleClose();
-    if (res === 200) {
+    if (200 <= res && res < 300) {
       setSuccess(true);
       setTimeout(() => {
         navigate(navigateDir);
@@ -208,6 +208,7 @@ export const ConfirmDialog = ({
 };
 
 export type ConfirmFormProps = {
+  handleValidation?: () => boolean | Promise<boolean>;
   msg: string;
   onConfirm: () => Promise<number>;
   navigateDir: string;
@@ -222,6 +223,7 @@ export type ConfirmFormProps = {
  * @param {boolean} disabled - boolean to set the button as disabled or not
  */
 export const ConfirmButton = ({
+  handleValidation,
   msg,
   onConfirm,
   navigateDir,
@@ -237,13 +239,27 @@ export const ConfirmButton = ({
     setOpen(false);
   };
 
+  const handleValidationTest = async () => {
+    if (handleValidation === undefined) {
+      return;
+    }
+    const res = await handleValidation();
+    if (res) {
+      handleClickOpen();
+    }
+  };
+
   return (
     <Fragment>
       <Button
         variant="contained"
         color="primary"
         sx={{ mt: 3, ml: 1 }}
-        onClick={handleClickOpen}
+        onClick={
+          handleValidation !== undefined
+            ? handleValidationTest
+            : handleClickOpen
+        }
         disabled={disabled}
       >
         Confirmar
@@ -346,18 +362,28 @@ export function TimeIntervalToReadableString(interval: {
   }
 }
 
-export function UsertypeIDToString(id: number): string {
-  const usertypeObjects = [
-    { key: 1, label: "Service admin" },
-    { key: 2, label: "Gerente administrativo" },
-    { key: 3, label: "Gerente agrónomo" },
-    { key: 4, label: "Especialista en suelos" },
-    { key: 5, label: "Botánico " },
-    { key: 6, label: "Agricultor" },
-  ];
+//  tipos de usuario sin el administrador
 
+export const tenantUserTypes = [
+  { id: 2, name: "Gerente administrativo" },
+  { id: 3, name: "Gerente agrónomo" },
+  { id: 4, name: "Especialista en suelos" },
+  { id: 5, name: "Botánico " },
+  { id: 6, name: "Agricultor" },
+];
+
+export const usertypeObjects = [
+  { id: 1, label: "Service admin" },
+  { id: 2, label: "Gerente administrativo" },
+  { id: 3, label: "Gerente agrónomo" },
+  { id: 4, label: "Especialista en suelos" },
+  { id: 5, label: "Botánico " },
+  { id: 6, label: "Agricultor" },
+];
+
+export function UsertypeIDToString(id: number): string {
   const usertypeString = usertypeObjects.find(
-    (usertypeObj) => usertypeObj.key === id
+    (usertypeObj) => usertypeObj.id === id
   )?.label;
 
   return usertypeString || "";
@@ -365,4 +391,9 @@ export function UsertypeIDToString(id: number): string {
 
 export function formatedDate(date: string) {
   return new Date(date).toLocaleDateString("en-GB");
+}
+
+export function isValidEmail(testString: string) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(testString);
 }

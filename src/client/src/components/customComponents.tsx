@@ -17,14 +17,16 @@ import { useNavigate } from "react-router-dom";
 
 export type DialogComponentProps = {
   component: JSX.Element;
+  disabled?: boolean;
   dialogTitle: string;
-  dialogSubtitle: string;
+  dialogSubtitle: string | JSX.Element;
   onConfirm: () => void;
 };
 
 // Opens a dialog component to confirm an action. Stays in the same page
 export const DialogComponent = ({
   component,
+  disabled,
   dialogTitle,
   dialogSubtitle,
   onConfirm,
@@ -32,7 +34,9 @@ export const DialogComponent = ({
   const [open, setOpen] = useState(false);
 
   const handleClickOpen = () => {
-    setOpen(true);
+    if (disabled !== true) {
+      setOpen(true);
+    }
   };
 
   const handleClose = () => {
@@ -56,9 +60,13 @@ export const DialogComponent = ({
       >
         <DialogTitle id="alert-dialog-title">{dialogTitle}</DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {dialogSubtitle}
-          </DialogContentText>
+          {typeof dialogSubtitle === "string" ? (
+            <DialogContentText id="alert-dialog-description">
+              {dialogSubtitle}
+            </DialogContentText>
+          ) : (
+            dialogSubtitle
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>

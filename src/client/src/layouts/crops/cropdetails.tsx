@@ -4,13 +4,12 @@ import "leaflet/dist/leaflet.css";
 import {
   getCropById,
   setDoneCropEvent,
+  setFinishedCrop,
   setFinishedCropStage,
 } from "../../services/services";
 import { Feature } from "geojson";
 
 import {
-  position,
-  LayerControler,
   FormattedArea,
   SentinelSnapshoter,
 } from "../../components/mapcomponents";
@@ -26,6 +25,7 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  Grid,
   IconButton,
   InputAdornment,
   Menu,
@@ -49,13 +49,16 @@ import {
 } from "@mui/icons-material";
 import {
   CircularProgressBackdrop,
+  DialogComponent,
   SnackBarAlert,
   TimeIntervalToReadableString,
   formatedDate,
 } from "../../components/customComponents";
 
 import { DateCalendar } from "@mui/x-date-pickers";
+import { format } from "date-fns";
 import PageTitle from "../../components/title";
+import dayjs from "dayjs";
 
 function sortedEvents(
   events: { due_date: string; done_date: string | undefined }[]
@@ -145,9 +148,12 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
         <h2>Cultivo:</h2>
         <p>Especie: {species.name}</p>
         {crop.description && <p>description: {crop.description}</p>}
-        <p>Fecha de plantación: {formatedDate(crop.start_date)}</p>
+        <p>Fecha de inicio: {formatedDate(crop.start_date)}</p>
         {crop.finish_date && (
-          <p>Fecha de cosecha: {formatedDate(crop.finish_date)}</p>
+          <>
+            <p>Fecha de finalización: {formatedDate(crop.finish_date)}</p>
+            <p>Peso total: {crop.weight_in_tons} toneladas</p>
+          </>
         )}
       </Box>
       <h3>Etapas de cultivo:</h3>
@@ -231,9 +237,38 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
           </TableBody>
         </Table>
       </TableContainer>
+      {stages[stages.length - 1].finish_date && !crop.finish_date ? (
+        <FinalHarvestReport
+          cropId={crop.id}
+          minDate={stages[stages.length - 1].finish_date}
+          setDataReloadCounter={setDataReloadCounter}
+        />
+      ) : null}
     </Box>
   );
 };
+
+//#region Snackbar
+
+type MySnackBarProps = {
+  open: boolean;
+  severity: AlertColor | undefined;
+  msg: string;
+};
+
+const eventSuccessSnackBar: MySnackBarProps = {
+  open: true,
+  severity: "success",
+  msg: "Tarea realizada!",
+};
+
+const errorSnackBar: MySnackBarProps = {
+  open: true,
+  severity: "error",
+  msg: "Algo ha fallado.",
+};
+
+//#endregion
 
 const StageInfo = ({ stage, setDataReloadCounter }: any) => {
   const { events, start_date, finish_date } = stage;
@@ -304,28 +339,11 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
 
   //#region Snackbar
 
-  type MySnackBarProps = {
-    open: boolean;
-    severity: AlertColor | undefined;
-    msg: string;
-  };
   const [snackBar, setSnackBar] = useState<MySnackBarProps>({
     open: false,
     severity: undefined,
     msg: "",
   });
-
-  const eventSuccessSnackBar: MySnackBarProps = {
-    open: true,
-    severity: "success",
-    msg: "Tarea realizada!",
-  };
-
-  const errorSnackBar: MySnackBarProps = {
-    open: true,
-    severity: "error",
-    msg: "Algo ha fallado.",
-  };
 
   const handleSnackbarClose = (
     event: React.SyntheticEvent | Event,
@@ -706,4 +724,209 @@ const PeriodicEvent = ({ event, handleOpenDateSelector, start_date }: any) => {
   );
 };
 
+const FinalHarvestReport = ({ cropId, minDate, setDataReloadCounter }: any) => {
+  const today = new Date();
+
+  const [formData, setFormData] = useState<any>({
+    date: null,
+    weight_in_tons: 0,
+  });
+
+  const [calendarAnchor, setCalendarAnchor] = useState<any>();
+  const openDateSelector = Boolean(calendarAnchor);
+
+  const handleOpenDateSelector = (event: any) => {
+    setCalendarAnchor(event.currentTarget);
+  };
+
+  const handleCloseDateSelector = () => {
+    setCalendarAnchor(null);
+  };
+
+  const [isDateValid, setIsDateValid] = useState<boolean>(false);
+
+  function handleDateChange(date: any) {
+    if (!Number.isNaN(new Date(date).getTime())) {
+      const dateObject = new Date(date);
+      setFormData((prevState: any) => ({
+        ...prevState,
+        date: dateObject,
+      }));
+      setIsDateValid(true);
+    } else {
+      setIsDateValid(false);
+    }
+    handleCloseDateSelector();
+  }
+
+  // submit data
+
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmitData = async () => {
+    setLoading(true);
+    try {
+      const isoDate = formData.date.toISOString();
+      const sentData = {
+        date: isoDate,
+        weight_in_tons: formData.weight_in_tons,
+      };
+
+      let res = await setFinishedCrop(sentData, cropId);
+
+      if (res === 200) {
+        setDataReloadCounter((prevCounter: number) => prevCounter + 1);
+        setSnackBar(eventSuccessSnackBar);
+      } else {
+        setSnackBar(errorSnackBar);
+      }
+    } catch (error) {
+      console.log(error);
+      setSnackBar(errorSnackBar);
+    }
+    setLoading(false);
+    handleCloseDateSelector();
+  };
+
+  const [snackBar, setSnackBar] = useState<MySnackBarProps>({
+    open: false,
+    severity: undefined,
+    msg: "",
+  });
+
+  const handleSnackbarClose = (
+    event: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackBar((prevObject) => ({
+      ...prevObject,
+      open: false,
+    }));
+  };
+
+  return (
+    <Box>
+      <h2>Reporte final de cosecha:</h2>
+      <Paper
+        variant="outlined"
+        component={Paper}
+        sx={{ mt: 3, p: { xs: 2, md: 3 } }}
+      >
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <Box display={"flex"} alignItems="center" sx={{ m: 1 }}>
+              <Typography mt={2} mr={1}>
+                {"Fecha de finalización: "}
+              </Typography>
+
+              <TextField
+                sx={{ input: { cursor: "pointer" } }}
+                variant="standard"
+                label={true ? "Fecha de finalización" : null}
+                value={formData.date ? format(formData.date, "dd/MM/yyyy") : ""}
+                onClick={(e) => handleOpenDateSelector(e)}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="start">
+                      <TodayIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
+
+            <Box display={"flex"} alignItems="center" sx={{ m: 1 }}>
+              <Typography>{"Peso final en toneladas: "}</Typography>{" "}
+              <TextField
+                required
+                name="weight_in_tons"
+                value={formData.weight_in_tons}
+                onChange={(e) =>
+                  setFormData((prevState: any) => ({
+                    ...prevState,
+                    weight_in_tons: e.target.value,
+                  }))
+                }
+                variant="standard"
+                sx={{ margin: 1 }}
+                type="number"
+                onKeyPress={(event) => {
+                  if (
+                    event?.key === "-" ||
+                    event?.key === "+" ||
+                    event?.key === "." ||
+                    event?.key === "e"
+                  ) {
+                    event.preventDefault();
+                  }
+                }}
+                InputProps={{
+                  inputProps: { min: 0 },
+                }}
+              />
+            </Box>
+
+            <Menu
+              id="date-menu"
+              anchorEl={calendarAnchor}
+              open={openDateSelector}
+              onClose={() => handleCloseDateSelector()}
+              MenuListProps={{
+                "aria-labelledby": "basic-button",
+              }}
+            >
+              <DateCalendar
+                showDaysOutsideCurrentMonth
+                value={formData.date ? dayjs(formData.date) : dayjs(today)}
+                minDate={dayjs(minDate)}
+                onChange={(newValue: any, selectionState: any) => {
+                  if (selectionState === "finish") {
+                    handleDateChange(newValue);
+                  }
+                }}
+              />
+            </Menu>
+          </Grid>
+        </Grid>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          <DialogComponent
+            component={
+              <Button variant="contained" disabled={!isDateValid}>
+                Confirmar
+              </Button>
+            }
+            disabled={!isDateValid}
+            dialogTitle={"¿Desea confirmar los siguientes datos?"}
+            dialogSubtitle={
+              <div>
+                <p>
+                  Fecha de finalización:{" "}
+                  {formData.date ? format(formData.date, "dd/MM/yyyy") : ""}
+                </p>
+                <p>Peso final: {formData.weight_in_tons} toneladas </p>
+              </div>
+            }
+            onConfirm={() => handleSubmitData()}
+          />
+        </Box>
+      </Paper>
+      <CircularProgressBackdrop loading={loading} />
+      <SnackBarAlert
+        handleSnackbarClose={handleSnackbarClose}
+        msg={snackBar.msg}
+        open={snackBar.open}
+        severity={snackBar.severity}
+      />
+    </Box>
+  );
+};
 export default CropDetails;

@@ -297,6 +297,17 @@ export const setFinishedCropStage = async (
   return res.status;
 };
 
+export const setFinishedCrop = async (cropData: any, cropId: number) => {
+  console.log(cropData);
+  console.log(cropId);
+  const res = await fetch(`${API}/donecrop/${cropId}`, {
+    method: "PUT",
+    body: JSON.stringify(cropData),
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};
+
 export const getCropTasks = async (id: number) => {
   const response = await fetch(`${API}/croptasks/${id}`);
   const data = await response.json();

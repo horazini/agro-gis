@@ -524,6 +524,36 @@ export const setFinishedCropStage = async (
   }
 };
 
+export const setFinishedCrop = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const crop_id = parseInt(req.params.id);
+    const { date, weight_in_tons } = req.body;
+
+    await client.query(
+      `
+      UPDATE crop SET finish_date = $1, weight_in_tons = $2 WHERE id = $3
+      `,
+      [date, weight_in_tons, crop_id]
+    );
+
+    await client.query("COMMIT");
+
+    return res.sendStatus(200);
+  } catch (e) {
+    console.log(e);
+    await client.query("ROLLBACK");
+    next(e);
+  } finally {
+    client.release();
+  }
+};
+
 export const getTenantCropData = async (
   req: Request,
   res: Response,

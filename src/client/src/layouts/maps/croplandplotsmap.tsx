@@ -289,7 +289,10 @@ const LandplotsAndCrops = () => {
               {geoData ? (
                 <Autocomplete
                   id="landplot-autocomplete"
-                  options={geoData.features}
+                  options={geoData.features.sort(
+                    (a: any, b: any) =>
+                      a.properties.landplot.id - b.properties.landplot.id
+                  )}
                   getOptionLabel={(option: any) =>
                     "Parcela " +
                     option.properties.landplot.id +

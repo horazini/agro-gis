@@ -134,7 +134,7 @@ const routeList = [
     text: "Usuarios",
     icon: <GroupsIcon />,
     to: "/users",
-    allowed: [3],
+    allowed: [2, 3],
   },
 
   {

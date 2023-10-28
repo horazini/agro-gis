@@ -29,7 +29,7 @@ interface user {
 
 const UserLoader = () => {
   const params = useParams();
-  PageTitle("Cliente");
+  PageTitle("Usuario");
 
   const [userData, setUserData] = useState<user>();
 

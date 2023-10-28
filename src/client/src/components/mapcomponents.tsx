@@ -296,7 +296,7 @@ export function LayerControler(): JSX.Element {
           <TileLayer
             //key={PlanetLabsReloadTrigger}
             url={`https://tiles.planet.com/basemaps/v1/planet-tiles/global_monthly_${PlanetLabsFormatedDate}_mosaic/gmap/{z}/{x}/{y}.png?api_key=${PLANET_LABS_API_KEY}`}
-            attribution='&copy; <a href="https://www.planet.com/">Planet Labs PBC</a> &mdash; Global monthly mosaic Basemaps'
+            attribution='&copy; <a href="https://www.planet.com/">Planet Labs PBC</a> &mdash; Global monthly Basemaps'
             eventHandlers={{
               add: () => {
                 handlePlanetLabsSelect();

@@ -107,10 +107,6 @@ function MonthModeView(props: any) {
 
   // Cell and tasks behavior
 
-  const onCellDragOver = (e: any) => {
-    e.preventDefault();
-  };
-
   const onCellDragStart = (item: any, rowIndex: number) => {
     setState({
       ...state,
@@ -124,6 +120,10 @@ function MonthModeView(props: any) {
       ...state,
       transfertTarget: { elementId, rowIndex },
     });
+  };
+
+  const onCellDragOver = (e: any) => {
+    e.preventDefault();
   };
 
   const onCellDragEnd = (e: any) => {

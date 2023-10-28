@@ -564,6 +564,9 @@ function SpeciesForm(): JSX.Element {
         <br />
         <Grid container>
           <Grid item xs={12} component={Paper}>
+            <Typography variant="h6" sx={{ margin: 1 }}>
+              {editingStageRowId !== null ? "Editar etapa" : "Agregar etapa"}
+            </Typography>{" "}
             <Box>
               <TextField
                 required
@@ -767,6 +770,9 @@ function SpeciesForm(): JSX.Element {
         <br />
         <Grid container>
           <Grid item xs={12} component={Paper}>
+            <Typography variant="h6" sx={{ margin: 1 }}>
+              {editingEventRowId !== null ? "Editar tarea" : "Agregar tarea"}
+            </Typography>{" "}
             <Box>
               <TextField
                 required

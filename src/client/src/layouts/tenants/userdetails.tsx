@@ -8,14 +8,11 @@ import {
   Edit as EditIcon,
 } from "@mui/icons-material";
 
-import { disableUser, enableUser, getUserData } from "../../services/services";
-import {
-  ConfirmDialog,
-  UsertypeIDToString,
-} from "../../components/customComponents";
-import PageTitle from "../../components/title";
+import { disableUser, enableUser, getUserData } from "../../utils/services";
+import { ConfirmDialog, PageTitle } from "../../components/customComponents";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { UsertypeIDToString } from "../../utils/functions";
 
 interface user {
   id: number;

@@ -10,11 +10,11 @@ import { Add as AddIcon, FormatListBulleted } from "@mui/icons-material";
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getTenantUsers } from "../../services/services";
-import { UsertypeIDToString } from "../../components/customComponents";
-import PageTitle from "../../components/title";
+import { getTenantUsers } from "../../utils/services";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { PageTitle } from "../../components/customComponents";
+import { UsertypeIDToString } from "../../utils/functions";
 
 interface user {
   id: number;

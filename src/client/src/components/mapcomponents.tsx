@@ -32,7 +32,7 @@ import {
 } from "../config";
 
 import { SimpleMapScreenshoter } from "leaflet-simple-map-screenshoter";
-import { postLandplotSnapshot } from "../services/services";
+import { postLandplotSnapshot } from "../utils/services";
 
 export const position: LatLngExpression = [-29, -58];
 

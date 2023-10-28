@@ -1,5 +1,5 @@
 import { Container, Grid, Paper } from "@mui/material";
-import PageTitle from "../../components/title";
+import { PageTitle } from "../../components/customComponents";
 
 const Home = () => {
   PageTitle("Inicio");

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 
-import { getGeoData } from "../../services/services";
+import { getGeoData } from "../../utils/services";
 import { Feature } from "geojson";
 
 import {
@@ -11,15 +11,15 @@ import {
 import { Box, Card } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { FormatListBulleted } from "@mui/icons-material";
-import { formatedDate } from "../../components/customComponents";
 
-import PageTitle from "../../components/title";
 import { DataGrid } from "@mui/x-data-grid/DataGrid";
 import {
   GridColDef,
   GridRenderCellParams,
   GridValueFormatterParams,
 } from "@mui/x-data-grid";
+import { PageTitle } from "../../components/customComponents";
+import { formatedDate } from "../../utils/functions";
 
 const CropDetails = () => {
   const params = useParams();

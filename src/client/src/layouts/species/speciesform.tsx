@@ -34,13 +34,13 @@ import {
   postSpeciesData,
   putSpeciesData,
   speciesDataType,
-} from "../../services/services";
+} from "../../utils/services";
 import {
   CancelButton,
   ConfirmButton,
   DialogComponent,
+  PageTitle,
 } from "../../components/customComponents";
-import PageTitle from "../../components/title";
 
 interface ISpeciesData {
   id: number | null;

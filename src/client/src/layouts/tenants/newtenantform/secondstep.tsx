@@ -20,8 +20,8 @@ import {
 
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import React, { useState } from "react";
-import { usernameAlreadyExists } from "../../../services/services";
-import { isValidEmail } from "../../../components/customComponents";
+import { usernameAlreadyExists } from "../../../utils/services";
+import { isValidEmail } from "../../../utils/functions";
 
 export interface RowData {
   id: number;

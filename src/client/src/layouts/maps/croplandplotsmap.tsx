@@ -16,7 +16,7 @@ import {
   getTenantSpecies,
   postCrop,
   speciesMainData,
-} from "../../services/services";
+} from "../../utils/services";
 
 import {
   position,
@@ -32,9 +32,8 @@ import {
   Button,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
-import { ConfirmButton } from "../../components/customComponents";
+import { ConfirmButton, PageTitle } from "../../components/customComponents";
 import { useNavigate } from "react-router";
-import PageTitle from "../../components/title";
 import { LatLngExpression } from "leaflet";
 import L from "leaflet";
 

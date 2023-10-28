@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { isValidEmail } from "../../../components/customComponents";
+import { isValidEmail } from "../../../utils/functions";
 
 export type FirstStepProps = {
   orgData: {

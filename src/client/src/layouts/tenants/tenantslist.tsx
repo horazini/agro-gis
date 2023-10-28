@@ -18,8 +18,8 @@ import {
   AddBusiness,
 } from "@mui/icons-material/";
 
-import { tenantMainData, getTenants } from "../../services/services";
-import PageTitle from "../../components/title";
+import { tenantMainData, getTenants } from "../../utils/services";
+import { PageTitle } from "../../components/customComponents";
 
 function TenantsList() {
   PageTitle("Clientes");

@@ -20,9 +20,9 @@ import {
   hashFunction,
   postTenantData,
   tenantDataType,
-} from "../../../services/services";
-import PageTitle from "../../../components/title";
-import { tenantUserTypes } from "../../../components/customComponents";
+} from "../../../utils/services";
+import { PageTitle } from "../../../components/customComponents";
+import { tenantUserTypes } from "../../../utils/functions";
 
 const MyForm = () => {
   PageTitle("Nuevo cliente");

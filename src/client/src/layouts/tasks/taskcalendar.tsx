@@ -28,18 +28,18 @@ import {
 import SchedulerToolbar from "./toolbar";
 import MonthModeView from "./monthview";
 import TimeLineModeView from "./timelineview";
-import PageTitle from "../../components/title";
 import { useNavigate } from "react-router-dom";
 import {
   getAllTenantTasksStructuredForCalendar,
   setDoneCropEvent,
   setFinishedCropStage,
-} from "../../services/services";
+} from "../../utils/services";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { DateCalendar } from "@mui/x-date-pickers";
 import {
   CircularProgressBackdrop,
+  PageTitle,
   SnackBarAlert,
 } from "../../components/customComponents";
 

@@ -14,11 +14,15 @@ import { LayerControler, position } from "../../components/mapcomponents";
 import {
   getAvailableAndOccupiedTenantGeo,
   putFeatures,
-} from "../../services/services";
+} from "../../utils/services";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { LatLngExpression } from "leaflet";
-import { CancelButton, ConfirmButton } from "../../components/customComponents";
+import {
+  CancelButton,
+  ConfirmButton,
+  PageTitle,
+} from "../../components/customComponents";
 
 import {
   Box,
@@ -38,8 +42,6 @@ import {
   KeyboardArrowUp as KeyboardArrowUpIcon,
   Apps as AppsIcon,
 } from "@mui/icons-material";
-
-import PageTitle from "../../components/title";
 
 type CircleFeature = {
   type: "Feature";

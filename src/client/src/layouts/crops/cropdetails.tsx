@@ -7,7 +7,7 @@ import {
   setFinishedCrop,
   setFinishedCropStage,
   sumIntervalToDate,
-} from "../../services/services";
+} from "../../utils/services";
 import { Feature } from "geojson";
 
 import {
@@ -51,16 +51,17 @@ import {
 import {
   CircularProgressBackdrop,
   DialogComponent,
+  PageTitle,
   SnackBarAlert,
   StandardDatePicker,
-  TimeIntervalToReadableString,
-  formatedDate,
 } from "../../components/customComponents";
 
 import { DateCalendar } from "@mui/x-date-pickers";
 import { format } from "date-fns";
-import PageTitle from "../../components/title";
-import dayjs from "dayjs";
+import {
+  TimeIntervalToReadableString,
+  formatedDate,
+} from "../../utils/functions";
 
 function sortedEvents(
   events: { due_date: string; done_date: string | undefined }[]

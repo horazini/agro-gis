@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { FormatListBulleted } from "@mui/icons-material";
 
-import { getTenantCrops } from "../../services/services";
-import PageTitle from "../../components/title";
+import { getTenantCrops } from "../../utils/services";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import {
@@ -15,7 +14,8 @@ import {
   GridValueFormatterParams,
 } from "@mui/x-data-grid";
 import { FormattedArea } from "../../components/mapcomponents";
-import { formatedDate } from "../../components/customComponents";
+import { formatedDate } from "../../utils/functions";
+import { PageTitle } from "../../components/customComponents";
 
 const CropsList = (crops: any[]) => {
   const navigate = useNavigate();

@@ -29,18 +29,16 @@ import {
   postUser,
   putUser,
   usernameAlreadyExists,
-} from "../../services/services";
+} from "../../utils/services";
 import {
   CancelButton,
   ConfirmButton,
   ConfirmDialog,
-  UsertypeIDToString,
-  isValidEmail,
-  tenantUserTypes,
+  PageTitle,
 } from "../../components/customComponents";
-import PageTitle from "../../components/title";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { isValidEmail, tenantUserTypes } from "../../utils/functions";
 
 interface user {
   id: number;

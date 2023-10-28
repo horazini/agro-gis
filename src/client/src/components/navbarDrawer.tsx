@@ -162,7 +162,7 @@ const routeList = [
     allowed: [3, 6],
   },
   {
-    text: "Lista de tareas",
+    text: "Calendario de tareas",
     icon: <CalendarMonthIcon />,
     to: "/calendar",
     allowed: [3, 6],

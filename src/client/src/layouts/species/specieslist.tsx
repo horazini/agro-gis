@@ -10,8 +10,8 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 
-import { speciesMainData, getTenantSpecies } from "../../services/services";
-import PageTitle from "../../components/title";
+import { speciesMainData, getTenantSpecies } from "../../utils/services";
+import { PageTitle } from "../../components/customComponents";
 
 function SpeciesList() {
   PageTitle("Especies");

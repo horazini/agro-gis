@@ -24,10 +24,9 @@ import {
   disableTenant,
   enableTenant,
   getTenantData,
-} from "../../services/services";
+} from "../../utils/services";
 import { FormattedArea } from "../../components/mapcomponents";
-import { ConfirmDialog } from "../../components/customComponents";
-import PageTitle from "../../components/title";
+import { ConfirmDialog, PageTitle } from "../../components/customComponents";
 
 interface user {
   id: number;

@@ -15,12 +15,10 @@ import {
   AlertColor,
 } from "@mui/material";
 
-import PageTitle from "../../components/title";
-
 import { useDispatch } from "react-redux";
 import { login } from "../../redux/authSlice";
 import { Fragment, useState } from "react";
-import { SnackBarAlert } from "../../components/customComponents";
+import { PageTitle, SnackBarAlert } from "../../components/customComponents";
 
 function Copyright(props: any) {
   return (

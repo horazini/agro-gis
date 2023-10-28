@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 import { Link } from "react-router-dom";
-import PageTitle from "../../components/title";
+import { PageTitle } from "../../components/customComponents";
 
 export default function NoMatch() {
   PageTitle("404");

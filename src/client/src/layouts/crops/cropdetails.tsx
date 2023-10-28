@@ -6,6 +6,7 @@ import {
   setDoneCropEvent,
   setFinishedCrop,
   setFinishedCropStage,
+  sumIntervalToDate,
 } from "../../services/services";
 import { Feature } from "geojson";
 
@@ -51,6 +52,7 @@ import {
   CircularProgressBackdrop,
   DialogComponent,
   SnackBarAlert,
+  StandardDatePicker,
   TimeIntervalToReadableString,
   formatedDate,
 } from "../../components/customComponents";
@@ -149,11 +151,16 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
         <p>Especie: {species.name}</p>
         {crop.description && <p>description: {crop.description}</p>}
         <p>Fecha de inicio: {formatedDate(crop.start_date)}</p>
-        {crop.finish_date && (
+        {crop.finish_date ? (
           <>
             <p>Fecha de finalización: {formatedDate(crop.finish_date)}</p>
             <p>Peso total: {crop.weight_in_tons} toneladas</p>
           </>
+        ) : (
+          <p>
+            Fecha de finalización estimada:{" "}
+            {formatedDate(crop.estimatedCropFinishDate)}
+          </p>
         )}
       </Box>
       <h3>Etapas de cultivo:</h3>
@@ -197,7 +204,17 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
                       {start_date && formatedDate(start_date)}
                     </TableCell>
                     <TableCell>
-                      {finish_date && formatedDate(finish_date)}
+                      {finish_date
+                        ? formatedDate(finish_date)
+                        : start_date
+                        ? "Estimado: " +
+                          formatedDate(
+                            sumIntervalToDate(
+                              start_date,
+                              species_growth_stage_estimated_time
+                            ).toISOString()
+                          )
+                        : null}
                     </TableCell>
                     <TableCell align="right">
                       <IconButton
@@ -404,22 +421,6 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
     handleCloseDateSelector();
   };
 
-  const [newTask, setNewTask] = useState({
-    name: "",
-    description: "",
-    due_date: null,
-    done_date: null,
-  });
-
-  const handleEventChange = (
-    event:
-      | SelectChangeEvent<string>
-      | React.ChangeEvent<{ name: string; value: unknown }>
-  ) => {
-    const { name, value } = event.target;
-    setNewTask({ ...newTask, [name]: value });
-  };
-
   const [newTaskDialogOpen, setNewTaskDialogOpen] = useState(false);
 
   const handleNewTaskClick = () => {
@@ -431,13 +432,35 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
     setNewTaskDialogOpen(false);
   };
 
-  const handleNewTaskConfirm = () => {
-    //...
-    //clear
-    setNewTaskDialogOpen(false);
-  };
-
   const TaskDialog = () => {
+    const [newTask, setNewTask] = useState({
+      name: "",
+      description: "",
+    });
+
+    const handleEventChange = (
+      event:
+        | SelectChangeEvent<string>
+        | React.ChangeEvent<{ name: string; value: unknown }>
+    ) => {
+      const { name, value } = event.target;
+      setNewTask({ ...newTask, [name]: value });
+    };
+
+    const [estimatedDate, setEstimatedDate] = useState<Date | null>(null);
+
+    const [finishDate, setFinishDate] = useState<Date | null>(null);
+
+    const handleNewTaskConfirm = () => {
+      const newTaskSent = {
+        ...newTask,
+        estimatedDate: estimatedDate?.toISOString(),
+        finishDate: finishDate?.toISOString(),
+      };
+      console.log(newTaskSent);
+      setNewTaskDialogOpen(false);
+    };
+
     return (
       <Dialog
         open={newTaskDialogOpen}
@@ -447,9 +470,10 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
       >
         <DialogTitle id="alert-dialog-title">Nueva tarea</DialogTitle>
         <DialogContent>
-          <p>Etapa: {stage.species_growth_stage_name}</p>
+          <h4>Etapa: {stage.species_growth_stage_name}</h4>
           <TextField
             required
+            variant="filled"
             label="Nombre"
             name="name"
             value={newTask.name}
@@ -458,20 +482,54 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
           <p> </p>
 
           <TextField
-            variant="outlined"
+            variant="filled"
             label="Descripción"
             name="description"
             value={newTask.description}
             onChange={handleEventChange}
           />
-          <p>Fecha estimada: </p>
-          <p>Fecha de realización: </p>
+
+          <Box display={"flex"} alignItems="center">
+            <Typography mt={2} mr={1}>
+              {"Fecha estimada: "}
+            </Typography>
+
+            <StandardDatePicker
+              date={estimatedDate}
+              setDate={setEstimatedDate}
+              minDate={start_date}
+              maxDate={finish_date}
+            />
+          </Box>
+          <Box display={"flex"} alignItems="center">
+            <Typography mt={2} mr={1}>
+              {"Fecha de realización: "}
+            </Typography>
+
+            <StandardDatePicker
+              date={finishDate}
+              setDate={setFinishDate}
+              minDate={start_date}
+              maxDate={finish_date}
+            />
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleNewTaskCancel}>Cancelar</Button>
-          <Button onClick={handleNewTaskConfirm} autoFocus>
-            Confirmar
-          </Button>
+
+          <DialogComponent
+            component={
+              <Button
+                disabled={!newTask.name || (!estimatedDate && !finishDate)}
+              >
+                Confirmar
+              </Button>
+            }
+            dialogTitle={"¿Confirmar tarea?"}
+            dialogSubtitle={"Se añadirá la nueva tarea a la etapa."}
+            disabled={!newTask.name || (!estimatedDate && !finishDate)}
+            onConfirm={() => handleNewTaskConfirm()}
+          />
         </DialogActions>
       </Dialog>
     );
@@ -526,8 +584,7 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
           variant="contained"
           color="primary"
           sx={{ mt: 3, ml: 1 }}
-          disabled
-          //disabled={!stage.start_date}
+          disabled={!stage.start_date}
           onClick={() => handleNewTaskClick()}
           startIcon={<PlaylistAddIcon />}
         >
@@ -677,16 +734,16 @@ const PeriodicEvent = ({ event, handleOpenDateSelector, start_date }: any) => {
         periodicEvents.map((event: any, index) => {
           return (
             <Fragment key={index}>
-              <Typography mt={2}>
-                Fecha estimada: {formatedDate(event.due_date)}
-              </Typography>
-              <Box display={"flex"} alignItems="center">
-                {event.done_date ? (
+              {event.done_date ? (
+                <Typography mt={2}>
+                  {"Fecha de realización: "} {formatedDate(event.done_date)}
+                </Typography>
+              ) : (
+                <Fragment>
                   <Typography mt={2}>
-                    {"Fecha de realización: "} {formatedDate(event.done_date)}
+                    Fecha estimada: {formatedDate(event.due_date)}
                   </Typography>
-                ) : (
-                  <Fragment>
+                  <Box display={"flex"} alignItems="center">
                     <Typography mt={2} mr={1}>
                       {"Fecha de realización: "}
                     </Typography>
@@ -711,9 +768,9 @@ const PeriodicEvent = ({ event, handleOpenDateSelector, start_date }: any) => {
                         ),
                       }}
                     />
-                  </Fragment>
-                )}
-              </Box>
+                  </Box>
+                </Fragment>
+              )}
             </Fragment>
           );
         })
@@ -725,51 +782,24 @@ const PeriodicEvent = ({ event, handleOpenDateSelector, start_date }: any) => {
 };
 
 const FinalHarvestReport = ({ cropId, minDate, setDataReloadCounter }: any) => {
-  const today = new Date();
+  const [weight_in_tons, setWeight_in_tons] = useState<any>(0);
 
-  const [formData, setFormData] = useState<any>({
-    date: null,
-    weight_in_tons: 0,
-  });
-
-  const [calendarAnchor, setCalendarAnchor] = useState<any>();
-  const openDateSelector = Boolean(calendarAnchor);
-
-  const handleOpenDateSelector = (event: any) => {
-    setCalendarAnchor(event.currentTarget);
-  };
-
-  const handleCloseDateSelector = () => {
-    setCalendarAnchor(null);
-  };
-
-  const [isDateValid, setIsDateValid] = useState<boolean>(false);
-
-  function handleDateChange(date: any) {
-    if (!Number.isNaN(new Date(date).getTime())) {
-      const dateObject = new Date(date);
-      setFormData((prevState: any) => ({
-        ...prevState,
-        date: dateObject,
-      }));
-      setIsDateValid(true);
-    } else {
-      setIsDateValid(false);
-    }
-    handleCloseDateSelector();
-  }
+  const [date, setDate] = useState<Date | null>(null);
 
   // submit data
 
   const [loading, setLoading] = useState(false);
 
   const handleSubmitData = async () => {
+    if (!date) {
+      return;
+    }
     setLoading(true);
     try {
-      const isoDate = formData.date.toISOString();
+      const isoDate = date.toISOString();
       const sentData = {
         date: isoDate,
-        weight_in_tons: formData.weight_in_tons,
+        weight_in_tons: weight_in_tons,
       };
 
       let res = await setFinishedCrop(sentData, cropId);
@@ -785,7 +815,6 @@ const FinalHarvestReport = ({ cropId, minDate, setDataReloadCounter }: any) => {
       setSnackBar(errorSnackBar);
     }
     setLoading(false);
-    handleCloseDateSelector();
   };
 
   const [snackBar, setSnackBar] = useState<MySnackBarProps>({
@@ -822,19 +851,11 @@ const FinalHarvestReport = ({ cropId, minDate, setDataReloadCounter }: any) => {
                 {"Fecha de finalización: "}
               </Typography>
 
-              <TextField
-                sx={{ input: { cursor: "pointer" } }}
-                variant="standard"
-                label={true ? "Fecha de finalización" : null}
-                value={formData.date ? format(formData.date, "dd/MM/yyyy") : ""}
-                onClick={(e) => handleOpenDateSelector(e)}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="start">
-                      <TodayIcon />
-                    </InputAdornment>
-                  ),
-                }}
+              <StandardDatePicker
+                date={date}
+                setDate={setDate}
+                label={"Fecha de finalización"}
+                minDate={minDate}
               />
             </Box>
 
@@ -843,13 +864,8 @@ const FinalHarvestReport = ({ cropId, minDate, setDataReloadCounter }: any) => {
               <TextField
                 required
                 name="weight_in_tons"
-                value={formData.weight_in_tons}
-                onChange={(e) =>
-                  setFormData((prevState: any) => ({
-                    ...prevState,
-                    weight_in_tons: e.target.value,
-                  }))
-                }
+                value={weight_in_tons}
+                onChange={(e) => setWeight_in_tons(e.target.value)}
                 variant="standard"
                 sx={{ margin: 1 }}
                 type="number"
@@ -868,27 +884,6 @@ const FinalHarvestReport = ({ cropId, minDate, setDataReloadCounter }: any) => {
                 }}
               />
             </Box>
-
-            <Menu
-              id="date-menu"
-              anchorEl={calendarAnchor}
-              open={openDateSelector}
-              onClose={() => handleCloseDateSelector()}
-              MenuListProps={{
-                "aria-labelledby": "basic-button",
-              }}
-            >
-              <DateCalendar
-                showDaysOutsideCurrentMonth
-                value={formData.date ? dayjs(formData.date) : dayjs(today)}
-                minDate={dayjs(minDate)}
-                onChange={(newValue: any, selectionState: any) => {
-                  if (selectionState === "finish") {
-                    handleDateChange(newValue);
-                  }
-                }}
-              />
-            </Menu>
           </Grid>
         </Grid>
         <Box
@@ -900,19 +895,19 @@ const FinalHarvestReport = ({ cropId, minDate, setDataReloadCounter }: any) => {
         >
           <DialogComponent
             component={
-              <Button variant="contained" disabled={!isDateValid}>
+              <Button variant="contained" disabled={!date}>
                 Confirmar
               </Button>
             }
-            disabled={!isDateValid}
+            disabled={!date}
             dialogTitle={"¿Desea confirmar los siguientes datos?"}
             dialogSubtitle={
               <div>
                 <p>
                   Fecha de finalización:{" "}
-                  {formData.date ? format(formData.date, "dd/MM/yyyy") : ""}
+                  {date ? format(date, "dd/MM/yyyy") : ""}
                 </p>
-                <p>Peso final: {formData.weight_in_tons} toneladas </p>
+                <p>Peso final: {weight_in_tons} toneladas </p>
               </div>
             }
             onConfirm={() => handleSubmitData()}

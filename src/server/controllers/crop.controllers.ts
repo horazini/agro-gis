@@ -302,6 +302,7 @@ export const getCropDataById = async (
       start_date: cropResponse.start_date,
       finish_date: cropResponse.finish_date,
       weight_in_tons: cropResponse.weight_in_tons,
+      estimatedCropFinishDate: cropResponse.start_date,
     };
 
     const stagesQuery = `
@@ -340,6 +341,21 @@ export const getCropDataById = async (
       })
     );
 
+    let estimatedCropFinishDate = crop.start_date;
+    stages.forEach((stage: any) => {
+      if (stage.finish_date) {
+        estimatedCropFinishDate = stage.finish_date;
+      } else {
+        estimatedCropFinishDate = sumIntervalToDate(
+          estimatedCropFinishDate,
+          stage.species_growth_stage_estimated_time
+        );
+      }
+    });
+
+    crop.estimatedCropFinishDate = estimatedCropFinishDate;
+
+    console.log(estimatedCropFinishDate);
     const properties = {
       species,
       crop,
@@ -503,13 +519,6 @@ export const setFinishedCropStage = async (
           [due_date, id]
         );
       }
-    } else {
-      await client.query(
-        `
-        UPDATE crop SET finish_date = $1 WHERE id = $2
-      `,
-        [doneDate, finishedStageCropId]
-      );
     }
 
     await client.query("COMMIT");

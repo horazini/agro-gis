@@ -10,10 +10,17 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  InputAdornment,
+  Menu,
   Snackbar,
+  TextField,
 } from "@mui/material";
 import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Today as TodayIcon } from "@mui/icons-material";
+import { format } from "date-fns";
+import { DateCalendar } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
 
 export type DialogComponentProps = {
   component: JSX.Element;
@@ -405,3 +412,89 @@ export function isValidEmail(testString: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(testString);
 }
+
+/**
+ *
+ * @param {Date | null} date
+ * @param {React.Dispatch<React.SetStateAction<Date | null>>} setDate
+ * @param {string} minDate
+ * @param {string} maxDate
+ * @param {string} label
+ * @returns {JSX.Element}
+ */
+export const StandardDatePicker = ({
+  date,
+  setDate,
+  label,
+  minDate,
+  maxDate,
+}: any): JSX.Element => {
+  const today = new Date();
+
+  const [calendarAnchor, setCalendarAnchor] = useState<any>();
+  const openDateSelector = Boolean(calendarAnchor);
+
+  const handleOpenDateSelector = (event: any) => {
+    setCalendarAnchor(event.currentTarget);
+  };
+
+  const handleCloseDateSelector = () => {
+    setCalendarAnchor(null);
+  };
+
+  function handleDateChange(date: any) {
+    if (!Number.isNaN(new Date(date).getTime())) {
+      const dateObject = new Date(date);
+      setDate(dateObject);
+    }
+    handleCloseDateSelector();
+  }
+
+  return (
+    <Fragment>
+      <TextField
+        sx={{ input: { cursor: "pointer" } }}
+        variant="standard"
+        label={label ? label : "Seleccionar fecha"}
+        value={date ? format(date, "dd/MM/yyyy") : ""}
+        onClick={(e) => (!date ? handleOpenDateSelector(e) : null)}
+        onKeyDown={(e) =>
+          e.key === "Backspace" || e.key === "Delete" ? setDate(null) : null
+        }
+        InputProps={{
+          endAdornment: (
+            <InputAdornment
+              position="start"
+              sx={{ cursor: "pointer" }}
+              onClick={(e) => handleOpenDateSelector(e)}
+            >
+              <TodayIcon />
+            </InputAdornment>
+          ),
+        }}
+      />
+
+      <Menu
+        id="date-menu"
+        anchorEl={calendarAnchor}
+        open={openDateSelector}
+        onClose={() => handleCloseDateSelector()}
+        MenuListProps={{
+          "aria-labelledby": "basic-button",
+        }}
+      >
+        <DateCalendar
+          showDaysOutsideCurrentMonth
+          value={date ? dayjs(date) : dayjs(today)}
+          minDate={minDate ? dayjs(minDate) : null}
+          maxDate={maxDate ? dayjs(maxDate) : null}
+          onChange={(newValue: any, selectionState: any) => {
+            if (selectionState === "finish") {
+              handleDateChange(newValue);
+            }
+          }}
+        />
+      </Menu>
+    </Fragment>
+  );
+};

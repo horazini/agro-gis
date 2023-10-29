@@ -67,3 +67,28 @@ export function TimeIntervalToReadableString(interval: {
     return "";
   }
 }
+
+/**
+ * Gets the date from a date after a certain interval.
+ * @param {Date} referenceDate
+ * @param {Postgres interval return object} interval
+ * @returns {Date}
+ */
+export function sumIntervalToDate(referenceDate: string, interval: any): Date {
+  let finalDate = new Date(referenceDate);
+
+  const intervalUnit = Object.keys(interval)[0] || "days";
+  const intervalCuantity: number = interval[intervalUnit] || 0;
+
+  if (intervalUnit === "days") {
+    finalDate.setDate(finalDate.getDate() + intervalCuantity);
+  }
+  if (intervalUnit === "months") {
+    finalDate.setMonth(finalDate.getMonth() + intervalCuantity);
+  }
+  if (intervalUnit === "years") {
+    finalDate.setFullYear(finalDate.getFullYear() + intervalCuantity);
+  }
+
+  return finalDate;
+}

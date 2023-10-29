@@ -6,7 +6,6 @@ import {
   setDoneCropEvent,
   setFinishedCrop,
   setFinishedCropStage,
-  sumIntervalToDate,
 } from "../../utils/services";
 import { Feature } from "geojson";
 
@@ -61,6 +60,7 @@ import { format } from "date-fns";
 import {
   TimeIntervalToReadableString,
   formatedDate,
+  sumIntervalToDate,
 } from "../../utils/functions";
 
 function sortedEvents(

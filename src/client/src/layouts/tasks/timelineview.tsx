@@ -19,7 +19,7 @@ import { es } from "date-fns/locale";
 import { TaskType } from "./taskcalendar";
 
 function TimeLineModeView(props: any) {
-  const { rows, searchResult, onTaskClick } = props;
+  const { rows, searchResult, taskStatus, onTaskClick } = props;
 
   const handleTaskClick = (event: any, task: any) => {
     event.preventDefault();
@@ -31,6 +31,15 @@ function TimeLineModeView(props: any) {
   if (searchResult) {
     fileredEvents = fileredEvents?.filter(
       (event: TaskType) => event?.crop_id === searchResult?.crop_id
+    );
+  }
+  if (taskStatus === "done") {
+    fileredEvents = fileredEvents?.filter(
+      (event: TaskType) => event?.done_date
+    );
+  } else if (taskStatus === "todo") {
+    fileredEvents = fileredEvents?.filter(
+      (event: TaskType) => !event?.done_date
     );
   }
 

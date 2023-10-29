@@ -12,6 +12,11 @@ import {
   TextField,
   Autocomplete,
   Box,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Button,
 } from "@mui/material";
 import { useTheme, styled } from "@mui/material/styles";
 
@@ -41,11 +46,20 @@ export type SchedulerToolbarProps = {
   switchMode: any;
   onModeChange: any;
   onDateChange: any;
+  taskStatus: any;
+  setTaskStatus: any;
 };
 
 function SchedulerToolbar(props: SchedulerToolbarProps) {
-  const { events, onSearchResult, switchMode, onModeChange, onDateChange } =
-    props;
+  const {
+    events,
+    onSearchResult,
+    switchMode,
+    onModeChange,
+    onDateChange,
+    taskStatus,
+    setTaskStatus,
+  } = props;
 
   const theme = useTheme();
 
@@ -95,6 +109,26 @@ function SchedulerToolbar(props: SchedulerToolbarProps) {
     onModeChange(mode);
   }, [mode]);
 
+  // zxc
+
+  const options = [
+    { label: "No filtrar", value: "any" },
+    { label: "Pendientes", value: "todo" },
+    { label: "Realizados", value: "done" },
+  ];
+
+  const [status, setStatus] = useState(taskStatus);
+
+  useEffect(() => {
+    if (taskStatus !== status) {
+      setStatus(taskStatus);
+    }
+  }, [taskStatus]);
+
+  useEffect(() => {
+    setTaskStatus(status);
+  }, [status]);
+
   return (
     <Toolbar
       variant="dense"
@@ -105,96 +139,135 @@ function SchedulerToolbar(props: SchedulerToolbarProps) {
       }}
     >
       <Grid container spacing={0} alignItems="center" justifyContent="flex-end">
-        <Grid item xs sm md sx={{ textAlign: "right" }}>
+        <Grid item xs sm md>
           <Stack
             direction="row"
             sx={{
               pr: 0.5,
               alignItems: "center",
-              justifyContent: "flex-end",
+              justifyContent: "space-between",
             }}
           >
-            <StyledAutoComplete
-              value={value}
-              id="scheduler-autocomplete"
-              inputValue={inputValue}
-              sx={{ mb: 0, display: "inline-flex" }}
-              onChange={handleOnChange}
-              options={events?.sort((a: any, b: any) => b.crop_id - a.crop_id)}
-              groupBy={(option: any) =>
-                option
-                  ? `Parcela N° ${option.landplot} - ${option.species_name}`
-                  : ""
-              }
-              getOptionLabel={(option: any) =>
-                option
-                  ? `Parcela N° ${option.landplot} - ${option.species_name}`
-                  : ""
-              }
-              isOptionEqualToValue={(option: any, value: any) =>
-                option.id === value.id
-              }
-              onInputChange={(event, newInputValue: any) => {
-                setInputValue(newInputValue);
-                setSearchResult(newInputValue);
-              }}
-              renderOption={(props: any, option: any) => {
-                let eventDate = option.done_date || option.due_date;
-                return (
-                  <Box component="li" sx={{ fontSize: 12 }} {...props}>
-                    {format(parse(eventDate, "yyyy-MM-dd", new Date()), "PPP", {
-                      locale: es,
-                    })}
-                  </Box>
-                );
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  size="small"
-                  label={"Filtrar"}
-                  InputProps={{ ...params.InputProps }}
-                />
-              )}
-            />
+            <FormControl
+              variant="outlined"
+              size="small"
+              sx={{ m: 1, minWidth: 220 }}
+            >
+              <InputLabel>Filtrar por estado</InputLabel>
 
-            <Hidden mdUp>
-              <IconButton
-                sx={{ mr: 0, "aria-label": "menu" }}
-                size="small"
-                //onClick={handleOpenXSelector}
-              >
-                <GridViewIcon />
-              </IconButton>
-            </Hidden>
-            <Hidden mdDown>
-              <ToggleButtonGroup
-                exclusive
-                value={mode}
-                size="small"
-                color="primary"
-                aria-label="text button group"
-                sx={{ mt: 0.2, mr: 1.3, display: "contents" }}
-                onChange={(e, newMode) => {
-                  if (newMode) {
-                    setMode(newMode);
-                  }
+              <Select
+                name="taskstatus"
+                value={status}
+                label="Filtrar por estado"
+                onChange={(e) => {
+                  setStatus(e.target.value);
                 }}
               >
-                {[
-                  { label: "calendario", value: "month" },
-                  { label: "linea cronológica", value: "timeline" },
-                ].map((tb) => (
-                  <ToggleButton
-                    sx={{ mt: 0.5 }}
-                    key={tb.value}
-                    value={tb.value}
-                  >
-                    {tb.label}
-                  </ToggleButton>
+                {options.map((option, index) => (
+                  <MenuItem key={index} value={option.value}>
+                    {option.label}
+                  </MenuItem>
                 ))}
-              </ToggleButtonGroup>
-            </Hidden>
+              </Select>
+            </FormControl>
+
+            <Box>
+              <StyledAutoComplete
+                value={value}
+                componentsProps={{
+                  popper: { style: { width: "fit-content" } },
+                }}
+                id="scheduler-autocomplete"
+                inputValue={inputValue}
+                sx={{ mb: 0, display: "inline-flex" }}
+                onChange={handleOnChange}
+                options={events?.sort(
+                  (a: any, b: any) => b.crop_id - a.crop_id
+                )}
+                groupBy={(option: any) =>
+                  option
+                    ? `Parcela N° ${option.landplot} - ${option.species_name}`
+                    : ""
+                }
+                getOptionLabel={(option: any) =>
+                  option
+                    ? `Parcela N° ${option.landplot} - ${option.species_name}`
+                    : ""
+                }
+                isOptionEqualToValue={(option: any, value: any) =>
+                  value === "" || option.id === value.id
+                }
+                onInputChange={(event, newInputValue: any) => {
+                  setInputValue(newInputValue);
+                  setSearchResult(newInputValue);
+                }}
+                renderOption={(props: any, option: any) => {
+                  let eventDate = option.done_date || option.due_date;
+                  return (
+                    <Box
+                      component="li"
+                      sx={{ fontSize: 12 }}
+                      {...props}
+                      key={option.id}
+                    >
+                      {format(
+                        parse(eventDate, "yyyy-MM-dd", new Date()),
+                        "PPP",
+                        {
+                          locale: es,
+                        }
+                      )}
+                    </Box>
+                  );
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    size="small"
+                    label={"Filtrar por cultivo"}
+                    InputProps={{ ...params.InputProps }}
+                  />
+                )}
+              />
+
+              <Hidden mdUp>
+                <IconButton
+                  sx={{ mr: 0, "aria-label": "menu" }}
+                  size="small"
+                  //onClick={handleOpenXSelector}
+                >
+                  <GridViewIcon />
+                </IconButton>
+              </Hidden>
+              <Hidden mdDown>
+                <ToggleButtonGroup
+                  exclusive
+                  value={mode}
+                  size="small"
+                  color="primary"
+                  aria-label="text button group"
+                  sx={{ mt: 0.2, mr: 1.3, display: "contents" }}
+                  onChange={(e, newMode) => {
+                    if (newMode) {
+                      setMode(newMode);
+                    }
+                  }}
+                >
+                  {[
+                    { label: "calendario", value: "month" },
+                    { label: "linea cronológica", value: "timeline" },
+                  ].map((tb) => (
+                    <ToggleButton
+                      sx={{ mt: 0.5 }}
+                      key={tb.value}
+                      value={tb.value}
+                    >
+                      {tb.label}
+                    </ToggleButton>
+                  ))}
+                </ToggleButtonGroup>
+              </Hidden>
+            </Box>
           </Stack>
         </Grid>
       </Grid>

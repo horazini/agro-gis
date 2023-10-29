@@ -206,6 +206,8 @@ function Taskcalendar() {
     setSearchResult(item);
   };
 
+  const [taskStatus, setTaskStatus] = useState("any");
+
   // Tasks load
 
   const [dataReloadCounter, setDataReloadCounter] = useState(0);
@@ -216,7 +218,6 @@ function Taskcalendar() {
     try {
       const tasks = await getAllTenantTasksStructuredForCalendar(id);
       setCropTasks(tasks);
-      console.log(tasks);
     } catch (error) {
       console.log(error);
     }
@@ -295,6 +296,8 @@ function Taskcalendar() {
           onModeChange={handleModeChange}
           onSearchResult={onSearchResult}
           onDateChange={handleDateChange}
+          taskStatus={taskStatus}
+          setTaskStatus={setTaskStatus}
         />
         <Grid container spacing={0} alignItems="center" justifyContent="start">
           {isMonthMode && (
@@ -305,10 +308,10 @@ function Taskcalendar() {
                   rows={state?.rows}
                   options={options}
                   searchResult={searchResult}
+                  taskStatus={taskStatus}
                   onTaskClick={handleEventClick}
                   onCellClick={handleCellClick}
                   onDateChange={handleDateChange}
-                  //searchResult={searchResult}
                   //onEventsChange={handleEventsChange}
                 />
               </Grid>
@@ -322,6 +325,7 @@ function Taskcalendar() {
                 <TimeLineModeView
                   rows={state?.rows}
                   searchResult={searchResult}
+                  taskStatus={taskStatus}
                   onTaskClick={handleEventClick}
                   //date={selectedDate}
                   //onCellClick={handleCellClick}

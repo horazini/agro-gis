@@ -72,6 +72,7 @@ function MonthModeView(props: any) {
     rows,
     options,
     searchResult,
+    taskStatus,
     onTaskClick,
     onCellClick,
     onEventsChange,
@@ -191,35 +192,44 @@ function MonthModeView(props: any) {
   const renderTask = (tasks: TaskType[], rowId: number) => {
     return tasks?.map((task: TaskType, index: any) => {
       // To show only events of the selected group
-      /* let condition = searchResult
-        ? task?.crop_id === searchResult?.crop_id ||
-          task?.user === searchResult?.user
-        : !searchResult; */
+      let condition = searchResult
+        ? task?.crop_id === searchResult?.crop_id
+        : !searchResult;
+
+      let statusCondition =
+        taskStatus === "todo"
+          ? !task?.done_date
+          : taskStatus === "done"
+          ? task?.done_date
+          : true;
+
       return (
-        // condition &&
-        <Paper
-          sx={{
-            width: "100%",
-            py: 0,
-            my: 0.3,
-            color: "#fff",
-            display: "inline-flex",
-            justifyContent: "center",
-            backgroundColor: task.color || theme.palette.primary.light,
-          }}
-          draggable={!task.done_date}
-          onClick={(e) => handleTaskClick(e, task)}
-          onDragStart={() => onCellDragStart(task, rowId)}
-          elevation={0}
-          key={`item-d-${task.id}-${rowId}`}
-        >
-          <Box sx={{ px: 0.5 }}>
-            <Typography variant="body2" sx={{ fontSize: 13 }}>
-              {task.name}
-            </Typography>
-            {task.done_date ? <CheckIcon sx={{ fontSize: 20 }} /> : null}
-          </Box>
-        </Paper>
+        condition &&
+        statusCondition && (
+          <Paper
+            sx={{
+              width: "100%",
+              py: 0,
+              my: 0.3,
+              color: "#fff",
+              display: "inline-flex",
+              justifyContent: "center",
+              backgroundColor: task.color || theme.palette.primary.light,
+            }}
+            draggable={!task.done_date}
+            onClick={(e) => handleTaskClick(e, task)}
+            onDragStart={() => onCellDragStart(task, rowId)}
+            elevation={0}
+            key={`item-d-${task.id}-${rowId}`}
+          >
+            <Box sx={{ px: 0.5 }}>
+              <Typography variant="body2" sx={{ fontSize: 13 }}>
+                {task.name}
+              </Typography>
+              {task.done_date ? <CheckIcon sx={{ fontSize: 20 }} /> : null}
+            </Box>
+          </Paper>
+        )
       );
     });
   };

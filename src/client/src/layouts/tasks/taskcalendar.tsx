@@ -171,14 +171,69 @@ function Taskcalendar() {
 
   const today = new Date();
 
-  const [state, setState] = useState<any>({});
-
   const [options] = useState({
     minWidth: 540,
     maxWidth: 540,
     minHeight: 540,
     maxHeight: 540,
   });
+
+  // Tasks load
+
+  const [dataReloadCounter, setDataReloadCounter] = useState(0);
+
+  const [cropTasks, setCropTasks] = useState<TaskType[]>([]);
+
+  const [filteredCropTasks, setFilteredCropTasks] = useState<TaskType[]>([]);
+
+  const [rows, setRows] = useState<any>();
+
+  const loadTasks = async (id: number) => {
+    try {
+      const tasks = await getAllTenantTasksStructuredForCalendar(id);
+      setCropTasks(tasks);
+      setFilteredCropTasks(tasks);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    if (tenantId) {
+      loadTasks(tenantId);
+    }
+  }, [tenantId, dataReloadCounter]);
+
+  // searchResult handle
+
+  const [searchResult, setSearchResult] = useState<any>();
+
+  const onSearchResult = (item: any) => {
+    setSearchResult(item);
+  };
+
+  const [taskStatus, setTaskStatus] = useState("any");
+
+  // crop and status task filter
+
+  useEffect(() => {
+    let filteredEvents = cropTasks;
+    if (searchResult) {
+      filteredEvents = filteredEvents?.filter(
+        (event: TaskType) => event?.crop_id === searchResult?.crop_id
+      );
+    }
+    if (taskStatus === "done") {
+      filteredEvents = filteredEvents?.filter(
+        (event: TaskType) => event?.done_date
+      );
+    } else if (taskStatus === "todo") {
+      filteredEvents = filteredEvents?.filter(
+        (event: TaskType) => !event?.done_date
+      );
+    }
+    setFilteredCropTasks(filteredEvents);
+  }, [searchResult, taskStatus]);
 
   // Mode handle
 
@@ -198,37 +253,6 @@ function Taskcalendar() {
     setSelectedDate(date);
   };
 
-  // searchResult handle
-
-  const [searchResult, setSearchResult] = useState();
-
-  const onSearchResult = (item: any) => {
-    setSearchResult(item);
-  };
-
-  const [taskStatus, setTaskStatus] = useState("any");
-
-  // Tasks load
-
-  const [dataReloadCounter, setDataReloadCounter] = useState(0);
-
-  const [cropTasks, setCropTasks] = useState<TaskType[]>([]);
-
-  const loadTasks = async (id: number) => {
-    try {
-      const tasks = await getAllTenantTasksStructuredForCalendar(id);
-      setCropTasks(tasks);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    if (tenantId) {
-      loadTasks(tenantId);
-    }
-  }, [tenantId, dataReloadCounter]);
-
   // Calendar and TimeLine data getters
 
   const getTimeLineRows = () =>
@@ -236,22 +260,16 @@ function Taskcalendar() {
     let eventDate = parse(event?.due_date, 'yyyy-MM-dd', new Date())
     return isSameDay(selectedDate, eventDate)
     }) */
-    cropTasks;
+    filteredCropTasks;
 
   useEffect(() => {
     if (isMonthMode) {
-      setState({
-        ...state,
-        rows: getMonthRows(selectedDate, cropTasks),
-      });
+      setRows(getMonthRows(selectedDate, filteredCropTasks));
     }
     if (isTimelineMode) {
-      setState({
-        ...state,
-        rows: getTimeLineRows(),
-      });
+      setRows(getTimeLineRows());
     }
-  }, [cropTasks, mode, selectedDate]);
+  }, [filteredCropTasks, mode, selectedDate]);
 
   const handleEventsChange = async (item: any) => {
     console.log(item);
@@ -305,10 +323,8 @@ function Taskcalendar() {
               <Grid item xs={12}>
                 <MonthModeView
                   selectedDate={selectedDate}
-                  rows={state?.rows}
+                  rows={rows}
                   options={options}
-                  searchResult={searchResult}
-                  taskStatus={taskStatus}
                   onTaskClick={handleEventClick}
                   onCellClick={handleCellClick}
                   onDateChange={handleDateChange}
@@ -323,9 +339,7 @@ function Taskcalendar() {
             <Grid container spacing={2} alignItems="start">
               <Grid item xs={12}>
                 <TimeLineModeView
-                  rows={state?.rows}
-                  searchResult={searchResult}
-                  taskStatus={taskStatus}
+                  rows={rows}
                   onTaskClick={handleEventClick}
                   //date={selectedDate}
                   //onCellClick={handleCellClick}
@@ -368,6 +382,7 @@ const EventDialogs = ({
   });
 
   const openDateSelector = Boolean(doneObject.calendarAnchor);
+
   const handleOpenDateSelector = (
     event: any,
     objectTable: string,
@@ -382,6 +397,7 @@ const EventDialogs = ({
       dateLimit: dateLimit,
     });
   };
+
   const handleCloseDateSelector = () => {
     setDoneObject({
       calendarAnchor: null,
@@ -480,8 +496,6 @@ const EventDialogs = ({
 
   //#endregion
 
-  //###
-
   const {
     id,
     name,
@@ -537,9 +551,12 @@ const EventDialogs = ({
                     disabled
                     variant="standard"
                     label="Marcar como realizado"
-                    onClick={(e) =>
-                      handleOpenDateSelector(e, "crop_event", id, min_date)
-                    }
+                    onClick={(e) => {
+                      let objectTable = eventDialogItem.class
+                        ? "crop_stage"
+                        : "crop_event";
+                      handleOpenDateSelector(e, objectTable, id, min_date);
+                    }}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="start">

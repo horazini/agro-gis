@@ -16,10 +16,9 @@ import {
 
 import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
-import { TaskType } from "./taskcalendar";
 
 function TimeLineModeView(props: any) {
-  const { rows, searchResult, taskStatus, onTaskClick } = props;
+  const { rows, onTaskClick } = props;
 
   const handleTaskClick = (event: any, task: any) => {
     event.preventDefault();
@@ -27,24 +26,8 @@ function TimeLineModeView(props: any) {
     onTaskClick(task);
   };
 
-  let fileredEvents = rows;
-  if (searchResult) {
-    fileredEvents = fileredEvents?.filter(
-      (event: TaskType) => event?.crop_id === searchResult?.crop_id
-    );
-  }
-  if (taskStatus === "done") {
-    fileredEvents = fileredEvents?.filter(
-      (event: TaskType) => event?.done_date
-    );
-  } else if (taskStatus === "todo") {
-    fileredEvents = fileredEvents?.filter(
-      (event: TaskType) => !event?.done_date
-    );
-  }
-
-  if (fileredEvents) {
-    fileredEvents.sort((a: any, b: any) => {
+  if (rows) {
+    rows.sort((a: any, b: any) => {
       let eventADate = a.done_date || a.due_date;
       let eventBDate = b.done_date || b.due_date;
       const dateA = parse(eventADate, "yyyy-MM-dd", new Date());
@@ -54,7 +37,7 @@ function TimeLineModeView(props: any) {
 
     return (
       <Timeline position="alternate">
-        {fileredEvents.map((task: any, index: any) => {
+        {rows.map((task: any, index: any) => {
           return (
             <TimelineItem
               key={`timeline-${index}`}

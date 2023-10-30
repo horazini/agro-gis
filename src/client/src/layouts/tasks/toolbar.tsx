@@ -129,6 +129,17 @@ function SchedulerToolbar(props: SchedulerToolbarProps) {
     setTaskStatus(status);
   }, [status]);
 
+  let filteredEvents = events;
+  if (taskStatus === "done") {
+    filteredEvents = filteredEvents?.filter(
+      (event: TaskType) => event?.done_date
+    );
+  } else if (taskStatus === "todo") {
+    filteredEvents = filteredEvents?.filter(
+      (event: TaskType) => !event?.done_date
+    );
+  }
+
   return (
     <Toolbar
       variant="dense"
@@ -181,7 +192,7 @@ function SchedulerToolbar(props: SchedulerToolbarProps) {
                 inputValue={inputValue}
                 sx={{ mb: 0, display: "inline-flex" }}
                 onChange={handleOnChange}
-                options={events?.sort(
+                options={filteredEvents?.sort(
                   (a: any, b: any) => b.crop_id - a.crop_id
                 )}
                 groupBy={(option: any) =>

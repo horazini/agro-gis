@@ -2,6 +2,7 @@ import { API } from "../config";
 import { format, parseISO } from "date-fns";
 import convert from "color-convert";
 import bcrypt from "bcryptjs";
+import { sumIntervalToDate } from "./functions";
 
 // Project hash function
 
@@ -338,16 +339,21 @@ function restructureTasks(inputCrops: any): any[] {
     const cropColor = `#${convert.hsv.hex([hue, 85, 75])}`;
 
     crop.stages.forEach((stage: any) => {
-      const stageId = stage.id;
       const stageName = stage.species_growth_stage_name;
       const formattedStageStartDate = formattedDate(stage.start_date);
+
+      let estimatedStageFinishDate = sumIntervalToDate(
+        stage.start_date,
+        stage.species_growth_stage_estimated_time
+      );
+
+      let minStageFinishDate = new Date(stage.start_date);
 
       stage.events.forEach((event: any) => {
         const eventId = event.id;
         const eventName = event.name;
 
         // Assigns the stage start as the minimum done date
-        let min_date = formattedStageStartDate;
 
         if (event.periodic_events && event.periodic_events.length > 0) {
           event.periodic_events
@@ -357,6 +363,16 @@ function restructureTasks(inputCrops: any): any[] {
 
               const formattedDueDate = formattedDate(periodicEvent.due_date);
               const formattedDoneDate = formattedDate(periodicEvent.done_date);
+
+              const eventDoneDate = new Date(periodicEvent.done_date);
+              if (eventDoneDate > estimatedStageFinishDate) {
+                estimatedStageFinishDate = eventDoneDate;
+              }
+              if (eventDoneDate > minStageFinishDate) {
+                minStageFinishDate = eventDoneDate;
+              }
+
+              let min_date = formattedStageStartDate;
 
               if (index === array.length - 1 && array.length > 1) {
                 // If an array of periodic tasks exist,
@@ -386,6 +402,14 @@ function restructureTasks(inputCrops: any): any[] {
           const formattedDueDate = formattedDate(event.due_date);
           const formattedDoneDate = formattedDate(event.done_date);
 
+          const eventDoneDate = new Date(event.done_date);
+          if (eventDoneDate > estimatedStageFinishDate) {
+            estimatedStageFinishDate = eventDoneDate;
+          }
+          if (eventDoneDate > minStageFinishDate) {
+            minStageFinishDate = eventDoneDate;
+          }
+
           const restructuredEvent = {
             id: eventId,
             name: eventName,
@@ -397,12 +421,46 @@ function restructureTasks(inputCrops: any): any[] {
             stage_name: stageName,
             due_date: formattedDueDate,
             done_date: formattedDoneDate,
-            min_date,
+            min_date: formattedStageStartDate,
           };
 
           restructuredData.push(restructuredEvent);
         }
       });
+
+      const formattedStageDueDate = formattedDate(
+        estimatedStageFinishDate.toISOString()
+      );
+
+      let formattedStageDoneDate;
+
+      let stageFinishEventName = `Finalizar etapa "${stageName}"`;
+      if (stage.finish_date) {
+        formattedStageDoneDate = formattedDate(stage.finish_date);
+        stageFinishEventName = `Fin de etapa "${stageName}"`;
+      }
+
+      const formattedStageMinDueDate = formattedDate(
+        minStageFinishDate.toISOString()
+      );
+
+      const stageFinishEvent = {
+        id: stage.id,
+        class: "stage_finish",
+        name: stageFinishEventName,
+        crop_id: crop.id,
+        landplot: crop.landplot_id,
+        species_name: crop.species_name,
+        crop_start_date: formattedCropStartDate,
+        stage_start_date: formattedStageStartDate,
+        color: cropColor,
+        stage_name: stageName,
+        due_date: formattedStageDueDate,
+        done_date: formattedStageDoneDate,
+        min_date: formattedStageMinDueDate,
+      };
+
+      restructuredData.push(stageFinishEvent);
     });
   });
 

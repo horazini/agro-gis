@@ -355,7 +355,6 @@ export const getCropDataById = async (
 
     crop.estimatedCropFinishDate = estimatedCropFinishDate;
 
-    console.log(estimatedCropFinishDate);
     const properties = {
       species,
       crop,
@@ -461,6 +460,11 @@ export const setFinishedCropStage = async (
     await client.query("BEGIN");
     const stage_id = parseInt(req.params.id);
     const { doneDate } = req.body;
+
+    await client.query(
+      "DELETE FROM crop_event WHERE crop_stage_id = $1 AND done_date IS NULL",
+      [stage_id]
+    );
 
     const finishedStageResponse: QueryResult = await client.query(
       `
@@ -604,17 +608,19 @@ async function cropTasksById(id: number) {
       SELECT id,
       landplot_id, landplot_description,
       species_name, 
-      start_date  
+      start_date, finish_date  
       FROM crop WHERE id = $1
     `;
   const cropResponse = (await pool.query(cropQuery, [id])).rows[0];
 
   const stagesQuery = `
     SELECT id, 
-     species_growth_stage_name, 
-     start_date, species_growth_stage_estimated_time, finish_date
+     species_growth_stage_name, species_growth_stage_description, 
+     species_growth_stage_estimated_time, species_growth_stage_sequence_number, 
+     start_date, finish_date, comments
      FROM crop_stage 
-     WHERE crop_id = $1 AND start_date IS NOT NULL;
+     WHERE crop_id = $1 AND start_date IS NOT NULL
+     ORDER BY species_growth_stage_sequence_number;
    `;
 
   const stagesResponse: QueryResult = await pool.query(stagesQuery, [id]);

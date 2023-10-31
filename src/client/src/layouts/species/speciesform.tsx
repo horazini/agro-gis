@@ -178,6 +178,26 @@ function SpeciesForm(): JSX.Element {
     return !name && !description && !estimatedTime && !estimatedTimeUnit;
   };
 
+  const disableEventClean = () => {
+    const {
+      ETFromStageStart,
+      ETFromStageStartUnit,
+      description,
+      name,
+      timePeriod,
+      timePeriodUnit,
+    } = growthEventData;
+
+    return (
+      !ETFromStageStart &&
+      !ETFromStageStartUnit &&
+      !description &&
+      !name &&
+      !timePeriod &&
+      !timePeriodUnit
+    );
+  };
+
   const [stagesList, setStagesList] = useState<IStageData[]>([]);
 
   const [editingStageRowId, setEditingStageRowId] = useState<number | null>(
@@ -502,59 +522,67 @@ function SpeciesForm(): JSX.Element {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {stagesList.map((row, index) => (
-                    <TableRow
-                      key={index}
-                      selected={index === editingStageRowId}
-                    >
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>{row.name}</TableCell>
-                      <TableCell>{row.description}</TableCell>
-                      <TableCell>
-                        {row.estimatedTime}{" "}
-                        {
-                          timeUnits.find(
-                            (unit) => unit.key === row.estimatedTimeUnit
-                          )?.label
-                        }
-                      </TableCell>
-                      <TableCell align="center">
-                        <IconButton
-                          onClick={() => handleEditStage(row, index)}
-                          size="small"
-                        >
-                          <EditIcon color="primary" />
-                        </IconButton>
+                  {stagesList.length > 0 ? (
+                    stagesList.map((row, index) => (
+                      <TableRow
+                        key={index}
+                        selected={index === editingStageRowId}
+                      >
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{row.name}</TableCell>
+                        <TableCell>{row.description}</TableCell>
+                        <TableCell>
+                          {row.estimatedTime}{" "}
+                          {
+                            timeUnits.find(
+                              (unit) => unit.key === row.estimatedTimeUnit
+                            )?.label
+                          }
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                            onClick={() => handleEditStage(row, index)}
+                            size="small"
+                          >
+                            <EditIcon color="primary" />
+                          </IconButton>
 
-                        <DialogComponent
-                          component={
-                            <IconButton size="small">
-                              <DeleteIcon color="primary" />
-                            </IconButton>
-                          }
-                          dialogTitle={"¿Desea eliminar este elemento?"}
-                          dialogSubtitle={
-                            "Se eliminarán tambien sus tareas asignadas."
-                          }
-                          onConfirm={() => handleDeleteStage(index)}
-                        />
-                      </TableCell>
-                      <TableCell align="right" width={50}>
-                        <IconButton
-                          sx={{ cursor: "move" }}
-                          draggable={true}
-                          onDragStart={(e) => onDragStart(e, index)}
-                          onDragEnd={onDragEnd}
-                          onDragOver={onDragOver}
-                          onDragEnter={(e: any) => onDragEnter(e, index)}
-                          aria-label="expand row"
-                          size="small"
-                        >
-                          <AppsIcon />
-                        </IconButton>
+                          <DialogComponent
+                            component={
+                              <IconButton size="small">
+                                <DeleteIcon color="primary" />
+                              </IconButton>
+                            }
+                            dialogTitle={"¿Desea eliminar este elemento?"}
+                            dialogSubtitle={
+                              "Se eliminarán tambien sus tareas asignadas."
+                            }
+                            onConfirm={() => handleDeleteStage(index)}
+                          />
+                        </TableCell>
+                        <TableCell align="right" width={50}>
+                          <IconButton
+                            sx={{ cursor: "move" }}
+                            draggable={true}
+                            onDragStart={(e) => onDragStart(e, index)}
+                            onDragEnd={onDragEnd}
+                            onDragOver={onDragOver}
+                            onDragEnter={(e: any) => onDragEnter(e, index)}
+                            aria-label="expand row"
+                            size="small"
+                          >
+                            <AppsIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        {"Ingrese etapas"}
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -677,89 +705,79 @@ function SpeciesForm(): JSX.Element {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {stagesList.length > 0 ? (
-                    stagesList.map((stage, stageIndex) =>
-                      stage.growthEvents
-                        .sort((a, b) => {
-                          const unitA = timeUnits.findIndex(
-                            (unit) => unit.key === a.ETFromStageStartUnit
-                          );
-                          const unitB = timeUnits.findIndex(
-                            (unit) => unit.key === b.ETFromStageStartUnit
-                          );
+                  {stagesList.map((stage, stageIndex) =>
+                    stage.growthEvents
+                      .sort((a, b) => {
+                        const unitA = timeUnits.findIndex(
+                          (unit) => unit.key === a.ETFromStageStartUnit
+                        );
+                        const unitB = timeUnits.findIndex(
+                          (unit) => unit.key === b.ETFromStageStartUnit
+                        );
 
-                          if (unitA !== unitB) {
-                            return unitA - unitB;
-                          } else {
-                            return (
-                              Number(a.ETFromStageStart) -
-                              Number(b.ETFromStageStart)
-                            );
-                          }
-                        })
-                        .map((event, eventIndex) => (
-                          <TableRow key={eventIndex}>
-                            <TableCell>{event.name}</TableCell>
-                            <TableCell>{stage.name}</TableCell>
-                            <TableCell>
-                              {event.ETFromStageStart}{" "}
-                              {
-                                timeUnits.find(
-                                  (unit) =>
-                                    unit.key === event.ETFromStageStartUnit
-                                )?.label
+                        if (unitA !== unitB) {
+                          return unitA - unitB;
+                        } else {
+                          return (
+                            Number(a.ETFromStageStart) -
+                            Number(b.ETFromStageStart)
+                          );
+                        }
+                      })
+                      .map((event, eventIndex) => (
+                        <TableRow key={eventIndex}>
+                          <TableCell>{event.name}</TableCell>
+                          <TableCell>{stage.name}</TableCell>
+                          <TableCell>
+                            {event.ETFromStageStart}{" "}
+                            {
+                              timeUnits.find(
+                                (unit) =>
+                                  unit.key === event.ETFromStageStartUnit
+                              )?.label
+                            }
+                          </TableCell>
+                          <TableCell>
+                            {(event.timePeriod === "" &&
+                              event.timePeriodUnit === "") ||
+                            (event.timePeriod !== "" &&
+                              event.timePeriodUnit !== "") ? (
+                              <>
+                                {event.timePeriod}{" "}
+                                {
+                                  timeUnits.find(
+                                    (unit) => unit.key === event.timePeriodUnit
+                                  )?.label
+                                }
+                              </>
+                            ) : null}
+                          </TableCell>
+
+                          <TableCell align="center">
+                            <Button
+                              onClick={() =>
+                                handleEditEvent(event, [stageIndex, eventIndex])
                               }
-                            </TableCell>
-                            <TableCell>
-                              {(event.timePeriod === "" &&
-                                event.timePeriodUnit === "") ||
-                              (event.timePeriod !== "" &&
-                                event.timePeriodUnit !== "") ? (
-                                <>
-                                  {event.timePeriod}{" "}
-                                  {
-                                    timeUnits.find(
-                                      (unit) =>
-                                        unit.key === event.timePeriodUnit
-                                    )?.label
-                                  }
-                                </>
-                              ) : null}
-                            </TableCell>
-
-                            <TableCell align="center">
-                              <Button
-                                onClick={() =>
-                                  handleEditEvent(event, [
-                                    stageIndex,
-                                    eventIndex,
-                                  ])
-                                }
-                              >
-                                <EditIcon sx={{ mr: 1 }} />
-                              </Button>
-                              <DialogComponent
-                                component={
-                                  <Button>
-                                    <DeleteIcon sx={{ mr: 1 }} />
-                                  </Button>
-                                }
-                                dialogTitle={"¿Desea eliminar este elemento?"}
-                                dialogSubtitle={
-                                  "Se eliminará de la lista de tareas."
-                                }
-                                onConfirm={() =>
-                                  handleDeleteEvent(stageIndex, eventIndex)
-                                }
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                    )
-                  ) : (
-                    <TableRow>
-                      <TableCell>{"Ingrese etapas"}</TableCell>
-                    </TableRow>
+                            >
+                              <EditIcon sx={{ mr: 1 }} />
+                            </Button>
+                            <DialogComponent
+                              component={
+                                <Button>
+                                  <DeleteIcon sx={{ mr: 1 }} />
+                                </Button>
+                              }
+                              dialogTitle={"¿Desea eliminar este elemento?"}
+                              dialogSubtitle={
+                                "Se eliminará de la lista de tareas."
+                              }
+                              onConfirm={() =>
+                                handleDeleteEvent(stageIndex, eventIndex)
+                              }
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))
                   )}
                 </TableBody>
               </Table>
@@ -923,7 +941,7 @@ function SpeciesForm(): JSX.Element {
                 color="error"
                 sx={{ margin: 1 }}
                 onClick={clearAllFields}
-                //disabled={disableEventClean()}
+                disabled={disableEventClean()}
               >
                 {editingEventRowId !== null ? "Cancelar" : "Limpiar"}
               </Button>
@@ -952,7 +970,7 @@ function SpeciesForm(): JSX.Element {
             msg={msg}
             onConfirm={handleSubmitForm}
             navigateDir={"/species/list"}
-            disabled={!species.name}
+            disabled={!species.name || stagesList.length === 0}
           />
         </Box>
       </Paper>

@@ -8,12 +8,11 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  InputAdornment,
   TextField,
   Typography,
   AlertColor,
+  Box,
 } from "@mui/material";
-import { Today as TodayIcon } from "@mui/icons-material";
 import {
   format,
   getDaysInMonth,
@@ -32,15 +31,17 @@ import { useNavigate } from "react-router-dom";
 import {
   getAllTenantTasksStructuredForCalendar,
   setDoneCropEvent,
+  setFinishedCrop,
   setFinishedCropStage,
 } from "../../utils/services";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { DateCalendar } from "@mui/x-date-pickers";
 import {
   CircularProgressBackdrop,
+  DialogComponent,
   PageTitle,
   SnackBarAlert,
+  StandardDatePicker,
 } from "../../components/customComponents";
 
 export type TaskType = {
@@ -302,7 +303,6 @@ function Taskcalendar() {
   const handleEventClick = (item: any) => {
     setEventDialogOpen(true);
     setEventDialogItem(item);
-    console.log(item);
   };
 
   return (
@@ -369,72 +369,22 @@ const EventDialogs = ({
 }: any) => {
   const navigate = useNavigate();
 
-  const [doneObject, setDoneObject] = useState<{
-    calendarAnchor: any;
-    objectTable: null | string;
-    objectId: number;
-    dateLimit: any;
-  }>({
-    calendarAnchor: null,
-    objectTable: null,
-    objectId: 0,
-    dateLimit: null,
-  });
-
-  const openDateSelector = Boolean(doneObject.calendarAnchor);
-
-  const handleOpenDateSelector = (
-    event: any,
-    objectTable: string,
-    objectId: number,
-    dateLimit: any
-  ) => {
-    event.preventDefault();
-    setDoneObject({
-      calendarAnchor: event.currentTarget,
-      objectTable: objectTable,
-      objectId: objectId,
-      dateLimit: dateLimit,
-    });
-  };
-
-  const handleCloseDateSelector = () => {
-    setDoneObject({
-      calendarAnchor: null,
-      objectTable: null,
-      objectId: 0,
-      dateLimit: null,
-    });
-  };
-
-  // ###
-
-  const disabledDates = (date: any) => {
-    if (!doneObject.dateLimit) {
-      return false;
-    }
-
-    const isoLimitDate = new Date(doneObject.dateLimit);
-
-    // Deshabilitar todas las fechas anteriores a la fecha tope
-    return date < isoLimitDate;
-  };
-
   const [loading, setLoading] = useState(false);
 
-  const handleDoneDateSelect = async (newValue: any) => {
+  const handleDoneDateSelect = async (selectedDate: Date) => {
     setLoading(true);
     try {
-      const isoDate = newValue.toISOString(); // Convertir la fecha a formato ISO 8601
+      const isoDate = selectedDate.toISOString(); // Convertir la fecha a formato ISO 8601
       let updateData = {
         doneDate: isoDate,
       };
 
       let res;
-      if (doneObject.objectTable === "crop_event") {
-        res = await setDoneCropEvent(updateData, doneObject.objectId);
-      } else if (doneObject.objectTable === "crop_stage") {
-        res = await setFinishedCropStage(updateData, doneObject.objectId);
+
+      if (eventDialogItem.class === "stage_finish") {
+        res = await setFinishedCropStage(updateData, eventDialogItem.id);
+      } else {
+        res = await setDoneCropEvent(updateData, eventDialogItem.id);
       }
 
       if (res === 200) {
@@ -450,7 +400,6 @@ const EventDialogs = ({
       setSnackBar(errorSnackBar);
     }
     setLoading(false);
-    handleCloseDateSelector();
     setEventDialogOpen(false);
   };
 
@@ -496,6 +445,41 @@ const EventDialogs = ({
 
   //#endregion
 
+  //#region crop finish vars
+
+  const [date, setDate] = useState<Date | null>(null);
+  const [weight_in_tons, setWeight_in_tons] = useState<any>(0);
+
+  const handleSubmitCropFinish = async () => {
+    if (!date) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const isoDate = date.toISOString();
+      const sentData = {
+        date: isoDate,
+        weight_in_tons: weight_in_tons,
+      };
+
+      let res = await setFinishedCrop(sentData, eventDialogItem.id);
+
+      if (res === 200) {
+        setDataReloadCounter((prevCounter: number) => prevCounter + 1);
+        setSnackBar(eventSuccessSnackBar);
+      } else {
+        setSnackBar(errorSnackBar);
+      }
+    } catch (error) {
+      console.log(error);
+      setSnackBar(errorSnackBar);
+    }
+    setLoading(false);
+    setEventDialogOpen(false);
+  };
+
+  //#endregion
+
   const {
     id,
     name,
@@ -511,81 +495,146 @@ const EventDialogs = ({
   return (
     <Fragment>
       <Dialog
-        open={eventDialogOpen}
-        onClose={
-          openDateSelector
-            ? () => handleCloseDateSelector()
-            : () => setEventDialogOpen(false)
+        open={
+          eventDialogOpen &&
+          (eventDialogItem.class !== "crop_finish" ||
+            (done_date !== undefined && done_date !== null))
         }
+        onClose={() => setEventDialogOpen(false)}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        {openDateSelector ? (
-          <DateCalendar
-            showDaysOutsideCurrentMonth
-            shouldDisableDate={disabledDates}
-            onChange={(newValue: any, selectionState: any) => {
-              if (selectionState === "finish") {
-                handleDoneDateSelect(newValue);
-              }
-            }}
-          />
-        ) : (
-          <Fragment>
-            <DialogTitle id="alert-dialog-title">{name}</DialogTitle>
-            <DialogContent>
-              <p>
-                Parcela N° {landplot} - {species_name}
-              </p>
-              <p>Etapa: {stage_name}</p>
-              <p>Fecha estimada: {due_date}</p>
-              {done_date ? (
-                <p>Fecha de realización: {done_date}</p>
-              ) : (
-                <Fragment>
-                  <Typography mt={2} mr={1}>
-                    {"Fecha de realización: "}
-                  </Typography>
+        <Fragment>
+          <DialogTitle id="alert-dialog-title">{name}</DialogTitle>
+          <DialogContent>
+            <p>
+              Parcela N° {landplot} - {species_name}
+            </p>
+            <p>Etapa: {stage_name}</p>
+            <p>Fecha estimada: {due_date}</p>
+            {done_date ? (
+              <p>Fecha de realización: {done_date}</p>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <Typography mt={2} mr={1}>
+                  {"Fecha de realización: "}
+                </Typography>
 
-                  <TextField
-                    disabled
-                    variant="standard"
-                    label="Marcar como realizado"
-                    onClick={(e) => {
-                      let objectTable = eventDialogItem.class
-                        ? "crop_stage"
-                        : "crop_event";
-                      handleOpenDateSelector(e, objectTable, id, min_date);
-                    }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="start">
-                          <TodayIcon />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Fragment>
-              )}
-            </DialogContent>
-            <DialogActions
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
+                <StandardDatePicker
+                  label={"Marcar como realizado"}
+                  minDate={min_date}
+                  onDateSelect={handleDoneDateSelect}
+                />
+              </div>
+            )}
+          </DialogContent>
+          <DialogActions
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Button onClick={() => setEventDialogOpen(false)}>Cerrar</Button>
+            <Button
+              onClick={() => navigate(`/cropdetails/${crop_id}`)}
+              autoFocus
             >
-              <Button onClick={() => setEventDialogOpen(false)}>Cerrar</Button>
-              <Button
-                onClick={() => navigate(`/cropdetails/${crop_id}`)}
-                autoFocus
-              >
-                Ver cultivo
-              </Button>
-            </DialogActions>
-          </Fragment>
-        )}
+              Ver cultivo
+            </Button>
+          </DialogActions>
+        </Fragment>
       </Dialog>
+
+      <Dialog
+        open={
+          eventDialogOpen &&
+          eventDialogItem.class === "crop_finish" &&
+          !done_date
+        }
+        onClose={() => setEventDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{name}</DialogTitle>
+        <DialogContent>
+          <p>
+            Parcela N° {landplot} - {species_name}
+          </p>
+
+          <p>Fecha estimada: {due_date}</p>
+
+          <Box display={"flex"} alignItems="center">
+            <Typography mt={2} mr={1}>
+              {"Fecha de finalización: "}
+            </Typography>
+
+            <StandardDatePicker
+              date={date}
+              setDate={setDate}
+              label={"Fecha de finalización"}
+              minDate={min_date}
+            />
+          </Box>
+
+          <Box display={"flex"} alignItems="center">
+            <Typography>{"Peso final en toneladas: "}</Typography>{" "}
+            <TextField
+              required
+              name="weight_in_tons"
+              value={weight_in_tons}
+              onChange={(e) => setWeight_in_tons(e.target.value)}
+              variant="standard"
+              sx={{ margin: 1 }}
+              type="number"
+              onKeyPress={(event) => {
+                if (
+                  event?.key === "-" ||
+                  event?.key === "+" ||
+                  event?.key === "." ||
+                  event?.key === "e"
+                ) {
+                  event.preventDefault();
+                }
+              }}
+              InputProps={{
+                inputProps: { min: 0 },
+              }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Button onClick={() => navigate(`/cropdetails/${crop_id}`)} autoFocus>
+            Ver cultivo
+          </Button>
+          <DialogComponent
+            component={
+              <Button variant="contained" disabled={!date}>
+                Confirmar
+              </Button>
+            }
+            disabled={!date}
+            dialogTitle={"¿Desea confirmar los siguientes datos?"}
+            dialogSubtitle={
+              <div>
+                <p>
+                  Fecha de finalización:{" "}
+                  {date ? format(date, "dd/MM/yyyy") : ""}
+                </p>
+                <p>Peso final: {weight_in_tons} toneladas </p>
+              </div>
+            }
+            onConfirm={() => handleSubmitCropFinish()}
+          />
+        </DialogActions>
+      </Dialog>
+
       <Fragment>
         <CircularProgressBackdrop loading={loading} />
         <SnackBarAlert

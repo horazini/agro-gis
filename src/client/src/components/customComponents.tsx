@@ -353,6 +353,7 @@ export const SnackBarAlert = ({
  *
  * @param {Date | null} date
  * @param {React.Dispatch<React.SetStateAction<Date | null>>} setDate
+ * @param {function(Date): void} onDateSelect
  * @param {string} minDate
  * @param {string} maxDate
  * @param {string} label
@@ -361,6 +362,7 @@ export const SnackBarAlert = ({
 export const StandardDatePicker = ({
   date,
   setDate,
+  onDateSelect,
   label,
   minDate,
   maxDate,
@@ -381,7 +383,8 @@ export const StandardDatePicker = ({
   function handleDateChange(date: any) {
     if (!Number.isNaN(new Date(date).getTime())) {
       const dateObject = new Date(date);
-      setDate(dateObject);
+      setDate && setDate(dateObject);
+      onDateSelect && onDateSelect(dateObject);
     }
     handleCloseDateSelector();
   }
@@ -395,7 +398,9 @@ export const StandardDatePicker = ({
         value={date ? format(date, "dd/MM/yyyy") : ""}
         onClick={(e) => (!date ? handleOpenDateSelector(e) : null)}
         onKeyDown={(e) =>
-          e.key === "Backspace" || e.key === "Delete" ? setDate(null) : null
+          date && setDate && (e.key === "Backspace" || e.key === "Delete")
+            ? setDate(null)
+            : null
         }
         InputProps={{
           endAdornment: (

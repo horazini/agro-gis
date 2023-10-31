@@ -29,7 +29,7 @@ import MonthModeView from "./monthview";
 import TimeLineModeView from "./timelineview";
 import { useNavigate } from "react-router-dom";
 import {
-  getAllTenantTasksStructuredForCalendar,
+  getAllCalendarTenantTasks,
   setDoneCropEvent,
   setFinishedCrop,
   setFinishedCropStage,
@@ -191,7 +191,7 @@ function Taskcalendar() {
 
   const loadTasks = async (id: number) => {
     try {
-      const tasks = await getAllTenantTasksStructuredForCalendar(id);
+      const tasks = await getAllCalendarTenantTasks(id);
       setCropTasks(tasks);
       setFilteredCropTasks(tasks);
     } catch (error) {

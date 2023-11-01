@@ -57,19 +57,19 @@ const TenantHeader = (tenantInfo: any) => {
   const { id, name, deleted } = tenantInfo;
 
   const [openDisable, setOpenDisable] = useState(false);
-  const [openEnable, setOpenEnsable] = useState(false);
+  const [openEnable, setOpenEnable] = useState(false);
 
   const handleClickOpenDisable = () => {
     setOpenDisable(true);
   };
 
   const handleClickOpenEnable = () => {
-    setOpenEnsable(true);
+    setOpenEnable(true);
   };
 
   const handleClose = () => {
     setOpenDisable(false);
-    setOpenEnsable(false);
+    setOpenEnable(false);
   };
 
   const handleDisableTenant: () => Promise<number> = async () => {

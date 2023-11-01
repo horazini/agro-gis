@@ -122,7 +122,7 @@ const UserDetails = ({ userData }: any) => {
             sx={{ mr: 2 }}
             onClick={deleted ? handleClickOpenEnable : handleClickOpenDisable}
           >
-            {deleted ? "Habilitar" : "Inhabilitar"}
+            {deleted ? "Habilitar" : "Eliminar"}
           </Button>
         </Box>
       </Box>
@@ -135,7 +135,7 @@ const UserDetails = ({ userData }: any) => {
       <ConfirmDialog
         open={openDisable}
         handleClose={handleClose}
-        msg={"Se inhabilitara al usuario, impidiendo su acceso al servicio."}
+        msg={"Se eliminará al usuario, impidiendo su acceso al servicio."}
         navigateDir={"/users"}
         onConfirm={handleDisableUser}
       />
@@ -143,7 +143,7 @@ const UserDetails = ({ userData }: any) => {
       <ConfirmDialog
         open={openEnable}
         handleClose={handleClose}
-        msg={"Se habilitara al usuario, devolviendo el acceso al servicio."}
+        msg={"Se habilitará al usuario, devolviendo el acceso al servicio."}
         navigateDir={"/users"}
         onConfirm={handleEnableUser}
       />

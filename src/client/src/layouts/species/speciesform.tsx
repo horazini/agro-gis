@@ -123,11 +123,7 @@ function SpeciesForm(): JSX.Element {
     }
   }, [params.id]);
 
-  if (isEditingForm) {
-    PageTitle("Editar especie");
-  } else {
-    PageTitle("Agregar especie");
-  }
+  PageTitle(isEditingForm ? "Editar especie" : "Agregar especie");
 
   // Datos principales de especie
 

@@ -108,7 +108,7 @@ const UserList = (users: user[]) => {
                 <Box>
                   <Button
                     variant="contained"
-                    color="warning"
+                    color="primary"
                     onClick={() => navigate(`/users/${user.id}`)}
                     style={{ marginLeft: ".5rem" }}
                     startIcon={<FormatListBulleted />}

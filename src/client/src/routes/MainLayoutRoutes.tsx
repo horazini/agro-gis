@@ -16,6 +16,7 @@ import UserDetails from "../layouts/tenants/userdetails";
 import UserForm from "../layouts/tenants/userform";
 
 import SpeciesList from "../layouts/species/specieslist";
+import SpeciesDetails from "../layouts/species/speciesdetails";
 import SpeciesForm from "../layouts/species/speciesform";
 
 import MapView from "../layouts/maps/map";
@@ -74,6 +75,11 @@ const routeList = [
     path: "/species/new",
     element: <SpeciesForm />,
     allowed: [3, 5],
+  },
+  {
+    path: "/species/:id",
+    element: <SpeciesDetails />,
+    allowed: [2, 3],
   },
   {
     path: "/species/:id/edit",

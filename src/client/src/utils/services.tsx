@@ -186,6 +186,12 @@ export const getSpeciesData = async (id: string) => {
   return data;
 };
 
+export const getDetailedSpeciesData = async (id: string) => {
+  const res = await fetch(`${API}/detailedspeciesdata/${id}`);
+  const data = await res.json();
+  return data;
+};
+
 export const getTenantSpecies = async (tenantId: number) => {
   const response = await fetch(`${API}/tenantspecies/${tenantId}`);
   const data = await response.json();
@@ -208,6 +214,22 @@ export const putSpeciesData = async (
   const res = await fetch(`${API}/species/${speciesId}`, {
     method: "PUT",
     body: JSON.stringify(updateData),
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};
+
+export const disableSpecies = async (speciesId: number) => {
+  const res = await fetch(`${API}/disablespecies/${speciesId}`, {
+    method: "PUT",
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};
+
+export const enableSpecies = async (speciesId: number) => {
+  const res = await fetch(`${API}/enablespecies/${speciesId}`, {
+    method: "PUT",
     headers: { "Content-type": "application/json" },
   });
   return res.status;

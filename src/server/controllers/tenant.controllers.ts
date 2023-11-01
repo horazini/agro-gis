@@ -51,7 +51,7 @@ export const disableTenant = async (
   try {
     const id = parseInt(req.params.id);
     await pool.query("UPDATE tenant SET deleted = true WHERE id = $1", [id]);
-    return res.status(200).send("Tenant ${id} disabled succesfully");
+    return res.status(200).send(`Tenant ${id} disabled succesfully`);
   } catch (e) {
     next(e);
   }
@@ -65,13 +65,13 @@ export const enableTenant = async (
   try {
     const id = parseInt(req.params.id);
     await pool.query("UPDATE tenant SET deleted = false WHERE id = $1", [id]);
-    return res.status(200).send("Tenant ${id} enabled succesfully");
+    return res.status(200).send(`Tenant ${id} enabled succesfully`);
   } catch (e) {
     next(e);
   }
 };
 
-export const getTenantUsers = async (
+export const getEnabledTenantUsers = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -91,9 +91,9 @@ export const getTenantUsers = async (
     const usersQuery: QueryResult = await pool.query(
       `
       SELECT 
-      id, usertype_id, mail_address, username, names, surname, deleted
+      id, usertype_id, mail_address, username, names, surname
       FROM user_account 
-      WHERE tenant_id = $1
+      WHERE tenant_id = $1 AND (deleted IS NULL OR deleted = 'false')
       `,
       [id]
     );

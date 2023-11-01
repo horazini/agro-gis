@@ -4,11 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-} from "@mui/icons-material";
+import { Add as AddIcon, FormatListBulleted } from "@mui/icons-material";
 
 import { speciesMainData, getTenantSpecies } from "../../utils/services";
 import { PageTitle } from "../../components/customComponents";
@@ -32,13 +28,6 @@ function SpeciesList() {
   }, []);
 
   const navigate = useNavigate();
-
-  const handleDelete = async (id: any) => {
-    try {
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   return (
     <Fragment>
@@ -69,19 +58,11 @@ function SpeciesList() {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => navigate(`/species/${specie.id}/edit`)}
-                endIcon={<EditIcon />}
-              >
-                Editar
-              </Button>
-              <Button
-                variant="contained"
-                color="warning"
+                onClick={() => navigate(`/species/${specie.id}`)}
                 style={{ marginLeft: ".5rem" }}
-                onClick={() => handleDelete(specie.id)}
-                endIcon={<DeleteIcon />}
+                startIcon={<FormatListBulleted />}
               >
-                Eliminar
+                Ver detalles
               </Button>
             </Box>
           </CardContent>

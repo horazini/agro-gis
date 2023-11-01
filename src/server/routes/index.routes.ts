@@ -11,7 +11,7 @@ import {
   updateTenant,
   getTenantById,
   createTenantWithUsers,
-  getTenantUsers,
+  getEnabledTenantUsers,
   getTenantData,
   disableTenant,
   enableTenant,
@@ -24,7 +24,7 @@ router.get("/tenant/:id", getTenantById);
 router.put("/tenant/:id", updateTenant);
 
 router.post("/tenantdata", createTenantWithUsers);
-router.get("/tenantusers/:id", getTenantUsers);
+router.get("/tenantusers/:id", getEnabledTenantUsers);
 router.get("/tenantdata/:id", getTenantData);
 router.put("/disabletenant/:id", disableTenant);
 router.put("/enabletenant/:id", enableTenant);
@@ -69,19 +69,25 @@ import {
   getSpecies,
   getSpeciesByTenant,
   getSpeciesDataById,
+  getDetailedSpeciesDataById,
   createSpecies,
-  deleteSpecies,
+  //deleteSpecies,
   updateSpecies,
   createSpeciesWithStagesAndEvents,
+  disableSpecies,
+  enableSpecies,
 } from "../controllers/species.controllers";
 
 router.get("/species", getSpecies);
 router.get("/speciesdata/:id", getSpeciesDataById);
+router.get("/detailedspeciesdata/:id", getDetailedSpeciesDataById);
 router.get("/tenantspecies/:id", getSpeciesByTenant);
 router.post("/species", createSpecies);
 router.post("/speciesdata", createSpeciesWithStagesAndEvents);
 router.put("/species/:id", updateSpecies);
-router.delete("/species/:id", deleteSpecies);
+//router.delete("/species/:id", deleteSpecies);
+router.put("/disablespecies/:id", disableSpecies);
+router.put("/enablespecies/:id", enableSpecies);
 
 // Geo
 

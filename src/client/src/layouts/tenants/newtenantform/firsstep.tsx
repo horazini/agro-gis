@@ -17,6 +17,7 @@ import {
   CancelButton,
   ConfirmButton,
 } from "../../../components/customComponents";
+import { tenantNameAlreadyExists } from "../../../utils/services";
 
 export type FirstStepProps = {
   orgData: {
@@ -31,6 +32,7 @@ export type FirstStepProps = {
   onNext: () => void;
   isEditingForm: boolean;
   onConfirm: () => Promise<number>;
+  tenantId?: number;
 };
 
 const FirstStep = ({
@@ -39,6 +41,7 @@ const FirstStep = ({
   onNext,
   isEditingForm,
   onConfirm,
+  tenantId,
 }: FirstStepProps) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -55,17 +58,36 @@ const FirstStep = ({
     navigate("/tenants/list");
   };
 
+  const [tenantNameError, setTenantNameError] = useState(false);
   const [emailError, setEmailError] = useState(false);
 
-  const handleValidation = () => {
+  const handleValidation = async () => {
+    const isTenantDuplicated = await tenantNameAlreadyExists(orgData.name);
     const isMailValid = isValidEmail(orgData.email);
 
-    if (!isMailValid) {
-      setEmailError(true);
-      return;
+    setEmailError(!isMailValid);
+    setTenantNameError(isTenantDuplicated);
+
+    if (isMailValid && !isTenantDuplicated) {
+      onNext();
     }
-    setEmailError(false);
-    onNext();
+  };
+
+  const handleConfirmEditFormValidation = async () => {
+    const isTenantDuplicated = await tenantNameAlreadyExists(
+      orgData.name,
+      tenantId
+    );
+    const isMailValid = isValidEmail(orgData.email);
+
+    setEmailError(!isMailValid);
+    setTenantNameError(isTenantDuplicated);
+
+    if (isMailValid && !isTenantDuplicated) {
+      return true;
+    } else {
+      return false;
+    }
   };
 
   return (
@@ -85,6 +107,10 @@ const FirstStep = ({
             variant="standard"
             value={orgData.name}
             onChange={handleInputChange}
+            error={tenantNameError}
+            helperText={
+              tenantNameError ? "El nombre de cliente ya está en uso" : ""
+            }
           />
         </Grid>
 
@@ -195,6 +221,7 @@ const FirstStep = ({
         <CancelButton navigateDir="/tenants/list" />
         {isEditingForm ? (
           <ConfirmButton
+            handleValidation={handleConfirmEditFormValidation}
             msg={"Se modificarán los datos del cliente"}
             onConfirm={onConfirm}
             navigateDir={"/tenants/list"}

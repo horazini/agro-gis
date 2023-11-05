@@ -256,6 +256,47 @@ export const createTenantWithUsers = async (
   }
 };
 
+export const tenantNameAlreadyExists = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { tenantName } = req.body;
+    const query: QueryResult = await pool.query(
+      "SELECT COUNT(*) AS tenant_exist FROM tenant WHERE name = $1",
+      [tenantName]
+    );
+    const response = query.rows[0].tenant_exist > 0;
+    return res.status(200).json(response);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const renameTenantNameAlreadyExists = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { tenantName, currentTenantId } = req.body;
+    const query: QueryResult = await pool.query(
+      "SELECT id FROM tenant WHERE name = $1",
+      [tenantName]
+    );
+    let response = false;
+    query.rows.forEach((tenant: any) => {
+      if (tenant.id !== currentTenantId) {
+        response = true;
+      }
+    });
+    return res.status(200).json(response);
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const updateTenant = async (
   req: Request,
   res: Response,

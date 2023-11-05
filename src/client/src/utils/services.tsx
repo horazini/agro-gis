@@ -128,6 +128,33 @@ export const usernameAlreadyExists = async (
   }
 };
 
+export const tenantNameAlreadyExists = async (
+  tenantName: string,
+  currentTenantId?: number
+) => {
+  if (currentTenantId) {
+    const res = await fetch(`${API}/renametenantnameexists`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tenantName, currentTenantId }),
+    });
+    const bool = await res.json();
+    return bool;
+  } else {
+    const res = await fetch(`${API}/tenantnameexists`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tenantName }),
+    });
+    const bool = await res.json();
+    return bool;
+  }
+};
+
 export const getUserData = async (id: string) => {
   const res = await fetch(`${API}/userdata/${id}`);
   const data = await res.json();

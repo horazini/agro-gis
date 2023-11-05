@@ -242,6 +242,7 @@ const MyForm = () => {
             onNext={handleNext}
             isEditingForm={isEditingForm}
             onConfirm={handleConfirm}
+            tenantId={Number(params.id)}
           />
         ) : (
           <Fragment>

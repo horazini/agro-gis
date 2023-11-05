@@ -13,6 +13,8 @@ import {
   createTenantWithUsers,
   getEnabledTenantUsers,
   getTenantData,
+  tenantNameAlreadyExists,
+  renameTenantNameAlreadyExists,
   disableTenant,
   enableTenant,
 } from "../controllers/tenant.controllers";
@@ -26,6 +28,8 @@ router.post("/tenantdata", createTenantWithUsers);
 router.put("/tenantdata", updateTenant);
 router.get("/tenantusers/:id", getEnabledTenantUsers);
 router.get("/tenantdata/:id", getTenantData);
+router.post("/tenantnameexists", tenantNameAlreadyExists);
+router.post("/renametenantnameexists", renameTenantNameAlreadyExists);
 router.put("/disabletenant/:id", disableTenant);
 router.put("/enabletenant/:id", enableTenant);
 

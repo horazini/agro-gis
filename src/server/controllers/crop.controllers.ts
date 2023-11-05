@@ -689,7 +689,7 @@ export const getAllTenantTasks = async (
     const cropsQuery = `
     SELECT id
     FROM crop 
-    WHERE tenant_id = $1 AND (deleted IS NULL OR deleted = 'false')
+    WHERE tenant_id = $1 AND deleted IS false
     ;
   `;
 
@@ -720,7 +720,7 @@ export const getAllCalendarTenantTasks = async (
     const cropsQuery = `
     SELECT id
     FROM crop 
-    WHERE tenant_id = $1 AND (deleted IS NULL OR deleted = 'false')
+    WHERE tenant_id = $1 AND deleted IS false
     ;
   `;
 

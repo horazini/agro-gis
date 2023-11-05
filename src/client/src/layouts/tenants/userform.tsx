@@ -15,15 +15,7 @@ import {
 } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
 import {
-  PersonOff as PersonOffIcon,
-  HowToReg as HowToRegIcon,
-} from "@mui/icons-material";
-
-import {
-  disableUser,
-  enableUser,
   getUserData,
   hashFunction,
   postUser,
@@ -33,7 +25,6 @@ import {
 import {
   CancelButton,
   ConfirmButton,
-  ConfirmDialog,
   PageTitle,
 } from "../../components/customComponents";
 import { useSelector } from "react-redux";

@@ -133,7 +133,7 @@ const CropsList = (crops: any[]) => {
           />
         </Box>
       ) : (
-        <h3> El cliente no registra cultivos. </h3>
+        <h3> No se registran cultivos. </h3>
       )}
     </Fragment>
   );

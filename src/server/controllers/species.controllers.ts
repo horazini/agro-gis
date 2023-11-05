@@ -23,7 +23,7 @@ export const getSpeciesByTenant = async (
   try {
     const id = parseInt(req.params.id);
     const response: QueryResult = await pool.query(
-      "SELECT id, name, description, tenant_id FROM species WHERE tenant_id = $1 AND (deleted IS NULL OR deleted = 'false')",
+      "SELECT id, name, description, tenant_id FROM species WHERE tenant_id = $1 AND deleted IS false",
       [id]
     );
     return res.status(200).json(response.rows);

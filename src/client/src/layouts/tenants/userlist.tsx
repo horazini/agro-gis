@@ -78,46 +78,7 @@ const UserList = (users: user[]) => {
       {users.length > 0 ? (
         <Fragment>
           {users.map((user) => (
-            <Card key={user.id} style={{ marginBottom: ".7rem" }}>
-              <CardContent
-                style={{ display: "flex", justifyContent: "space-between" }}
-              >
-                <Box>
-                  <Box fontStyle={{ display: "flex" }}>
-                    <Typography>
-                      {user.surname}, {user.names}
-                    </Typography>
-                    {user.deleted === true ? (
-                      <Fragment>
-                        <Typography style={{ marginLeft: 10 }}>•</Typography>
-                        <Chip
-                          label="INHABILITADO"
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          style={{ marginLeft: 10 }}
-                        />
-                      </Fragment>
-                    ) : null}
-                  </Box>
-                  <Typography>
-                    {UsertypeIDToString(user.usertype_id)}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => navigate(`/users/${user.id}`)}
-                    style={{ marginLeft: ".5rem" }}
-                    startIcon={<FormatListBulleted />}
-                  >
-                    Ver detalles
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
+            <UserCard user={user} key={user.id} />
           ))}
         </Fragment>
       ) : (
@@ -127,4 +88,46 @@ const UserList = (users: user[]) => {
   );
 };
 
+export const UserCard = ({ user }: any) => {
+  const navigate = useNavigate();
+
+  return (
+    <Card key={user.id} style={{ marginBottom: ".7rem" }}>
+      <CardContent style={{ display: "flex", justifyContent: "space-between" }}>
+        <Box>
+          <Box fontStyle={{ display: "flex" }}>
+            <Typography>
+              {user.surname}, {user.names}
+            </Typography>
+            {user.deleted === true ? (
+              <Fragment>
+                <Typography style={{ marginLeft: 10 }}>•</Typography>
+                <Chip
+                  label="INHABILITADO"
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  style={{ marginLeft: 10 }}
+                />
+              </Fragment>
+            ) : null}
+          </Box>
+          <Typography>{UsertypeIDToString(user.usertype_id)}</Typography>
+        </Box>
+
+        <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate(`/users/${user.id}`)}
+            style={{ marginLeft: ".5rem" }}
+            startIcon={<FormatListBulleted />}
+          >
+            Ver detalles
+          </Button>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
 export default UserListLoad;

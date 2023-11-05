@@ -1,13 +1,4 @@
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Collapse,
-  Divider,
-  IconButton,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Divider } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -15,9 +6,6 @@ import {
   PersonOff as PersonOffIcon,
   HowToReg as HowToRegIcon,
   Edit as EditIcon,
-  FormatListBulleted,
-  KeyboardArrowDown,
-  KeyboardArrowUp,
 } from "@mui/icons-material";
 
 import {
@@ -27,6 +15,8 @@ import {
 } from "../../utils/services";
 import { FormattedArea } from "../../components/mapcomponents";
 import { ConfirmDialog, PageTitle } from "../../components/customComponents";
+import { formatedDate } from "../../utils/functions";
+import { UserCard } from "./userlist";
 
 interface user {
   id: number;
@@ -54,7 +44,17 @@ interface tenantData {
 }
 
 const TenantHeader = (tenantInfo: any) => {
-  const { id, name, deleted } = tenantInfo;
+  const {
+    id,
+    name,
+    deleted,
+    created,
+    representatives_surname,
+    representatives_names,
+    email,
+    phone,
+    locality,
+  } = tenantInfo;
 
   const [openDisable, setOpenDisable] = useState(false);
   const [openEnable, setOpenEnable] = useState(false);
@@ -107,7 +107,7 @@ const TenantHeader = (tenantInfo: any) => {
             startIcon={<EditIcon />}
             variant="contained"
             sx={{ mr: 2 }}
-            onClick={() => navigate(`/`)}
+            onClick={() => navigate(`/tenants/${id}/edit`)}
           >
             Editar
           </Button>
@@ -126,6 +126,19 @@ const TenantHeader = (tenantInfo: any) => {
 
       <Divider />
 
+      <Box>
+        <h3>
+          Localidad: {locality}
+          <br />
+          Representante: {representatives_surname}, {representatives_names}
+          <br />
+          Correo electrónico: {email}
+          <br />
+          Número de teléfono: {phone}
+          <br />
+          Adquisición del servicio: {formatedDate(created)}
+        </h3>
+      </Box>
       <ConfirmDialog
         open={openDisable}
         handleClose={handleClose}
@@ -150,57 +163,13 @@ const TenantHeader = (tenantInfo: any) => {
 };
 
 const UserList = (users: user[]) => {
-  const [open, setOpen] = useState(-1);
-
   return (
     <Fragment>
       <h2>Usuarios</h2>
       {users.length > 0 ? (
         <Fragment>
           {users.map((user) => (
-            <Card key={user.id} style={{ marginBottom: ".7rem" }}>
-              <CardContent
-                style={{ display: "flex", justifyContent: "space-between" }}
-              >
-                <Box>
-                  <Typography>
-                    {user.surname}, {user.names}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Button
-                    disabled
-                    variant="contained"
-                    color="warning"
-                    /* onClick={() => navigate(`/tenants/${user.id}`)} */
-                    style={{ marginLeft: ".5rem" }}
-                    startIcon={<FormatListBulleted />}
-                  >
-                    Ver detalles
-                  </Button>
-
-                  <IconButton
-                    aria-label="expand row"
-                    size="small"
-                    onClick={() => setOpen(open === user.id ? -1 : user.id)}
-                    style={{ marginLeft: ".5rem" }}
-                  >
-                    {open === user.id ? (
-                      <KeyboardArrowUp />
-                    ) : (
-                      <KeyboardArrowDown />
-                    )}
-                  </IconButton>
-                </Box>
-              </CardContent>
-
-              <Collapse in={open === user.id} timeout="auto" unmountOnExit>
-                <CardContent>
-                  <Typography>Info</Typography>
-                </CardContent>
-              </Collapse>
-            </Card>
+            <UserCard user={user} />
           ))}
         </Fragment>
       ) : (

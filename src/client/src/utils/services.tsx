@@ -15,6 +15,17 @@ export type tenantMainData = {
   deleted: boolean;
 };
 
+export type tenantDetailedData = {
+  id?: number;
+  name: string;
+  representatives_names: string;
+  representatives_surname: string;
+  locality: string;
+  email: string;
+  phone: string | number;
+  deleted?: boolean;
+};
+
 export type userDataType = {
   id?: number;
   usertype_id: number;
@@ -27,9 +38,7 @@ export type userDataType = {
 };
 
 export type tenantDataType = {
-  tenant: {
-    name: string;
-  };
+  tenant: tenantDetailedData;
   users: userDataType[];
 };
 
@@ -55,6 +64,15 @@ export const postTenantData = async (tenantData: tenantDataType) => {
   const res = await fetch(`${API}/tenantdata`, {
     method: "POST",
     body: JSON.stringify(tenantData),
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};
+
+export const putTenantData = async (tenantPutData: tenantDetailedData) => {
+  const res = await fetch(`${API}/tenantdata`, {
+    method: "PUT",
+    body: JSON.stringify(tenantPutData),
     headers: { "Content-type": "application/json" },
   });
   return res.status;

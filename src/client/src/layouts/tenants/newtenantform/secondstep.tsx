@@ -15,17 +15,17 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
-  SelectChangeEvent,
 } from "@mui/material";
 
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import React, { useState } from "react";
 import { usernameAlreadyExists } from "../../../utils/services";
 import { isValidEmail } from "../../../utils/functions";
+import { tenantUserTypes } from "../../../utils/functions";
 
 export interface RowData {
   id: number;
-  usertype: string;
+  usertype_id: number;
   username: string;
   mail_address: string;
   surname: string;
@@ -33,7 +33,6 @@ export interface RowData {
 }
 
 export type SecondStepProps = {
-  usertypes: { id: number; name: string }[];
   userList: RowData[];
   handleSubmitUser: (usersData: RowData, editingRowId: number | null) => void;
   handleDeleteUser: (id: number) => void;
@@ -42,29 +41,22 @@ export type SecondStepProps = {
 };
 
 const SecondStep = ({
-  usertypes,
   userList,
   handleSubmitUser,
   handleDeleteUser,
   onBack,
   onNext,
 }: SecondStepProps) => {
-  const usertypeslist = Object.values(usertypes).map((item: any) => item.name);
-
   const [userData, setUserData] = useState<RowData>({
     id: 0,
     username: "",
-    usertype: "",
+    usertype_id: 0,
     mail_address: "",
     surname: "",
     names: "",
   });
 
-  const handleFormChange = (
-    event:
-      | SelectChangeEvent<string>
-      | React.ChangeEvent<{ name: string; value: unknown }>
-  ) => {
+  const handleFormChange = (event: { target: { name: any; value: any } }) => {
     const { name, value } = event.target;
     setUserData({ ...userData, [name]: value });
   };
@@ -82,7 +74,7 @@ const SecondStep = ({
     setUserData({
       id: 0,
       username: "",
-      usertype: "",
+      usertype_id: 0,
       mail_address: "",
       surname: "",
       names: "",
@@ -91,8 +83,8 @@ const SecondStep = ({
   };
 
   const disableSubmit = () => {
-    const { usertype, surname, names, mail_address, username } = userData;
-    return !(usertype && surname && names && mail_address && username);
+    const { usertype_id, surname, names, mail_address, username } = userData;
+    return !(usertype_id && surname && names && mail_address && username);
   };
 
   const [emailError, setEmailError] = useState(false);
@@ -162,7 +154,13 @@ const SecondStep = ({
               <TableBody>
                 {userList.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell>{row.usertype}</TableCell>
+                    <TableCell>
+                      {
+                        tenantUserTypes.find(
+                          (usertype: any) => usertype.id === row.usertype_id
+                        )?.name
+                      }
+                    </TableCell>
                     <TableCell>{row.surname}</TableCell>
                     <TableCell>{row.names}</TableCell>
                     <TableCell>{row.mail_address}</TableCell>
@@ -190,17 +188,19 @@ const SecondStep = ({
             <InputLabel id="demo-simple-select-label">
               Tipo de usuario
             </InputLabel>
+
             <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              label="Usertype"
-              name="usertype"
-              value={userData.usertype}
+              value={userData.usertype_id}
               onChange={handleFormChange}
+              name="usertype_id"
+              displayEmpty
             >
-              {usertypeslist.map((usertype) => (
-                <MenuItem key={usertype} value={usertype}>
-                  {usertype}
+              <MenuItem value="0" disabled>
+                Seleccione un rol
+              </MenuItem>
+              {tenantUserTypes.map((usertype) => (
+                <MenuItem key={usertype.id} value={usertype.id}>
+                  {usertype.name}
                 </MenuItem>
               ))}
             </Select>

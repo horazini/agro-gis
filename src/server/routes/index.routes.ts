@@ -21,9 +21,9 @@ router.get("/", getTime);
 
 router.get("/tenants", getTenants);
 router.get("/tenant/:id", getTenantById);
-router.put("/tenant/:id", updateTenant);
 
 router.post("/tenantdata", createTenantWithUsers);
+router.put("/tenantdata", updateTenant);
 router.get("/tenantusers/:id", getEnabledTenantUsers);
 router.get("/tenantdata/:id", getTenantData);
 router.put("/disabletenant/:id", disableTenant);

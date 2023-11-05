@@ -6,9 +6,8 @@ import {
   Stepper,
   Typography,
 } from "@mui/material";
-import React, { useEffect } from "react";
+import React, { Fragment, useEffect } from "react";
 import { useState } from "react";
-import bcrypt from "bcryptjs";
 
 import FirstStep from "./firsstep";
 import SecondStep from "./secondstep";
@@ -17,16 +16,17 @@ import ThirdStep from "./thirdstep";
 import { RowData } from "./secondstep";
 
 import {
+  getTenantData,
   hashFunction,
   postTenantData,
+  putTenantData,
   tenantDataType,
 } from "../../../utils/services";
 import { PageTitle } from "../../../components/customComponents";
 import { tenantUserTypes } from "../../../utils/functions";
+import { useParams } from "react-router-dom";
 
 const MyForm = () => {
-  PageTitle("Nuevo cliente");
-
   // Pasos del formulario
 
   const [activeStep, setActiveStep] = useState(0);
@@ -41,10 +41,12 @@ const MyForm = () => {
   // Datos de la organizacion
 
   const [orgData, setOrgData] = useState({
-    tenantName: "",
-    adminSurname: "",
-    adminNames: "",
-    adminMailAddress: "",
+    name: "",
+    representatives_surname: "",
+    representatives_names: "",
+    email: "",
+    locality: "",
+    phone: "",
   });
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,47 +84,104 @@ const MyForm = () => {
     setUserList((prevRows) => prevRows.filter((row) => row.id !== id));
   };
 
-  const usertypeslist = Object.values(tenantUserTypes).map(
+  /*   const usertypeslist = Object.values(tenantUserTypes).map(
     (item: any) => item.name
-  );
+  ); */
 
   const usersSummary: {
-    usertype: string;
+    usertypename: string;
     total: number;
-  }[] = usertypeslist.map((usertype) => {
-    const total = userList.filter((user) => user.usertype === usertype).length;
-    return { usertype, total };
+  }[] = tenantUserTypes.map((usertype) => {
+    const total = userList.filter(
+      (user) => user.usertype_id === usertype.id
+    ).length;
+    const usertypename = usertype.name;
+    return { usertypename, total };
   });
-  usersSummary.push({ usertype: "Total", total: userList.length });
+  usersSummary.push({ usertypename: "Total", total: userList.length });
+
+  // Cargar especie existente (caso de edicion)
+
+  const params = useParams();
+
+  const [isEditingForm, setIsEditingForm] = useState(false);
+  const [deletedUsers, setDeletedUsers] = useState<number[]>([]);
+
+  const loadTenant = async (id: string) => {
+    try {
+      const data = await getTenantData(id);
+      const orgDataLoad = {
+        email: data.tenant.email,
+        locality: data.tenant.locality,
+        name: data.tenant.name,
+        phone: data.tenant.phone,
+        representatives_names: data.tenant.representatives_names,
+        representatives_surname: data.tenant.representatives_surname,
+      };
+      setOrgData(orgDataLoad);
+      setUserList(data.users);
+      setIsEditingForm(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    if (params.id) {
+      loadTenant(params.id);
+    }
+  }, [params.id]);
+
+  PageTitle(isEditingForm ? "Editar cliente" : "Nuevo cliente");
 
   // Confirmar formulario
 
   const handleConfirm = async () => {
     try {
-      const tenantData: tenantDataType = {
-        tenant: {
-          name: orgData.tenantName,
-        },
-        users: userList.map((user: any) => {
-          const usertype =
-            tenantUserTypes.find((type) => type.name === user.usertype) ||
-            userList[0];
+      if (isEditingForm) {
+        const tenantPutData = {
+          id: Number(params.id),
+          name: orgData.name,
+          representatives_names: orgData.representatives_names,
+          representatives_surname: orgData.representatives_surname,
+          locality: orgData.locality,
+          email: orgData.email,
+          phone: orgData.phone,
+        };
 
-          const password_hash = hashFunction(user.username);
+        const res = await putTenantData(tenantPutData);
+        return res;
+      } else {
+        const tenantData: tenantDataType = {
+          tenant: {
+            name: orgData.name,
+            representatives_names: orgData.representatives_names,
+            representatives_surname: orgData.representatives_surname,
+            locality: orgData.locality,
+            email: orgData.email,
+            phone: orgData.phone,
+          },
+          users: userList.map((user: any) => {
+            const usertype =
+              tenantUserTypes.find((type) => type.name === user.usertype) ||
+              userList[0];
 
-          return {
-            usertype_id: usertype?.id,
-            mail_address: user.mail_address,
-            username: user.username,
-            names: user.names,
-            surname: user.surname,
-            password_hash,
-          };
-        }),
-      };
+            const password_hash = hashFunction(user.username);
 
-      const res = await postTenantData(tenantData);
-      return res;
+            return {
+              usertype_id: usertype?.id,
+              mail_address: user.mail_address,
+              username: user.username,
+              names: user.names,
+              surname: user.surname,
+              password_hash,
+            };
+          }),
+        };
+
+        const res = await postTenantData(tenantData);
+        return res;
+      }
     } catch (error) {
       console.log(error);
       return 400;
@@ -139,12 +198,13 @@ const MyForm = () => {
             orgData={orgData}
             handleInputChange={handleInputChange}
             onNext={handleNext}
+            isEditingForm={isEditingForm}
+            onConfirm={handleConfirm}
           />
         );
       case 1:
         return (
           <SecondStep
-            usertypes={tenantUserTypes}
             userList={userList}
             handleSubmitUser={handleSubmitUser}
             handleDeleteUser={handleDeleteUser}
@@ -173,20 +233,32 @@ const MyForm = () => {
         sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }}
       >
         <Typography component="h1" variant="h4" align="center">
-          Nuevo cliente
+          {isEditingForm ? "Editar cliente" : "Nuevo cliente"}
         </Typography>
-        <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
-          <Step>
-            <StepLabel>Organización</StepLabel>
-          </Step>
-          <Step>
-            <StepLabel>Usuarios</StepLabel>
-          </Step>
-          <Step>
-            <StepLabel>Confirmar datos</StepLabel>
-          </Step>
-        </Stepper>
-        {renderStepContent(activeStep)}
+        {isEditingForm ? (
+          <FirstStep
+            orgData={orgData}
+            handleInputChange={handleInputChange}
+            onNext={handleNext}
+            isEditingForm={isEditingForm}
+            onConfirm={handleConfirm}
+          />
+        ) : (
+          <Fragment>
+            <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
+              <Step>
+                <StepLabel>Organización</StepLabel>
+              </Step>
+              <Step>
+                <StepLabel>Usuarios</StepLabel>
+              </Step>
+              <Step>
+                <StepLabel>Confirmar datos</StepLabel>
+              </Step>
+            </Stepper>
+            {renderStepContent(activeStep)}
+          </Fragment>
+        )}
       </Paper>
     </Container>
   );

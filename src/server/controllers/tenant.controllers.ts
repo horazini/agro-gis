@@ -93,7 +93,7 @@ export const getEnabledTenantUsers = async (
       SELECT 
       id, usertype_id, mail_address, username, names, surname
       FROM user_account 
-      WHERE tenant_id = $1 AND (deleted IS NULL OR deleted = 'false')
+      WHERE tenant_id = $1 AND deleted IS false
       `,
       [id]
     );
@@ -121,8 +121,7 @@ export const getTenantData = async (
     const id = parseInt(req.params.id);
     const tenantQuery: QueryResult = await pool.query(
       `
-      SELECT 
-      id, name, deleted FROM tenant WHERE id = $1
+      SELECT * FROM tenant WHERE id = $1
       `,
       [id]
     );
@@ -189,13 +188,29 @@ export const createTenantWithUsers = async (
     const tenantData = req.body.tenant;
     const usersData = req.body.users || [];
 
+    const {
+      name,
+      representatives_names,
+      representatives_surname,
+      locality,
+      email,
+      phone,
+    } = tenantData;
     // Insertar nuevo tenant y obtener el ID
     const tenantInsertQuery = `
-      INSERT INTO tenant (name)
-      VALUES ($1)
+      INSERT INTO tenant (name,
+        representatives_names, representatives_surname, locality, email, phone)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id
     `;
-    const tenantInsertValues = [tenantData.name];
+    const tenantInsertValues = [
+      name,
+      representatives_names,
+      representatives_surname,
+      locality,
+      email,
+      phone,
+    ];
     const tenantInsertResponse: QueryResult = await client.query(
       tenantInsertQuery,
       tenantInsertValues
@@ -247,10 +262,37 @@ export const updateTenant = async (
   next: NextFunction
 ) => {
   try {
-    const id = parseInt(req.params.id);
-    const { name } = req.body;
-    await pool.query("UPDATE tenant SET name = $1 WHERE id = $2", [name, id]);
-    return res.status(204).send("Tenant ${id} updated succesfully");
+    const {
+      id,
+      name,
+      representatives_names,
+      representatives_surname,
+      locality,
+      email,
+      phone,
+    } = req.body;
+
+    const tenantUpdateQuery = `
+      UPDATE tenant SET
+        name = $1, representatives_names = $2, representatives_surname = $3, locality = $4, email = $5, phone = $6
+        WHERE id = $7
+    `;
+
+    const tenantUpdateValues = [
+      name,
+      representatives_names,
+      representatives_surname,
+      locality,
+      email,
+      phone,
+      id,
+    ];
+    const tenantUpdateResponse: QueryResult = await pool.query(
+      tenantUpdateQuery,
+      tenantUpdateValues
+    );
+
+    return res.status(204).send(`Tenant ${id} updated succesfully`);
   } catch (e) {
     next(e);
   }

@@ -13,19 +13,33 @@ import {
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { isValidEmail } from "../../../utils/functions";
+import {
+  CancelButton,
+  ConfirmButton,
+} from "../../../components/customComponents";
 
 export type FirstStepProps = {
   orgData: {
-    tenantName: string;
-    adminSurname: string;
-    adminNames: string;
-    adminMailAddress: string;
+    name: string;
+    representatives_surname: string;
+    representatives_names: string;
+    email: string;
+    locality: string;
+    phone: string;
   };
   handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onNext: () => void;
+  isEditingForm: boolean;
+  onConfirm: () => Promise<number>;
 };
 
-const FirstStep = ({ orgData, handleInputChange, onNext }: FirstStepProps) => {
+const FirstStep = ({
+  orgData,
+  handleInputChange,
+  onNext,
+  isEditingForm,
+  onConfirm,
+}: FirstStepProps) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -44,7 +58,7 @@ const FirstStep = ({ orgData, handleInputChange, onNext }: FirstStepProps) => {
   const [emailError, setEmailError] = useState(false);
 
   const handleValidation = () => {
-    const isMailValid = isValidEmail(orgData.adminMailAddress);
+    const isMailValid = isValidEmail(orgData.email);
 
     if (!isMailValid) {
       setEmailError(true);
@@ -56,39 +70,37 @@ const FirstStep = ({ orgData, handleInputChange, onNext }: FirstStepProps) => {
 
   return (
     <React.Fragment>
-      <Typography variant="h6" gutterBottom>
-        Organización
-      </Typography>
-      <Grid container spacing={3}>
+      <Grid container spacing={1}>
+        <Grid item xs={12}>
+          <Typography variant="h6">Organización</Typography>
+        </Grid>
         <Grid item xs={12}>
           <TextField
             required
             inputProps={{ maxLength: 100 }}
-            id="tenantName"
-            name="tenantName"
+            id="name"
+            name="name"
             label="Nombre de la organización"
             fullWidth
             variant="standard"
-            value={orgData.tenantName}
+            value={orgData.name}
             onChange={handleInputChange}
           />
         </Grid>
-      </Grid>
-      <br />
-      <Typography variant="h6" gutterBottom>
-        Administrador
-      </Typography>
-      <Grid container spacing={3}>
+
+        <Grid item xs={12} mt={3}>
+          <Typography variant="h6">Representante</Typography>
+        </Grid>
         <Grid item xs={12} sm={6}>
           <TextField
             required
             inputProps={{ maxLength: 50 }}
             id="surname"
-            name="adminSurname"
-            label="Apellido"
+            name="representatives_surname"
+            label="Apellido del representante"
             fullWidth
             variant="standard"
-            value={orgData.adminSurname}
+            value={orgData.representatives_surname}
             onChange={handleInputChange}
           />
         </Grid>
@@ -97,30 +109,82 @@ const FirstStep = ({ orgData, handleInputChange, onNext }: FirstStepProps) => {
             required
             inputProps={{ maxLength: 50 }}
             id="names"
-            name="adminNames"
-            label="Nombres"
+            name="representatives_names"
+            label="Nombres del representante"
             fullWidth
             variant="standard"
-            value={orgData.adminNames}
+            value={orgData.representatives_names}
+            onChange={handleInputChange}
+          />
+        </Grid>
+
+        <Grid item xs={12} mt={3}>
+          <Typography variant="h6">Datos de contacto</Typography>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            required
+            inputProps={{ maxLength: 50 }}
+            id="locality"
+            name="locality"
+            label="Localidad"
+            fullWidth
+            variant="standard"
+            value={orgData.locality}
             onChange={handleInputChange}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
           <TextField
             required
-            inputProps={{ maxLength: 100 }}
+            inputProps={{ maxLength: 20 }}
+            id="phone"
+            name="phone"
+            label="Número de teléfono"
+            fullWidth
+            onKeyDown={(e) => {
+              if (
+                !(
+                  e.key === "0" ||
+                  e.key === "1" ||
+                  e.key === "2" ||
+                  e.key === "3" ||
+                  e.key === "4" ||
+                  e.key === "5" ||
+                  e.key === "6" ||
+                  e.key === "7" ||
+                  e.key === "8" ||
+                  e.key === "9" ||
+                  e.key === "Backspace" ||
+                  e.key === "Delete" ||
+                  e.key === "Tab"
+                )
+              ) {
+                e.preventDefault();
+              }
+            }}
+            variant="standard"
+            value={orgData.phone}
+            onChange={handleInputChange}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            required
+            inputProps={{ maxLength: 50 }}
             id="mailAddress"
-            name="adminMailAddress"
+            name="email"
             label="Correo electrónico"
             fullWidth
             variant="standard"
-            value={orgData.adminMailAddress}
+            value={orgData.email}
             onChange={handleInputChange}
             error={emailError}
             helperText={emailError ? "El correo electrónico no es válido" : ""}
           />
         </Grid>
       </Grid>
+
       <Box
         sx={{
           display: "flex",
@@ -128,24 +192,25 @@ const FirstStep = ({ orgData, handleInputChange, onNext }: FirstStepProps) => {
           alignItems: "center",
         }}
       >
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 3, ml: 1 }}
-          onClick={handleClickOpen}
-        >
-          Cancelar
-        </Button>
-
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 3, ml: 1 }}
-          disabled={!Object.values(orgData).every((value) => !!value)}
-          onClick={handleValidation}
-        >
-          Siguiente
-        </Button>
+        <CancelButton navigateDir="/tenants/list" />
+        {isEditingForm ? (
+          <ConfirmButton
+            msg={"Se modificarán los datos del cliente"}
+            onConfirm={onConfirm}
+            navigateDir={"/tenants/list"}
+            disabled={false}
+          />
+        ) : (
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 3, ml: 1 }}
+            disabled={!Object.values(orgData).every((value) => !!value)}
+            onClick={handleValidation}
+          >
+            Siguiente
+          </Button>
+        )}
       </Box>
 
       <Dialog

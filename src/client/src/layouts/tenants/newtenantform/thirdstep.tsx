@@ -5,13 +5,15 @@ import { ConfirmButton } from "../../../components/customComponents";
 
 export type ThirdStepProps = {
   formData: {
-    tenantName: string;
-    adminSurname: string;
-    adminNames: string;
-    adminMailAddress: string;
+    name: string;
+    representatives_names: string;
+    representatives_surname: string;
+    locality: string;
+    email: string;
+    phone: string | number;
   };
   usersSummary: {
-    usertype: string;
+    usertypename: string;
     total: number;
   }[];
   onBack: () => void;
@@ -30,19 +32,20 @@ const ThirdStep = ({
   return (
     <React.Fragment>
       <Typography variant="h5" gutterBottom>
-        Cliente “{formData.tenantName}”
+        Cliente “{formData.name}”
       </Typography>
       <Typography variant="h6" gutterBottom>
-        Administrador: {formData.adminSurname}, {formData.adminNames}
+        Administrador: {formData.representatives_surname},{" "}
+        {formData.representatives_names}
         <br />
-        Email: {formData.adminMailAddress}
+        Email: {formData.email}
       </Typography>
       <Typography variant="h5" gutterBottom>
         Resumen de usuarios:
       </Typography>
       {usersSummary.map((row) => (
-        <Typography key={row.usertype} variant="h6" gutterBottom>
-          {row.usertype}: {row.total}
+        <Typography key={row.usertypename} variant="h6" gutterBottom>
+          {row.usertypename}: {row.total}
         </Typography>
       ))}
 

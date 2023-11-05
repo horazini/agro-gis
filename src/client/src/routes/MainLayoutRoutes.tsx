@@ -47,6 +47,11 @@ const routeList = [
     allowed: [1],
   },
   {
+    path: "/tenants/:id/edit",
+    element: <TenantForm />,
+    allowed: [1],
+  },
+  {
     path: "/users",
     element: <TenantUsers />,
     allowed: [2, 3],

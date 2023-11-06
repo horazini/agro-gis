@@ -14,7 +14,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { UsertypeIDToString } from "../../utils/functions";
 
-interface user {
+export type user = {
   id: number;
   usertype_id: number;
   mail_address: string;
@@ -22,7 +22,7 @@ interface user {
   names: string;
   surname: string;
   deleted: boolean;
-}
+};
 
 const UserLoader = () => {
   const params = useParams();
@@ -30,7 +30,7 @@ const UserLoader = () => {
 
   const [userData, setUserData] = useState<user>();
 
-  const loadTenant = async (id: string) => {
+  const loadUser = async (id: string) => {
     try {
       const data = await getUserData(id);
       setUserData(data);
@@ -41,7 +41,7 @@ const UserLoader = () => {
 
   useEffect(() => {
     if (params.id) {
-      loadTenant(params.id);
+      loadUser(params.id);
     }
   }, [params.id]);
 

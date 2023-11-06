@@ -37,6 +37,8 @@ export type DialogComponentProps = {
   disabled?: boolean;
   dialogTitle: string;
   dialogSubtitle: string | JSX.Element;
+  onClose?: () => void;
+  handleValidation?: () => boolean | Promise<boolean>;
   onConfirm: () => void;
 };
 
@@ -46,6 +48,8 @@ export const DialogComponent = ({
   disabled,
   dialogTitle,
   dialogSubtitle,
+  onClose,
+  handleValidation,
   onConfirm,
 }: DialogComponentProps) => {
   const [open, setOpen] = useState(false);
@@ -57,7 +61,20 @@ export const DialogComponent = ({
   };
 
   const handleClose = () => {
+    if (onClose !== undefined) {
+      onClose();
+    }
     setOpen(false);
+  };
+
+  const handleValidationTest = async () => {
+    if (handleValidation === undefined) {
+      return;
+    }
+    const res = await handleValidation();
+    if (res) {
+      handleConfirm();
+    }
   };
 
   const handleConfirm = () => {
@@ -87,7 +104,14 @@ export const DialogComponent = ({
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleConfirm} autoFocus>
+          <Button
+            onClick={
+              handleValidation !== undefined
+                ? handleValidationTest
+                : handleConfirm
+            }
+            autoFocus
+          >
             Confirmar
           </Button>
         </DialogActions>
@@ -152,19 +176,21 @@ export const CancelButton = ({ navigateDir }: CancelFormProps) => {
   );
 };
 
+export type ConfirmDialogProps = {
+  open: boolean;
+  handleClose: () => void;
+  msg: string;
+  onConfirm: () => Promise<number>;
+  navigateDir: string;
+};
+
 export const ConfirmDialog = ({
   open,
   handleClose,
   msg,
   onConfirm,
   navigateDir,
-}: {
-  open: boolean;
-  handleClose: () => void;
-  msg: string;
-  onConfirm: () => Promise<number>;
-  navigateDir: string;
-}) => {
+}: ConfirmDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [failure, setFailure] = useState(false);
@@ -232,7 +258,7 @@ export const ConfirmDialog = ({
   );
 };
 
-export type ConfirmFormProps = {
+export type ConfirmButtonProps = {
   handleValidation?: () => boolean | Promise<boolean>;
   msg: string;
   onConfirm: () => Promise<number>;
@@ -253,7 +279,7 @@ export const ConfirmButton = ({
   onConfirm,
   navigateDir,
   disabled,
-}: ConfirmFormProps) => {
+}: ConfirmButtonProps) => {
   const [open, setOpen] = useState(false);
 
   const handleClickOpen = () => {
@@ -313,6 +339,12 @@ export const CircularProgressBackdrop = ({
       <CircularProgress color="inherit" />
     </Backdrop>
   );
+};
+
+export type MySnackBarProps = {
+  open: boolean;
+  severity: AlertColor | undefined;
+  msg: string;
 };
 
 export type SnackBarAlertProps = {

@@ -54,7 +54,6 @@ export default function SignIn() {
       const password = String(data.get("password"));
       await dispatch(login({ username, password }) as any);
     } catch (error: any) {
-      console.log(error.message);
       if (error.message) {
         handleSnackbarOpen(error.message);
       } else {

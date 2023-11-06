@@ -39,6 +39,7 @@ import { RootState } from "../../redux/store";
 import {
   CircularProgressBackdrop,
   DialogComponent,
+  MySnackBarProps,
   PageTitle,
   SnackBarAlert,
   StandardDatePicker,
@@ -391,7 +392,7 @@ const EventDialogs = ({
         // Increment the data reload counter to trigger a data refresh
         setDataReloadCounter((prevCounter: number) => prevCounter + 1);
 
-        setSnackBar(eventSuccessSnackBar);
+        setSnackBar(successSnackBar);
       } else {
         setSnackBar(errorSnackBar);
       }
@@ -407,18 +408,7 @@ const EventDialogs = ({
 
   //#region Snackbar
 
-  type MySnackBarProps = {
-    open: boolean;
-    severity: AlertColor | undefined;
-    msg: string;
-  };
-  const [snackBar, setSnackBar] = useState<MySnackBarProps>({
-    open: false,
-    severity: undefined,
-    msg: "",
-  });
-
-  const eventSuccessSnackBar: MySnackBarProps = {
+  const successSnackBar: MySnackBarProps = {
     open: true,
     severity: "success",
     msg: "Tarea realizada!",
@@ -429,6 +419,12 @@ const EventDialogs = ({
     severity: "error",
     msg: "Algo ha fallado.",
   };
+
+  const [snackBar, setSnackBar] = useState<MySnackBarProps>({
+    open: false,
+    severity: undefined,
+    msg: "",
+  });
 
   const handleSnackbarClose = (
     event: React.SyntheticEvent | Event,
@@ -466,7 +462,7 @@ const EventDialogs = ({
 
       if (res === 200) {
         setDataReloadCounter((prevCounter: number) => prevCounter + 1);
-        setSnackBar(eventSuccessSnackBar);
+        setSnackBar(successSnackBar);
       } else {
         setSnackBar(errorSnackBar);
       }

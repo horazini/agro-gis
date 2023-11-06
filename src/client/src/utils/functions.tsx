@@ -9,7 +9,7 @@ export const tenantUserTypes = [
 ];
 
 export const usertypeObjects = [
-  { id: 1, label: "Service admin" },
+  { id: 1, label: "Administrador del servicio" },
   { id: 2, label: "Gerente administrativo" },
   { id: 3, label: "Gerente agrónomo" },
   { id: 4, label: "Especialista en suelos" },

@@ -196,12 +196,25 @@ export const login = async (
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  const query =
-    "SELECT tenant_id, usertype_id, id, username, names, surname FROM user_account WHERE username = $1";
+  const query = `  
+    SELECT
+      tenant_id, usertype_id, user_account.id, username, names, surname,
+      ut.name AS usertype_name,
+      t.name AS tenant_name
+    FROM
+      user_account 
+        JOIN usertype ut ON user_account.usertype_id = ut.id
+        JOIN tenant t ON user_account.tenant_id = t.id
+    WHERE
+      user_account.username = $1;
+    `;
   const result = await pool.query(query, [username]);
+  console.log(result.rows[0]);
   const {
     tenant_id: tenantId,
+    tenant_name: tenantName,
     usertype_id: userTypeId,
+    usertype_name: usertypeName,
     id: userId,
     names: names,
     surname: surname,
@@ -209,7 +222,53 @@ export const login = async (
 
   const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "1h" });
 
-  res.json({ token, tenantId, userTypeId, userId, username, names, surname });
+  res.json({
+    token,
+    tenantId,
+    tenantName,
+    userTypeId,
+    usertypeName,
+    userId,
+    username,
+    names,
+    surname,
+  });
+};
+
+export const verifyCredentials = async (
+  req: { body: { username: any; password: any } },
+  res: any
+) => {
+  const { username, password } = req.body;
+  const isValidCredentials = await verifyUserCredentials(username, password);
+  return res.status(200).json(isValidCredentials);
+};
+
+export const resetUserPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId, username, prevPassword, newPasswordHash } = req.body;
+    const isValidCredentials = await verifyUserCredentials(
+      username,
+      prevPassword
+    );
+    if (isValidCredentials) {
+      await pool.query(
+        "UPDATE user_account SET password_hash = $1 WHERE id = $2 AND username = $3",
+        [newPasswordHash, userId, username]
+      );
+      return res
+        .status(200)
+        .send(`User ${userId}'s password updated succesfully`);
+    } else {
+      return res.status(400).send(`Something went wrong.`);
+    }
+  } catch (e) {
+    next(e);
+  }
 };
 
 // Obtener tipos de usuario
@@ -264,7 +323,7 @@ export const disableUser = async (
     await pool.query("UPDATE user_account SET deleted = true WHERE id = $1", [
       id,
     ]);
-    return res.status(200).send("User ${id} disabled succesfully");
+    return res.status(200).send(`User ${id} disabled succesfully`);
   } catch (e) {
     next(e);
   }
@@ -280,7 +339,7 @@ export const enableUser = async (
     await pool.query("UPDATE user_account SET deleted = false WHERE id = $1", [
       id,
     ]);
-    return res.status(200).send("User ${id} enabled succesfully");
+    return res.status(200).send(`User ${id} enabled succesfully`);
   } catch (e) {
     next(e);
   }

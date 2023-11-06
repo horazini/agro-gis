@@ -7,6 +7,8 @@ import { RootState } from "../redux/store";
 
 import NoMatch from "../layouts/app/nomatch";
 
+import Profile from "../layouts/user/profile";
+
 import TenantList from "../layouts/tenants/tenantslist";
 import TenantForm from "../layouts/tenants/newtenantform/tenantform";
 import TenantDetails from "../layouts/tenants/tenantdetails";
@@ -31,6 +33,11 @@ import CropsList from "../layouts/crops/cropslist";
 import Calendar from "../layouts/tasks/taskcalendar";
 
 const routeList = [
+  {
+    path: "/profile",
+    element: <Profile />,
+    allowed: [1, 2, 3, 4, 5, 6],
+  },
   {
     path: "/tenants/list",
     element: <TenantList />,

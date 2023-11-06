@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/authSlice";
 
@@ -34,6 +34,7 @@ import {
   Menu as MenuIcon,
   ChevronLeft as ChevronLeftIcon,
   Settings as SettingsIcon,
+  BrightnessMedium as BrightnessMediumIcon,
   AccountCircle as AccountCircleIcon,
   Logout as LogoutIcon,
   Store as StoreIcon,
@@ -183,7 +184,7 @@ const SettingsMenu = () => {
 
   return (
     <Fragment>
-      <Tooltip title="Ajustes">
+      <Tooltip title="Preferencia de tema">
         <IconButton
           onClick={handleSettingsClick}
           color="inherit"
@@ -192,7 +193,7 @@ const SettingsMenu = () => {
           aria-haspopup="true"
           aria-expanded={settingsOpen ? "true" : undefined}
         >
-          <SettingsIcon sx={{ width: 32, height: 32 }} />
+          <BrightnessMediumIcon sx={{ width: 32, height: 32 }} />
         </IconButton>
       </Tooltip>
 
@@ -234,9 +235,6 @@ const SettingsMenu = () => {
           Tema oscuro
           <Switch checked={theme} />
         </MenuItem>
-
-        <Divider />
-        <MenuItem>Preferencias</MenuItem>
       </Menu>
     </Fragment>
   );
@@ -244,7 +242,7 @@ const SettingsMenu = () => {
 
 const UserMenu = () => {
   const dispatch = useDispatch();
-  const { username, surname, names } = useSelector(
+  const { username, surname, names, tenantName, usertypeName } = useSelector(
     (state: RootState) => state.auth
   );
 
@@ -261,6 +259,17 @@ const UserMenu = () => {
     await dispatch(logout() as any);
   };
 
+  const handleProfileClick = () => {
+    setAnchorEl(null);
+    navigate(`/profile`);
+  };
+
+  const handleTenantClick = () => {
+    setAnchorEl(null);
+    navigate(`/`);
+  };
+
+  const navigate = useNavigate();
   return (
     <Fragment>
       <Tooltip title="Usuario">
@@ -281,7 +290,6 @@ const UserMenu = () => {
         id="account-menu"
         open={userOpen}
         onClose={handleUserClose}
-        onClick={handleUserClose}
         PaperProps={{
           elevation: 0,
           sx: {
@@ -311,7 +319,13 @@ const UserMenu = () => {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <MenuItem onClick={handleUserClose}>
+        <MenuItem onClick={handleTenantClick}>
+          <ListItemIcon>
+            <StoreIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary={tenantName} />
+        </MenuItem>
+        <MenuItem onClick={handleProfileClick}>
           <Avatar />
           <ListItemText primary={`${names} ${surname}`} secondary={username} />
         </MenuItem>

@@ -46,6 +46,7 @@ import {
   getUserData,
   disableUser,
   enableUser,
+  resetUserPassword,
 } from "../controllers/user.controllers";
 
 router.get("/users", getUsers);
@@ -58,11 +59,13 @@ router.post("/renameusernameexists", renameUsernameAlreadyExists);
 router.get("/userdata/:id", getUserData);
 router.put("/disableuser/:id", disableUser);
 router.put("/enableuser/:id", enableUser);
+router.put("/userpassword", resetUserPassword);
 
 // auth
 
-import { login } from "../controllers/user.controllers";
+import { verifyCredentials, login } from "../controllers/user.controllers";
 
+router.post("/verifycredentials", verifyCredentials);
 router.post("/login", login);
 
 // Data tables

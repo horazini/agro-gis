@@ -48,6 +48,33 @@ export const getTenants = async () => {
   return data;
 };
 
+export const tenantNameAlreadyExists = async (
+  tenantName: string,
+  currentTenantId?: number
+) => {
+  if (currentTenantId) {
+    const res = await fetch(`${API}/renametenantnameexists`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tenantName, currentTenantId }),
+    });
+    const bool = await res.json();
+    return bool;
+  } else {
+    const res = await fetch(`${API}/tenantnameexists`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tenantName }),
+    });
+    const bool = await res.json();
+    return bool;
+  }
+};
+
 export const getTenantUsers = async (id: number) => {
   const res = await fetch(`${API}/tenantusers/${id}`);
   const data = await res.json();
@@ -128,31 +155,30 @@ export const usernameAlreadyExists = async (
   }
 };
 
-export const tenantNameAlreadyExists = async (
-  tenantName: string,
-  currentTenantId?: number
+export const verifyCredentials = async (username: string, password: string) => {
+  const res = await fetch(`${API}/verifycredentials`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+  });
+  const bool = await res.json();
+  return bool;
+};
+
+export const resetUserPassword = async (
+  userId: number,
+  username: string,
+  prevPassword: string,
+  newPasswordHash: string
 ) => {
-  if (currentTenantId) {
-    const res = await fetch(`${API}/renametenantnameexists`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ tenantName, currentTenantId }),
-    });
-    const bool = await res.json();
-    return bool;
-  } else {
-    const res = await fetch(`${API}/tenantnameexists`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ tenantName }),
-    });
-    const bool = await res.json();
-    return bool;
-  }
+  const res = await fetch(`${API}/userpassword`, {
+    method: "PUT",
+    headers: { "Content-type": "application/json" },
+    body: JSON.stringify({ userId, username, prevPassword, newPasswordHash }),
+  });
+  return res.status;
 };
 
 export const getUserData = async (id: string) => {

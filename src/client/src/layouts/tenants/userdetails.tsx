@@ -9,7 +9,10 @@ import {
 } from "@mui/icons-material";
 
 import { disableUser, enableUser, getUserData } from "../../utils/services";
-import { ConfirmDialog, PageTitle } from "../../components/customComponents";
+import {
+  ConfirmFetchAndRedirect,
+  PageTitle,
+} from "../../components/customComponents";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { UsertypeIDToString } from "../../utils/functions";
@@ -56,22 +59,6 @@ const UserDetails = ({ userData }: any) => {
   const { id, usertype_id, mail_address, username, names, surname, deleted } =
     userData;
 
-  const [openDisable, setOpenDisable] = useState(false);
-  const [openEnable, setOpenEnsable] = useState(false);
-
-  const handleClickOpenDisable = () => {
-    setOpenDisable(true);
-  };
-
-  const handleClickOpenEnable = () => {
-    setOpenEnsable(true);
-  };
-
-  const handleClose = () => {
-    setOpenDisable(false);
-    setOpenEnsable(false);
-  };
-
   const handleDisableUser: () => Promise<number> = async () => {
     try {
       return disableUser(id);
@@ -114,16 +101,28 @@ const UserDetails = ({ userData }: any) => {
           >
             Editar
           </Button>
-          <Button
+
+          <ConfirmFetchAndRedirect
+            component={
+              <Button
+                disabled={id === userId}
+                startIcon={deleted ? <HowToRegIcon /> : <PersonOffIcon />}
+                variant="contained"
+                color={deleted ? "success" : "error"}
+                sx={{ mr: 2 }}
+              >
+                {deleted ? "Habilitar" : "Eliminar"}
+              </Button>
+            }
             disabled={id === userId}
-            startIcon={deleted ? <HowToRegIcon /> : <PersonOffIcon />}
-            variant="contained"
-            color={deleted ? "success" : "error"}
-            sx={{ mr: 2 }}
-            onClick={deleted ? handleClickOpenEnable : handleClickOpenDisable}
-          >
-            {deleted ? "Habilitar" : "Eliminar"}
-          </Button>
+            msg={
+              deleted
+                ? "Se habilitará al usuario, devolviendo el acceso al servicio."
+                : "Se eliminará al usuario, impidiendo su acceso al servicio."
+            }
+            navigateDir={"/users"}
+            onConfirm={deleted ? handleEnableUser : handleDisableUser}
+          />
         </Box>
       </Box>
 
@@ -132,21 +131,6 @@ const UserDetails = ({ userData }: any) => {
       <h2>Rol: {UsertypeIDToString(usertype_id)}</h2>
       <h2>Nombre de usuario: {username}</h2>
       <h2>Correo electrónico: {mail_address}</h2>
-      <ConfirmDialog
-        open={openDisable}
-        handleClose={handleClose}
-        msg={"Se eliminará al usuario, impidiendo su acceso al servicio."}
-        navigateDir={"/users"}
-        onConfirm={handleDisableUser}
-      />
-
-      <ConfirmDialog
-        open={openEnable}
-        handleClose={handleClose}
-        msg={"Se habilitará al usuario, devolviendo el acceso al servicio."}
-        navigateDir={"/users"}
-        onConfirm={handleEnableUser}
-      />
     </Fragment>
   );
 };

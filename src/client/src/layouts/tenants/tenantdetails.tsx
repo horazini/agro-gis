@@ -14,7 +14,10 @@ import {
   getTenantData,
 } from "../../utils/services";
 import { FormattedArea } from "../../components/mapcomponents";
-import { ConfirmDialog, PageTitle } from "../../components/customComponents";
+import {
+  ConfirmFetchAndRedirect,
+  PageTitle,
+} from "../../components/customComponents";
 import { formatedDate } from "../../utils/functions";
 import { UserCard } from "./userlist";
 
@@ -56,22 +59,6 @@ const TenantHeader = (tenantInfo: any) => {
     locality,
   } = tenantInfo;
 
-  const [openDisable, setOpenDisable] = useState(false);
-  const [openEnable, setOpenEnable] = useState(false);
-
-  const handleClickOpenDisable = () => {
-    setOpenDisable(true);
-  };
-
-  const handleClickOpenEnable = () => {
-    setOpenEnable(true);
-  };
-
-  const handleClose = () => {
-    setOpenDisable(false);
-    setOpenEnable(false);
-  };
-
   const handleDisableTenant: () => Promise<number> = async () => {
     try {
       return disableTenant(id);
@@ -112,15 +99,25 @@ const TenantHeader = (tenantInfo: any) => {
             Editar
           </Button>
 
-          <Button
-            startIcon={deleted ? <HowToRegIcon /> : <PersonOffIcon />}
-            variant="contained"
-            color={deleted ? "success" : "error"}
-            sx={{ mr: 2 }}
-            onClick={deleted ? handleClickOpenEnable : handleClickOpenDisable}
-          >
-            {deleted ? "Habilitar" : "Inhabilitar"}
-          </Button>
+          <ConfirmFetchAndRedirect
+            component={
+              <Button
+                startIcon={deleted ? <HowToRegIcon /> : <PersonOffIcon />}
+                variant="contained"
+                color={deleted ? "success" : "error"}
+                sx={{ mr: 2 }}
+              >
+                {deleted ? "Habilitar" : "Inhabilitar"}
+              </Button>
+            }
+            msg={
+              deleted
+                ? "Se habilitará al cliente, devolviendo el acceso a todos sus usuarios."
+                : "Se inhabilitará al cliente, impidiendo el acceso a todos sus usuarios."
+            }
+            navigateDir={"/tenants/list"}
+            onConfirm={deleted ? handleEnableTenant : handleDisableTenant}
+          />
         </Box>
       </Box>
 
@@ -139,25 +136,6 @@ const TenantHeader = (tenantInfo: any) => {
           Adquisición del servicio: {formatedDate(created)}
         </h3>
       </Box>
-      <ConfirmDialog
-        open={openDisable}
-        handleClose={handleClose}
-        msg={
-          "Se inhabilitará al cliente, impidiendo el acceso a todos sus usuarios."
-        }
-        navigateDir={"/tenants/list"}
-        onConfirm={handleDisableTenant}
-      />
-
-      <ConfirmDialog
-        open={openEnable}
-        handleClose={handleClose}
-        msg={
-          "Se habilitará al cliente, devolviendo el acceso a todos sus usuarios."
-        }
-        navigateDir={"/tenants/list"}
-        onConfirm={handleEnableTenant}
-      />
     </Fragment>
   );
 };

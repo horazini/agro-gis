@@ -33,7 +33,10 @@ import {
   enableSpecies,
   getDetailedSpeciesData,
 } from "../../utils/services";
-import { ConfirmDialog, PageTitle } from "../../components/customComponents";
+import {
+  ConfirmFetchAndRedirect,
+  PageTitle,
+} from "../../components/customComponents";
 
 import { FormattedArea } from "../../components/mapcomponents";
 
@@ -114,23 +117,7 @@ function SpeciesForm(): JSX.Element {
     finishedCropsWeightSum: 0,
   });
 
-  // Enable/disable dialogs
-
-  const [openDisable, setOpenDisable] = useState(false);
-  const [openEnable, setOpenEnable] = useState(false);
-
-  const handleClickOpenDisable = () => {
-    setOpenDisable(true);
-  };
-
-  const handleClickOpenEnable = () => {
-    setOpenEnable(true);
-  };
-
-  const handleClose = () => {
-    setOpenDisable(false);
-    setOpenEnable(false);
-  };
+  // Enable/disable functions
 
   const handleDisableSpecies: () => Promise<number> = async () => {
     try {
@@ -189,15 +176,27 @@ function SpeciesForm(): JSX.Element {
             >
               Editar
             </Button>
-            <Button
-              startIcon={deleted ? <RestoreFromTrashIcon /> : <DeleteIcon />}
-              variant="contained"
-              color={deleted ? "success" : "error"}
-              sx={{ mr: 2 }}
-              onClick={deleted ? handleClickOpenEnable : handleClickOpenDisable}
-            >
-              {deleted ? "Habilitar" : "Eliminar"}
-            </Button>
+            <ConfirmFetchAndRedirect
+              component={
+                <Button
+                  startIcon={
+                    deleted ? <RestoreFromTrashIcon /> : <DeleteIcon />
+                  }
+                  variant="contained"
+                  color={deleted ? "success" : "error"}
+                  sx={{ mr: 2 }}
+                >
+                  {deleted ? "Habilitar" : "Eliminar"}
+                </Button>
+              }
+              msg={
+                deleted
+                  ? "Se habilitará a la especie, devolviendo al cliente su acceso a la misma."
+                  : "Se eliminará la especie, impidiendo la creación de nuevos cultivos de la misma."
+              }
+              navigateDir={"/species/list"}
+              onConfirm={deleted ? handleEnableSpecies : handleDisableSpecies}
+            />
           </Box>
         </Box>
 
@@ -219,26 +218,6 @@ function SpeciesForm(): JSX.Element {
         ) : (
           <h3> No se registran cosechas de esta especie. </h3>
         )}
-
-        <ConfirmDialog
-          open={openDisable}
-          handleClose={handleClose}
-          msg={
-            "Se eliminará la especie, impidiendo la creación de nuevos cultivos de la misma."
-          }
-          navigateDir={"/species/list"}
-          onConfirm={handleDisableSpecies}
-        />
-
-        <ConfirmDialog
-          open={openEnable}
-          handleClose={handleClose}
-          msg={
-            "Se habilitará a la especie, devolviendo al cliente su acceso a la misma."
-          }
-          navigateDir={"/species/list"}
-          onConfirm={handleEnableSpecies}
-        />
       </Fragment>
       <Paper
         variant="outlined"

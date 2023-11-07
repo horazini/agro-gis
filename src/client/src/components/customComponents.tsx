@@ -32,39 +32,33 @@ export const PageTitle = (title: string) => {
   return null;
 };
 
-export type DialogComponentProps = {
-  component: JSX.Element;
+//#region Dialog components
+
+export type MyDialogProps = {
+  open: boolean;
   disabled?: boolean;
   dialogTitle: string;
   dialogSubtitle: string | JSX.Element;
-  onClose?: () => void;
+  cancelButtonText?: string;
+  onClose: () => void;
   handleValidation?: () => boolean | Promise<boolean>;
   onConfirm: () => void;
 };
 
-// Opens a dialog component to confirm an action. Stays in the same page
-export const DialogComponent = ({
-  component,
-  disabled,
+/**
+ * Basic dialog component that works with an "open" boolean prop.
+ */
+export const MyDialog = ({
+  open,
   dialogTitle,
   dialogSubtitle,
+  cancelButtonText,
   onClose,
   handleValidation,
   onConfirm,
-}: DialogComponentProps) => {
-  const [open, setOpen] = useState(false);
-
-  const handleClickOpen = () => {
-    if (disabled !== true) {
-      setOpen(true);
-    }
-  };
-
+}: MyDialogProps) => {
   const handleClose = () => {
-    if (onClose !== undefined) {
-      onClose();
-    }
-    setOpen(false);
+    onClose();
   };
 
   const handleValidationTest = async () => {
@@ -79,6 +73,81 @@ export const DialogComponent = ({
 
   const handleConfirm = () => {
     onConfirm();
+    onClose();
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">{dialogTitle}</DialogTitle>
+      <DialogContent>
+        {typeof dialogSubtitle === "string" ? (
+          <DialogContentText id="alert-dialog-description">
+            {dialogSubtitle}
+          </DialogContentText>
+        ) : (
+          dialogSubtitle
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose}>
+          {cancelButtonText ? cancelButtonText : "Cancelar"}
+        </Button>
+        <Button
+          onClick={
+            handleValidation !== undefined
+              ? handleValidationTest
+              : handleConfirm
+          }
+          autoFocus
+        >
+          Confirmar
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+export type DialogComponentProps = {
+  component: JSX.Element;
+  disabled?: boolean;
+  dialogTitle: string;
+  dialogSubtitle: string | JSX.Element;
+  cancelButtonText?: string;
+  onClose?: () => void;
+  handleValidation?: () => boolean | Promise<boolean>;
+  onConfirm: () => void;
+};
+
+/**
+ * Custom clickable component that opens a "confirm action" dialog.
+ */
+export const DialogComponent = ({
+  component,
+  disabled,
+  dialogTitle,
+  dialogSubtitle,
+  cancelButtonText,
+  onClose,
+  handleValidation,
+  onConfirm,
+}: DialogComponentProps) => {
+  const [open, setOpen] = useState(false);
+
+  const handleClickOpen = () => {
+    if (disabled !== true) {
+      setOpen(true);
+    }
+  };
+
+  const handleClickClose = () => {
+    if (onClose !== undefined) {
+      onClose();
+    }
     setOpen(false);
   };
 
@@ -86,36 +155,15 @@ export const DialogComponent = ({
     <Fragment>
       <span onClick={handleClickOpen}>{component}</span>
 
-      <Dialog
+      <MyDialog
         open={open}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{dialogTitle}</DialogTitle>
-        <DialogContent>
-          {typeof dialogSubtitle === "string" ? (
-            <DialogContentText id="alert-dialog-description">
-              {dialogSubtitle}
-            </DialogContentText>
-          ) : (
-            dialogSubtitle
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button
-            onClick={
-              handleValidation !== undefined
-                ? handleValidationTest
-                : handleConfirm
-            }
-            autoFocus
-          >
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        dialogTitle={dialogTitle}
+        dialogSubtitle={dialogSubtitle}
+        cancelButtonText={cancelButtonText}
+        onClose={handleClickClose}
+        handleValidation={handleValidation}
+        onConfirm={onConfirm}
+      />
     </Fragment>
   );
 };
@@ -124,91 +172,105 @@ export type CancelFormProps = {
   navigateDir: string;
 };
 
-// Opens a dialog component to confirm the 'leave' of a form. Redirects to some other page
+/**
+ * Dialog button to confirm a form resignation. Redirects to some other page.
+ * @param {string} navigateDir - redirect directory
+ * @returns {JSX.Element} Button and dialog
+ */
 export const CancelButton = ({ navigateDir }: CancelFormProps) => {
   const navigate = useNavigate();
 
-  const [cancel, setCancel] = useState(false);
-
-  const handleCancelOpen = () => {
-    setCancel(true);
-  };
-
-  const handleClose = () => {
-    setCancel(false);
-  };
-
-  const handleCancel = () => {
-    navigate(navigateDir);
-  };
-
   return (
     <Fragment>
-      <Button
-        variant="outlined"
-        color="primary"
-        sx={{ mt: 3, ml: 1 }}
-        onClick={handleCancelOpen}
-      >
-        Cancelar
-      </Button>
-
-      <Dialog
-        open={cancel}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"¿Cancelar carga?"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Los datos ingresados no serán guardados.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Quedarme aquí</Button>
-          <Button onClick={handleCancel} autoFocus>
-            Confirmar
+      <DialogComponent
+        component={
+          <Button variant="outlined" color="primary" sx={{ mt: 3, ml: 1 }}>
+            Cancelar
           </Button>
-        </DialogActions>
-      </Dialog>
+        }
+        dialogTitle="¿Cancelar carga?"
+        dialogSubtitle={"Los datos ingresados no serán guardados."}
+        cancelButtonText={"Quedarme aquí"}
+        onConfirm={() => {
+          navigate(navigateDir);
+        }}
+      />
     </Fragment>
   );
 };
 
-export type ConfirmDialogProps = {
-  open: boolean;
-  handleClose: () => void;
+export type ConfirmFetchAndRedirectProps = {
+  component: JSX.Element;
+  disabled?: boolean;
+  handleValidation?: any;
+  onClose?: () => void;
   msg: string;
   onConfirm: () => Promise<number>;
   navigateDir: string;
 };
 
-export const ConfirmDialog = ({
-  open,
-  handleClose,
+/**
+ * Highly customizable component that opens a confirmation dialog and waits for an HTML response to redirect to some directory
+ */
+export const ConfirmFetchAndRedirect = ({
+  component,
+  disabled,
+  handleValidation,
+  onClose,
   msg,
   onConfirm,
   navigateDir,
-}: ConfirmDialogProps) => {
+}: ConfirmFetchAndRedirectProps) => {
+  const [open, setOpen] = useState(false);
+
+  const handleValidationTest = async () => {
+    if (handleValidation === undefined) {
+      return;
+    }
+    const res = await handleValidation();
+    if (res) {
+      setOpen(true);
+    }
+  };
+
+  const handleComponentOpen = () => {
+    if (!disabled) {
+      if (handleValidation !== undefined) {
+        handleValidationTest();
+      } else {
+        setOpen(true);
+      }
+    }
+  };
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [failure, setFailure] = useState(false);
 
   const navigate = useNavigate();
 
+  const handleClickClose = () => {
+    if (onClose !== undefined) {
+      onClose();
+    }
+    setOpen(false);
+  };
+
   const handleConfirm = async () => {
     setLoading(true);
+    setOpen(false);
     const res = await onConfirm();
 
     setLoading(false);
-    handleClose();
     if (200 <= res && res < 300) {
       setSuccess(true);
       setTimeout(() => {
         navigate(navigateDir);
       }, 4000);
     } else {
+      if (onClose !== undefined) {
+        onClose();
+      }
       setFailure(true);
       setTimeout(() => {
         setFailure(false);
@@ -218,25 +280,16 @@ export const ConfirmDialog = ({
 
   return (
     <Fragment>
-      <Dialog
+      <span onClick={handleComponentOpen}>{component}</span>
+
+      <MyDialog
         open={open}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"¿Confirmar?"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            {msg}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleConfirm} autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        dialogTitle="¿Confirmar?"
+        dialogSubtitle={msg}
+        onClose={handleClickClose}
+        onConfirm={handleConfirm}
+      />
+
       <Backdrop open={loading} style={{ zIndex: 9999 }}>
         <CircularProgress color="inherit" />
       </Backdrop>
@@ -267,7 +320,7 @@ export type ConfirmButtonProps = {
 };
 
 /**
- * Opens a dialog component to confirm a data load action. Redirects to some other page
+ * Opens a dialog component to confirm a data load action. Redirects to some other page.
  * @param {string} msg - dialog content text
  * @param {() => Promise<number>} onConfirm - action to realize when user confirms
  * @param {string} navigateDir - redirect directory
@@ -280,52 +333,32 @@ export const ConfirmButton = ({
   navigateDir,
   disabled,
 }: ConfirmButtonProps) => {
-  const [open, setOpen] = useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleValidationTest = async () => {
-    if (handleValidation === undefined) {
-      return;
-    }
-    const res = await handleValidation();
-    if (res) {
-      handleClickOpen();
-    }
-  };
-
   return (
     <Fragment>
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ mt: 3, ml: 1 }}
-        onClick={
-          handleValidation !== undefined
-            ? handleValidationTest
-            : handleClickOpen
+      <ConfirmFetchAndRedirect
+        component={
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 3, ml: 1 }}
+            disabled={disabled}
+          >
+            Confirmar
+          </Button>
         }
-        disabled={disabled}
-      >
-        Confirmar
-      </Button>
-
-      <ConfirmDialog
-        open={open}
-        handleClose={handleClose}
+        handleValidation={handleValidation}
         msg={msg}
         navigateDir={navigateDir}
         onConfirm={onConfirm}
+        disabled={disabled}
       />
     </Fragment>
   );
 };
+
+//#endregion
+
+//#region snackbars
 
 export type CircularProgressBackdropProps = {
   loading: boolean;
@@ -380,6 +413,8 @@ export const SnackBarAlert = ({
     </Snackbar>
   );
 };
+
+//#endregion
 
 /**
  *

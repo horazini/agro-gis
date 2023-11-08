@@ -416,6 +416,16 @@ export const SnackBarAlert = ({
 
 //#endregion
 
+export type StandardDatePickerProps = {
+  onOpenDateSelector?: () => void;
+  date?: Date | null;
+  setDate?: React.Dispatch<React.SetStateAction<Date | null>>;
+  onDateSelect?: (date: Date) => void;
+  label?: string;
+  minDate?: Date;
+  maxDate?: Date;
+};
+
 /**
  *
  * @param {Date | null} date
@@ -427,19 +437,21 @@ export const SnackBarAlert = ({
  * @returns {JSX.Element}
  */
 export const StandardDatePicker = ({
+  onOpenDateSelector,
   date,
   setDate,
   onDateSelect,
   label,
   minDate,
   maxDate,
-}: any): JSX.Element => {
+}: StandardDatePickerProps): JSX.Element => {
   const today = new Date();
 
   const [calendarAnchor, setCalendarAnchor] = useState<any>();
   const openDateSelector = Boolean(calendarAnchor);
 
   const handleOpenDateSelector = (event: any) => {
+    onOpenDateSelector && onOpenDateSelector();
     setCalendarAnchor(event.currentTarget);
   };
 
@@ -481,6 +493,75 @@ export const StandardDatePicker = ({
           ),
         }}
       />
+
+      <Menu
+        id="date-menu"
+        anchorEl={calendarAnchor}
+        open={openDateSelector}
+        onClose={() => handleCloseDateSelector()}
+        MenuListProps={{
+          "aria-labelledby": "basic-button",
+        }}
+      >
+        <DateCalendar
+          showDaysOutsideCurrentMonth
+          value={date ? dayjs(date) : dayjs(today)}
+          minDate={minDate ? dayjs(minDate) : null}
+          maxDate={maxDate ? dayjs(maxDate) : null}
+          onChange={(newValue: any, selectionState: any) => {
+            if (selectionState === "finish") {
+              handleDateChange(newValue);
+            }
+          }}
+        />
+      </Menu>
+    </Fragment>
+  );
+};
+
+export const ButtonDatePicker = ({
+  onOpenDateSelector,
+  onDateSelect,
+  date,
+  label,
+  minDate,
+  maxDate,
+  disabled,
+}: any): JSX.Element => {
+  const today = new Date();
+
+  const [calendarAnchor, setCalendarAnchor] = useState<any>();
+  const openDateSelector = Boolean(calendarAnchor);
+
+  const handleOpenDateSelector = (event: any) => {
+    onOpenDateSelector && onOpenDateSelector();
+    setCalendarAnchor(event.currentTarget);
+  };
+
+  const handleCloseDateSelector = () => {
+    setCalendarAnchor(null);
+  };
+
+  function handleDateChange(date: any) {
+    if (!Number.isNaN(new Date(date).getTime())) {
+      const dateObject = new Date(date);
+      onDateSelect && onDateSelect(dateObject);
+    }
+    handleCloseDateSelector();
+  }
+
+  return (
+    <Fragment>
+      <Button
+        variant="contained"
+        color="primary"
+        sx={{ mt: 3, ml: 1 }}
+        disabled={disabled}
+        onClick={(e) => (!disabled ? handleOpenDateSelector(e) : null)}
+        endIcon={<TodayIcon />}
+      >
+        {label ? label : "Seleccionar fecha"}
+      </Button>
 
       <Menu
         id="date-menu"

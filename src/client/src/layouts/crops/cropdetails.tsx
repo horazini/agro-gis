@@ -14,7 +14,6 @@ import {
   SentinelSnapshoter,
 } from "../../components/mapcomponents";
 import {
-  AlertColor,
   Box,
   Button,
   Card,
@@ -27,8 +26,6 @@ import {
   Divider,
   Grid,
   IconButton,
-  InputAdornment,
-  Menu,
   Paper,
   SelectChangeEvent,
   Table,
@@ -44,18 +41,18 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   KeyboardArrowDown,
   KeyboardArrowUp,
-  Today as TodayIcon,
   PlaylistAdd as PlaylistAddIcon,
 } from "@mui/icons-material";
 import {
+  ButtonDatePicker,
   CircularProgressBackdrop,
   DialogComponent,
+  MySnackBarProps,
   PageTitle,
   SnackBarAlert,
   StandardDatePicker,
 } from "../../components/customComponents";
 
-import { DateCalendar } from "@mui/x-date-pickers";
 import { format } from "date-fns";
 import {
   TimeIntervalToReadableString,
@@ -268,12 +265,6 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
 
 //#region Snackbar
 
-type MySnackBarProps = {
-  open: boolean;
-  severity: AlertColor | undefined;
-  msg: string;
-};
-
 const eventSuccessSnackBar: MySnackBarProps = {
   open: true,
   severity: "success",
@@ -304,56 +295,7 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
     done_date?: string;
   };
 
-  const [doneObject, setDoneObject] = useState<{
-    calendarAnchor: any;
-    objectTable: null | string;
-    objectId: number;
-    dateLimit: any;
-  }>({
-    calendarAnchor: null,
-    objectTable: null,
-    objectId: 0,
-    dateLimit: null,
-  });
-
-  const openDateSelector = Boolean(doneObject.calendarAnchor);
-  const handleOpenDateSelector = (
-    event: any,
-    objectTable: string,
-    objectId: number,
-    dateLimit: any
-  ) => {
-    setDoneObject({
-      calendarAnchor: event.currentTarget,
-      objectTable: objectTable,
-      objectId: objectId,
-      dateLimit: dateLimit,
-    });
-  };
-  const handleCloseDateSelector = () => {
-    setDoneObject({
-      calendarAnchor: null,
-      objectTable: null,
-      objectId: 0,
-      dateLimit: null,
-    });
-  };
-
   //#endregion
-
-  const handleStageFinishClick = (event: any, stage: any) => {
-    let dateLimit = stage.start_date;
-
-    for (const event of stage.events) {
-      const isoDateLimit = new Date(dateLimit);
-      const isoEventDate = new Date(event.done_date);
-      if (isoEventDate > isoDateLimit) {
-        dateLimit = event.done_date;
-      }
-    }
-
-    handleOpenDateSelector(event, "crop_stage", stage.id, dateLimit);
-  };
 
   //#region Snackbar
 
@@ -378,32 +320,29 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
 
   //#endregion
 
-  const disabledDates = (date: any) => {
-    if (!doneObject.dateLimit) {
-      return false;
-    }
-
-    const isoLimitDate = new Date(doneObject.dateLimit);
-
-    // Deshabilitar todas las fechas anteriores a la fecha tope
-    return date < isoLimitDate;
-  };
-
   const [loading, setLoading] = useState(false);
 
-  const handleDoneDateSelect = async (newValue: any) => {
+  const handleDoneDateSelect = async (
+    date: any,
+    recordTable: string,
+    id: number
+  ) => {
+    if (id === undefined) {
+      return;
+    }
     setLoading(true);
     try {
-      const isoDate = newValue.toISOString(); // Convertir la fecha a formato ISO 8601
+      const isoDate = date.toISOString(); // Convertir la fecha a formato ISO 8601
       let updateData = {
         doneDate: isoDate,
       };
 
       let res;
-      if (doneObject.objectTable === "crop_event") {
-        res = await setDoneCropEvent(updateData, doneObject.objectId);
-      } else if (doneObject.objectTable === "crop_stage") {
-        res = await setFinishedCropStage(updateData, doneObject.objectId);
+
+      if (recordTable === "crop_event") {
+        res = await setDoneCropEvent(updateData, id);
+      } else if (recordTable === "crop_stage") {
+        res = await setFinishedCropStage(updateData, id);
       }
 
       if (res === 200) {
@@ -419,8 +358,44 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
       setSnackBar(errorSnackBar);
     }
     setLoading(false);
-    handleCloseDateSelector();
   };
+
+  //#region Stage finishing handling
+
+  const [doneStageId, setDoneStageId] = useState(0);
+  const [doneStageMinDate, setDoneStageMinDate] = useState(null);
+
+  const handleStageFinishOpen = (stage: any) => {
+    setDoneStageId(stage.id);
+
+    let dateLimit = stage.start_date;
+
+    for (const event of stage.events) {
+      const isoDateLimit = new Date(dateLimit);
+
+      if (event.periodic_events) {
+        for (const periodic_event of event.periodic_events) {
+          const isoEventDate = new Date(periodic_event.done_date);
+          if (isoEventDate > isoDateLimit) {
+            dateLimit = periodic_event.done_date;
+          }
+        }
+      } else {
+        const isoEventDate = new Date(event.done_date);
+        if (isoEventDate > isoDateLimit) {
+          dateLimit = event.done_date;
+        }
+      }
+    }
+
+    setDoneStageMinDate(dateLimit);
+  };
+
+  const handleStageFinishDateSelect = (date: Date) => {
+    handleDoneDateSelect(date, "crop_stage", doneStageId);
+  };
+
+  //#endregion
 
   const [newTaskDialogOpen, setNewTaskDialogOpen] = useState(false);
 
@@ -556,14 +531,14 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
                   {event.id ? (
                     <UniqueEvent
                       event={event}
-                      handleOpenDateSelector={handleOpenDateSelector}
                       start_date={start_date}
+                      handleDoneDateSelect={handleDoneDateSelect}
                     />
                   ) : (
                     <PeriodicEvent
                       event={event}
-                      handleOpenDateSelector={handleOpenDateSelector}
                       start_date={start_date}
+                      handleDoneDateSelect={handleDoneDateSelect}
                     />
                   )}
                 </Box>
@@ -592,10 +567,8 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
           Añadir tarea
         </Button>
         {!finish_date && start_date ? (
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ mt: 3, ml: 1 }}
+          <ButtonDatePicker
+            label="Finalizar etapa"
             disabled={
               !stage.events.every(
                 (event: GrowthEvent) =>
@@ -603,34 +576,13 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
                   event.species_growth_event_time_period !== null
               )
             }
-            onClick={(e) => handleStageFinishClick(e, stage)}
-            endIcon={<TodayIcon />}
-          >
-            Finalizar etapa
-          </Button>
+            minDate={doneStageMinDate}
+            onOpenDateSelector={() => handleStageFinishOpen(stage)}
+            onDateSelect={handleStageFinishDateSelect}
+          />
         ) : null}
       </Box>
       <Fragment>
-        <Menu
-          id="date-menu"
-          anchorEl={doneObject.calendarAnchor}
-          open={openDateSelector}
-          onClose={() => handleCloseDateSelector()}
-          MenuListProps={{
-            "aria-labelledby": "basic-button",
-          }}
-        >
-          <DateCalendar
-            showDaysOutsideCurrentMonth
-            shouldDisableDate={disabledDates}
-            onChange={(newValue: any, selectionState: any) => {
-              if (selectionState === "finish") {
-                handleDoneDateSelect(newValue);
-              }
-            }}
-          />
-        </Menu>
-
         <CircularProgressBackdrop loading={loading} />
         <SnackBarAlert
           handleSnackbarClose={handleSnackbarClose}
@@ -644,10 +596,18 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
   );
 };
 
-const UniqueEvent = ({ event, handleOpenDateSelector, start_date }: any) => {
+const UniqueEvent = ({ event, start_date, handleDoneDateSelect }: any) => {
   const formatedETFromStageStart = TimeIntervalToReadableString(
     event.species_growth_event_et_from_stage_start
   );
+
+  // Event finishing handling
+
+  const [doneEventId, setDoneEventId] = useState(0);
+
+  const handleDateSelect = (date: Date) => {
+    handleDoneDateSelect(date, "crop_event", doneEventId);
+  };
 
   return (
     <Fragment>
@@ -670,25 +630,13 @@ const UniqueEvent = ({ event, handleOpenDateSelector, start_date }: any) => {
                   {"Fecha de realización: "}
                 </Typography>
 
-                <TextField
-                  disabled
-                  variant="standard"
+                <StandardDatePicker
+                  onOpenDateSelector={() => setDoneEventId(event.id)}
+                  //date
+                  onDateSelect={handleDateSelect}
+                  minDate={start_date}
+                  //maxDate
                   label="Marcar como realizado"
-                  onClick={(e) =>
-                    handleOpenDateSelector(
-                      e,
-                      "crop_event",
-                      event.id,
-                      start_date
-                    )
-                  }
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="start">
-                        <TodayIcon />
-                      </InputAdornment>
-                    ),
-                  }}
                 />
               </Fragment>
             )}
@@ -701,7 +649,7 @@ const UniqueEvent = ({ event, handleOpenDateSelector, start_date }: any) => {
   );
 };
 
-const PeriodicEvent = ({ event, handleOpenDateSelector, start_date }: any) => {
+const PeriodicEvent = ({ event, start_date, handleDoneDateSelect }: any) => {
   const formatedETFromStageStart = TimeIntervalToReadableString(
     event.species_growth_event_et_from_stage_start
   );
@@ -711,6 +659,14 @@ const PeriodicEvent = ({ event, handleOpenDateSelector, start_date }: any) => {
   );
 
   const periodicEvents = sortedEvents(event.periodic_events);
+
+  // Event finishing handling
+
+  const [doneEventId, setDoneEventId] = useState(0);
+
+  const handleDateSelect = (date: Date) => {
+    handleDoneDateSelect(date, "crop_event", doneEventId);
+  };
 
   return (
     <Fragment>
@@ -749,25 +705,13 @@ const PeriodicEvent = ({ event, handleOpenDateSelector, start_date }: any) => {
                       {"Fecha de realización: "}
                     </Typography>
 
-                    <TextField
-                      disabled
-                      variant="standard"
+                    <StandardDatePicker
+                      onOpenDateSelector={() => setDoneEventId(event.id)}
+                      //date
+                      onDateSelect={handleDateSelect}
+                      minDate={start_date}
+                      //maxDate
                       label="Marcar como realizado"
-                      onClick={(e) =>
-                        handleOpenDateSelector(
-                          e,
-                          "crop_event",
-                          event.id,
-                          start_date
-                        )
-                      }
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="start">
-                            <TodayIcon />
-                          </InputAdornment>
-                        ),
-                      }}
                     />
                   </Box>
                 </Fragment>

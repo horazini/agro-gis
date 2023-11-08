@@ -458,26 +458,83 @@ export const createSnapshot = async (
   }
 };
 
-export const getSnapshot = async (
+export function PostgresByteaToBase64(image: any): string {
+  const base64Image = image.toString("base64");
+  const imageDataUri = `data:image/png;base64,${base64Image}`;
+  return imageDataUri;
+}
+
+export const getLandplotSnapshots = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const id = 1;
+    const id = parseInt(req.params.id);
 
     const queryResponse: QueryResult = await pool.query(
-      "SELECT image, id, landplot_id, crop_id, crop_stage_id, date FROM landplot_snapshot"
+      "SELECT image, id, crop_id, crop_stage_id, date FROM landplot_snapshot WHERE landplot_id = $1",
+      [id]
     );
-    const { image, ...rest } = queryResponse.rows[6];
-    const base64Image = image.toString("base64");
-    const imageDataUri = `data:image/png;base64,${base64Image}`;
 
-    const response = {
-      imageDataUri,
-      ...rest,
-    };
-    return res.status(200).json(response);
+    const snapshots = queryResponse.rows.map((row: any) => {
+      const { image, ...rest } = row;
+
+      const imageDataUri = PostgresByteaToBase64(image);
+
+      const response = {
+        imageDataUri,
+        ...rest,
+      };
+      return response;
+    });
+
+    return res.status(200).json(snapshots);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const getCropSnapshots = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    const queryResponse: QueryResult = await pool.query(
+      "SELECT image, id, crop_stage_id, date FROM landplot_snapshot WHERE crop_id = $1",
+      [id]
+    );
+
+    const snapshots = queryResponse.rows.map((row: any) => {
+      const { image, ...rest } = row;
+
+      const imageDataUri = PostgresByteaToBase64(image);
+
+      const response = {
+        imageDataUri,
+        ...rest,
+      };
+      return response;
+    });
+
+    return res.status(200).json(snapshots);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const deleteSnapshot = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = parseInt(req.params.id);
+    await pool.query("DELETE FROM landplot_snapshot WHERE id = $1", [id]);
+    return res.status(200).send(`Snaphsot ${id} deleted succesfully`);
   } catch (e) {
     next(e);
   }

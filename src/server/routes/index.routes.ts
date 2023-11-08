@@ -106,7 +106,9 @@ import {
   getAvailableAndOccupiedTenantGeo,
   updateFeatures,
   createSnapshot,
-  getSnapshot,
+  getLandplotSnapshots,
+  getCropSnapshots,
+  deleteSnapshot,
 } from "../controllers/landplot.controllers";
 
 router.get("/geo", getGeo); // not used
@@ -118,7 +120,9 @@ router.get("/availabletenantGeo/:tenantId", getAvailableAndOccupiedTenantGeo);
 router.put("/features", updateFeatures);
 
 router.post("/snapshot", createSnapshot);
-router.get("/snapshot", getSnapshot);
+router.get("/landplotsnapshots/:id", getLandplotSnapshots);
+router.get("/cropsnapshots/:id", getCropSnapshots);
+router.delete("/snapshot/:id", deleteSnapshot);
 
 // Crops
 

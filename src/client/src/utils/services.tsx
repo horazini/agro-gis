@@ -423,3 +423,23 @@ export const postLandplotSnapshot = async (snapshotData: any) => {
   });
   return res.status;
 };
+
+export const getLandplotSnapshots = async (id: string) => {
+  const res = await fetch(`${API}/landplotsnapshots/${id}`);
+  const data = await res.json();
+  return data;
+};
+
+export const getCropSnapshots = async (id: string) => {
+  const res = await fetch(`${API}/cropsnapshots/${id}`);
+  const data = await res.json();
+  return data;
+};
+
+export const deleteSnapshot = async (snapshotId: number) => {
+  const res = await fetch(`${API}/snapshot/${snapshotId}`, {
+    method: "DELETE",
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};

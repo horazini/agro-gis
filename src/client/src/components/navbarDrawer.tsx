@@ -33,7 +33,6 @@ import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import {
   Menu as MenuIcon,
   ChevronLeft as ChevronLeftIcon,
-  Settings as SettingsIcon,
   BrightnessMedium as BrightnessMediumIcon,
   AccountCircle as AccountCircleIcon,
   Logout as LogoutIcon,

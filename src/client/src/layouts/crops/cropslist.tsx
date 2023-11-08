@@ -106,6 +106,13 @@ const CropsList = (crops: any[]) => {
       headerName: "Peso cosecha",
       type: "number",
       width: 120,
+      renderCell: (params: GridRenderCellParams<any>) => {
+        if (params.value === null) {
+          return "";
+        }
+        const Pvalue = params.value;
+        return Pvalue + " toneladas";
+      },
     },
   ];
 

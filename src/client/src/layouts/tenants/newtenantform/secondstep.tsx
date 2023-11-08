@@ -194,9 +194,9 @@ const SecondStep = ({
                               <DeleteIcon color="primary" />
                             </IconButton>
                           }
-                          dialogTitle={"¿Desea eliminar este elemento?"}
+                          dialogTitle={"¿Desea eliminar este usuario?"}
                           dialogSubtitle={
-                            "Se eliminarán tambien sus tareas asignadas."
+                            "Se eliminará al usuario y sus datos de la lista."
                           }
                           onConfirm={() => userDelete(row.id)}
                         />

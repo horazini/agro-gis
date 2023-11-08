@@ -44,30 +44,36 @@ function SpeciesList() {
           Agregar nueva especie
         </Button>
       </Box>
-      {species.map((specie) => (
-        <Card key={specie.id} style={{ marginBottom: ".7rem" }}>
-          <CardContent
-            style={{ display: "flex", justifyContent: "space-between" }}
-          >
-            <Box>
-              <Typography>{specie["name"]}</Typography>
-              <Typography>{specie["description"]}</Typography>
-            </Box>
-
-            <Box>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => navigate(`/species/${specie.id}`)}
-                style={{ marginLeft: ".5rem" }}
-                startIcon={<FormatListBulleted />}
+      {species.length > 0 ? (
+        <Fragment>
+          {species.map((specie) => (
+            <Card key={specie.id} style={{ marginBottom: ".7rem" }}>
+              <CardContent
+                style={{ display: "flex", justifyContent: "space-between" }}
               >
-                Ver detalles
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      ))}
+                <Box>
+                  <Typography>{specie["name"]}</Typography>
+                  <Typography>{specie["description"]}</Typography>
+                </Box>
+
+                <Box>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => navigate(`/species/${specie.id}`)}
+                    style={{ marginLeft: ".5rem" }}
+                    startIcon={<FormatListBulleted />}
+                  >
+                    Ver detalles
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          ))}
+        </Fragment>
+      ) : (
+        <h3> No hay especies registradas. </h3>
+      )}
     </Fragment>
   );
 }

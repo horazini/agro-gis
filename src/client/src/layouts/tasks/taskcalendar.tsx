@@ -10,7 +10,6 @@ import {
   DialogContent,
   TextField,
   Typography,
-  AlertColor,
   Box,
 } from "@mui/material";
 import {
@@ -30,6 +29,8 @@ import TimeLineModeView from "./timelineview";
 import { useNavigate } from "react-router-dom";
 import {
   getAllCalendarTenantTasks,
+  getFulfilledCropsCalendarTenantTasks,
+  getOngoingCropsCalendarTenantTasks,
   setDoneCropEvent,
   setFinishedCrop,
   setFinishedCropStage,
@@ -192,7 +193,7 @@ function Taskcalendar() {
 
   const loadTasks = async (id: number) => {
     try {
-      const tasks = await getAllCalendarTenantTasks(id);
+      const tasks = await getOngoingCropsCalendarTenantTasks(id);
       setCropTasks(tasks);
       setFilteredCropTasks(tasks);
     } catch (error) {

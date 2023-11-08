@@ -196,103 +196,116 @@ const SnapshotGallery = ({
         </h1>
       </Box>
 
-      <Box
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <IconButton
-          disabled={selectedSnapshotIndex === snapshotData.length - 1}
-          onClick={() => setSelectedSnapshotInex(selectedSnapshotIndex + 1)}
-          sx={{ margin: 3 }}
-        >
-          <ChevronLeftIcon />
-        </IconButton>
-        <Card>
-          <CardMedia component="img" image={selectedSnapshot.imageDataUri} />
-          <CardContent
+      {snapshotData.length > 0 ? (
+        <Fragment>
+          <Box
             style={{
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            <Typography variant="body2" color="text.secondary">
-              {formatedDate(selectedSnapshot.date)}
-            </Typography>
-          </CardContent>
-        </Card>
-        <IconButton
-          disabled={selectedSnapshotIndex === 0}
-          onClick={() => setSelectedSnapshotInex(selectedSnapshotIndex - 1)}
-          sx={{ margin: 3 }}
-        >
-          <ChevronRightIcon />
-        </IconButton>
-      </Box>
-      {userTypeId === 3 ? (
-        <Fragment>
-          <br />
-
-          <DialogComponent
-            component={
-              <Button
-                startIcon={<DeleteIcon />}
-                variant="contained"
-                color={"error"}
+            <IconButton
+              disabled={selectedSnapshotIndex === snapshotData.length - 1}
+              onClick={() => setSelectedSnapshotInex(selectedSnapshotIndex + 1)}
+              sx={{ margin: 3 }}
+            >
+              <ChevronLeftIcon />
+            </IconButton>
+            <Card>
+              <CardMedia
+                component="img"
+                image={selectedSnapshot.imageDataUri}
+              />
+              <CardContent
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
               >
-                Eliminar captura seleccionada
-              </Button>
-            }
-            dialogTitle={"¿Desea eliminar la captura seleccionada?"}
-            dialogSubtitle={"Esta acción es irreversible."}
-            onConfirm={() => handleDeleteSnapshot()}
-          />
-        </Fragment>
-      ) : null}
+                <Typography variant="body2" color="text.secondary">
+                  {formatedDate(selectedSnapshot.date)}
+                </Typography>
+              </CardContent>
+            </Card>
+            <IconButton
+              disabled={selectedSnapshotIndex === 0}
+              onClick={() => setSelectedSnapshotInex(selectedSnapshotIndex - 1)}
+              sx={{ margin: 3 }}
+            >
+              <ChevronRightIcon />
+            </IconButton>
+          </Box>
+          {userTypeId === 3 ? (
+            <Fragment>
+              <br />
 
-      <br />
-      <h2>Lista de capturas:</h2>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell width={"5%"}></TableCell>
-                  <TableCell width={"95%"}>Fecha</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {snapshotData.map((snapshot: any, index: number) => {
-                  const { id, date } = snapshot;
-                  return (
-                    <Fragment key={id}>
-                      <TableRow
-                        key={index}
-                        selected={index === selectedSnapshotIndex}
-                      >
-                        <TableCell>
-                          <IconButton
-                            aria-label="expand row"
-                            size="small"
-                            onClick={() => setSelectedSnapshotInex(index)}
+              <DialogComponent
+                component={
+                  <Button
+                    startIcon={<DeleteIcon />}
+                    variant="contained"
+                    color={"error"}
+                  >
+                    Eliminar captura seleccionada
+                  </Button>
+                }
+                dialogTitle={"¿Desea eliminar la captura seleccionada?"}
+                dialogSubtitle={"Esta acción es irreversible."}
+                onConfirm={() => handleDeleteSnapshot()}
+              />
+            </Fragment>
+          ) : null}
+
+          <br />
+          <h2>Lista de capturas:</h2>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell width={"5%"}></TableCell>
+                      <TableCell width={"95%"}>Fecha</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {snapshotData.map((snapshot: any, index: number) => {
+                      const { id, date } = snapshot;
+                      return (
+                        <Fragment key={id}>
+                          <TableRow
+                            key={index}
+                            selected={index === selectedSnapshotIndex}
                           >
-                            <AppsIcon />
-                          </IconButton>
-                        </TableCell>
-                        <TableCell>{formatedDate(date)}</TableCell>
-                      </TableRow>
-                    </Fragment>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Grid>
-      </Grid>
+                            <TableCell>
+                              <IconButton
+                                aria-label="expand row"
+                                size="small"
+                                onClick={() => setSelectedSnapshotInex(index)}
+                              >
+                                <AppsIcon />
+                              </IconButton>
+                            </TableCell>
+                            <TableCell>{formatedDate(date)}</TableCell>
+                          </TableRow>
+                        </Fragment>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Grid>
+          </Grid>
+        </Fragment>
+      ) : (
+        <h3>
+          {" "}
+          No se registran capturas de{" "}
+          {isCropForm ? "este cultivo" : "esta parcela"}.
+        </h3>
+      )}
 
       <CircularProgressBackdrop loading={loading} />
       <SnackBarAlert

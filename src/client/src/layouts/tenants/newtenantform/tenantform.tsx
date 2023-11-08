@@ -105,7 +105,6 @@ const MyForm = () => {
   const params = useParams();
 
   const [isEditingForm, setIsEditingForm] = useState(false);
-  const [deletedUsers, setDeletedUsers] = useState<number[]>([]);
 
   const loadTenant = async (id: string) => {
     try {

@@ -709,6 +709,200 @@ export const getAllTenantTasks = async (
   }
 };
 
+function formattedDate(dateString: string) {
+  if (dateString === null) {
+    return "";
+  }
+  const dateObject = new Date(dateString);
+  const formattedDate = format(dateObject, "yyyy-MM-dd");
+  console.log(formattedDate);
+  return formattedDate;
+}
+
+function calendarStructuredTasks(cropsTasks: any[]): any[] {
+  const restructuredData: any[] = [];
+
+  cropsTasks.forEach((crop: any, index: number) => {
+    const formattedCropStartDate = formattedDate(crop.start_date);
+
+    const hue = (index * 360) / cropsTasks.length;
+    const cropColor = `#${convert.hsv.hex([hue, 85, 75])}`;
+
+    crop.stages.forEach((stage: any, index: number) => {
+      const stageName = stage.species_growth_stage_name;
+      const formattedStageStartDate = formattedDate(stage.start_date);
+
+      // Stage finish variables init
+
+      let shouldShowStageFinishEvent = true;
+
+      let estimatedStageFinishDate = sumIntervalToDate(
+        stage.start_date,
+        stage.species_growth_stage_estimated_time
+      );
+
+      let minStageFinishDate = new Date(stage.start_date);
+
+      stage.events.forEach((event: any) => {
+        const eventId = event.id;
+        const eventName = event.name;
+
+        if (event.periodic_events && event.periodic_events.length > 0) {
+          event.periodic_events
+            .sort((a: any, b: any) => a.id - b.id)
+            .forEach((periodicEvent: any, index: number, array: any[]) => {
+              //#region stage finish
+
+              if (periodicEvent.done_date) {
+                const eventDoneDate = new Date(periodicEvent.done_date);
+                if (eventDoneDate > estimatedStageFinishDate) {
+                  estimatedStageFinishDate = eventDoneDate;
+                }
+                if (eventDoneDate > minStageFinishDate) {
+                  minStageFinishDate = eventDoneDate;
+                }
+              }
+
+              //#endregion
+
+              const periodicEventId = periodicEvent.id;
+
+              const formattedDueDate = formattedDate(periodicEvent.due_date);
+              const formattedDoneDate = formattedDate(periodicEvent.done_date);
+
+              let min_date = formattedStageStartDate;
+
+              if (index === array.length - 1 && array.length > 1) {
+                // If an array of periodic tasks exist,
+                // assigns the done date of the previous item as the min done date of the last one
+                min_date = formattedDate(array[index - 1].done_date);
+              } else {
+              }
+
+              const restructuredEvent = {
+                id: periodicEventId,
+                name: eventName,
+                crop_id: crop.id,
+                landplot: crop.landplot_id,
+                species_name: crop.species_name,
+                crop_start_date: formattedCropStartDate,
+                stage_start_date: formattedStageStartDate,
+                color: cropColor,
+                stage_name: stageName,
+                due_date: formattedDueDate,
+                done_date: formattedDoneDate,
+                min_date,
+              };
+
+              restructuredData.push(restructuredEvent);
+            });
+        } else {
+          //#region stage finish
+
+          if (!event.done_date) {
+            shouldShowStageFinishEvent = false;
+          } else {
+            const eventDoneDate = new Date(event.done_date);
+            if (eventDoneDate > estimatedStageFinishDate) {
+              estimatedStageFinishDate = eventDoneDate;
+            }
+            if (eventDoneDate > minStageFinishDate) {
+              minStageFinishDate = eventDoneDate;
+            }
+          }
+
+          //#endregion
+
+          const formattedDueDate = formattedDate(event.due_date);
+          const formattedDoneDate = formattedDate(event.done_date);
+
+          const restructuredEvent = {
+            id: eventId,
+            name: eventName,
+            crop_id: crop.id,
+            landplot: crop.landplot_id,
+            species_name: crop.species_name,
+            crop_start_date: formattedCropStartDate,
+            color: cropColor,
+            stage_name: stageName,
+            due_date: formattedDueDate,
+            done_date: formattedDoneDate,
+            min_date: formattedStageStartDate,
+          };
+
+          restructuredData.push(restructuredEvent);
+        }
+      });
+
+      if (shouldShowStageFinishEvent) {
+        const formattedStageDueDate = formattedDate(
+          estimatedStageFinishDate.toISOString()
+        );
+
+        let formattedStageDoneDate;
+
+        let stageFinishEventName = `Finalizar etapa "${stageName}"`;
+        if (stage.finish_date) {
+          formattedStageDoneDate = formattedDate(stage.finish_date);
+          stageFinishEventName = `Fin de etapa "${stageName}"`;
+        }
+
+        const formattedStageMinDueDate = formattedDate(
+          minStageFinishDate.toISOString()
+        );
+
+        const stageFinishEvent = {
+          id: stage.id,
+          class: "stage_finish",
+          name: stageFinishEventName,
+          crop_id: crop.id,
+          landplot: crop.landplot_id,
+          species_name: crop.species_name,
+          crop_start_date: formattedCropStartDate,
+          stage_start_date: formattedStageStartDate,
+          color: cropColor,
+          stage_name: stageName,
+          due_date: formattedStageDueDate,
+          done_date: formattedStageDoneDate,
+          min_date: formattedStageMinDueDate,
+        };
+
+        restructuredData.push(stageFinishEvent);
+      }
+
+      if (index === crop.stages.length - 1 && stage.finish_date) {
+        let formattedStageDoneDate = formattedDate(stage.finish_date);
+
+        let formattedCropDoneDate;
+
+        let cropFinishEventName = `Finalizar cultivo: Parcela N°. ${crop.landplot_id} - ${crop.species_name}`;
+        if (crop.finish_date) {
+          formattedCropDoneDate = formattedDate(crop.finish_date);
+          cropFinishEventName = `Fin del cultivo: Parcela N°. ${crop.landplot_id} - ${crop.species_name}`;
+        }
+        const cropFinishEvent = {
+          id: crop.id,
+          class: "crop_finish",
+          name: cropFinishEventName,
+          crop_id: crop.id,
+          landplot: crop.landplot_id,
+          species_name: crop.species_name,
+          crop_start_date: formattedCropStartDate,
+          stage_start_date: formattedStageStartDate,
+          color: cropColor,
+          stage_name: stageName,
+          due_date: formattedStageDoneDate,
+          done_date: formattedCropDoneDate,
+          min_date: formattedStageDoneDate,
+        };
+
+        restructuredData.push(cropFinishEvent);
+      }
+    });
+  });
+  return restructuredData;
+}
+
 export const getAllCalendarTenantTasks = async (
   req: Request,
   res: Response,
@@ -734,200 +928,69 @@ export const getAllCalendarTenantTasks = async (
       })
     );
 
-    //#region tasks restructuring
+    const restructuredData = calendarStructuredTasks(cropsTasks);
 
-    function formattedDate(dateString: string) {
-      if (dateString === null) {
-        return "";
-      }
-      const dateObject = new Date(dateString);
-      const formattedDate = format(dateObject, "yyyy-MM-dd");
-      console.log(formattedDate);
-      return formattedDate;
-    }
+    return res.status(200).json(restructuredData);
+  } catch (e) {
+    next(e);
+  }
+};
 
-    const restructuredData: any[] = [];
+export const getFulfilledCropsCalendarTenantTasks = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
 
-    cropsTasks.forEach((crop: any, index: number) => {
-      const formattedCropStartDate = formattedDate(crop.start_date);
+    const cropsQuery = `
+    SELECT id
+    FROM crop 
+    WHERE tenant_id = $1 AND deleted IS false
+    AND finish_date IS NOT NULL`;
+    const cropsResponse: QueryResult = await pool.query(cropsQuery, [tenantId]);
 
-      const hue = (index * 360) / cropsTasks.length;
-      const cropColor = `#${convert.hsv.hex([hue, 85, 75])}`;
+    const cropsTasks = await Promise.all(
+      cropsResponse.rows.map(async (crop: any) => {
+        const cropTasks = await cropTasksById(crop.id);
 
-      crop.stages.forEach((stage: any, index: number) => {
-        const stageName = stage.species_growth_stage_name;
-        const formattedStageStartDate = formattedDate(stage.start_date);
+        return cropTasks;
+      })
+    );
 
-        // Stage finish variables init
+    const restructuredData = calendarStructuredTasks(cropsTasks);
 
-        let shouldShowStageFinishEvent = true;
+    return res.status(200).json(restructuredData);
+  } catch (e) {
+    next(e);
+  }
+};
 
-        let estimatedStageFinishDate = sumIntervalToDate(
-          stage.start_date,
-          stage.species_growth_stage_estimated_time
-        );
+export const getOngoingCropsCalendarTenantTasks = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
 
-        let minStageFinishDate = new Date(stage.start_date);
+    const cropsQuery = `
+    SELECT id
+    FROM crop 
+    WHERE tenant_id = $1 AND deleted IS false
+    AND finish_date IS NULL`;
+    const cropsResponse: QueryResult = await pool.query(cropsQuery, [tenantId]);
 
-        stage.events.forEach((event: any) => {
-          const eventId = event.id;
-          const eventName = event.name;
+    const cropsTasks = await Promise.all(
+      cropsResponse.rows.map(async (crop: any) => {
+        const cropTasks = await cropTasksById(crop.id);
 
-          if (event.periodic_events && event.periodic_events.length > 0) {
-            event.periodic_events
-              .sort((a: any, b: any) => a.id - b.id)
-              .forEach((periodicEvent: any, index: number, array: any[]) => {
-                //#region stage finish
+        return cropTasks;
+      })
+    );
 
-                if (periodicEvent.done_date) {
-                  const eventDoneDate = new Date(periodicEvent.done_date);
-                  if (eventDoneDate > estimatedStageFinishDate) {
-                    estimatedStageFinishDate = eventDoneDate;
-                  }
-                  if (eventDoneDate > minStageFinishDate) {
-                    minStageFinishDate = eventDoneDate;
-                  }
-                }
-
-                //#endregion
-
-                const periodicEventId = periodicEvent.id;
-
-                const formattedDueDate = formattedDate(periodicEvent.due_date);
-                const formattedDoneDate = formattedDate(
-                  periodicEvent.done_date
-                );
-
-                let min_date = formattedStageStartDate;
-
-                if (index === array.length - 1 && array.length > 1) {
-                  // If an array of periodic tasks exist,
-                  // assigns the done date of the previous item as the min done date of the last one
-                  min_date = formattedDate(array[index - 1].done_date);
-                } else {
-                }
-
-                const restructuredEvent = {
-                  id: periodicEventId,
-                  name: eventName,
-                  crop_id: crop.id,
-                  landplot: crop.landplot_id,
-                  species_name: crop.species_name,
-                  crop_start_date: formattedCropStartDate,
-                  stage_start_date: formattedStageStartDate,
-                  color: cropColor,
-                  stage_name: stageName,
-                  due_date: formattedDueDate,
-                  done_date: formattedDoneDate,
-                  min_date,
-                };
-
-                restructuredData.push(restructuredEvent);
-              });
-          } else {
-            //#region stage finish
-
-            if (!event.done_date) {
-              shouldShowStageFinishEvent = false;
-            } else {
-              const eventDoneDate = new Date(event.done_date);
-              if (eventDoneDate > estimatedStageFinishDate) {
-                estimatedStageFinishDate = eventDoneDate;
-              }
-              if (eventDoneDate > minStageFinishDate) {
-                minStageFinishDate = eventDoneDate;
-              }
-            }
-
-            //#endregion
-
-            const formattedDueDate = formattedDate(event.due_date);
-            const formattedDoneDate = formattedDate(event.done_date);
-
-            const restructuredEvent = {
-              id: eventId,
-              name: eventName,
-              crop_id: crop.id,
-              landplot: crop.landplot_id,
-              species_name: crop.species_name,
-              crop_start_date: formattedCropStartDate,
-              color: cropColor,
-              stage_name: stageName,
-              due_date: formattedDueDate,
-              done_date: formattedDoneDate,
-              min_date: formattedStageStartDate,
-            };
-
-            restructuredData.push(restructuredEvent);
-          }
-        });
-
-        if (shouldShowStageFinishEvent) {
-          const formattedStageDueDate = formattedDate(
-            estimatedStageFinishDate.toISOString()
-          );
-
-          let formattedStageDoneDate;
-
-          let stageFinishEventName = `Finalizar etapa "${stageName}"`;
-          if (stage.finish_date) {
-            formattedStageDoneDate = formattedDate(stage.finish_date);
-            stageFinishEventName = `Fin de etapa "${stageName}"`;
-          }
-
-          const formattedStageMinDueDate = formattedDate(
-            minStageFinishDate.toISOString()
-          );
-
-          const stageFinishEvent = {
-            id: stage.id,
-            class: "stage_finish",
-            name: stageFinishEventName,
-            crop_id: crop.id,
-            landplot: crop.landplot_id,
-            species_name: crop.species_name,
-            crop_start_date: formattedCropStartDate,
-            stage_start_date: formattedStageStartDate,
-            color: cropColor,
-            stage_name: stageName,
-            due_date: formattedStageDueDate,
-            done_date: formattedStageDoneDate,
-            min_date: formattedStageMinDueDate,
-          };
-
-          restructuredData.push(stageFinishEvent);
-        }
-
-        if (index === crop.stages.length - 1 && stage.finish_date) {
-          let formattedStageDoneDate = formattedDate(stage.finish_date);
-
-          let formattedCropDoneDate;
-
-          let cropFinishEventName = `Finalizar cultivo: Parcela N°. ${crop.landplot_id} - ${crop.species_name}`;
-          if (crop.finish_date) {
-            formattedCropDoneDate = formattedDate(crop.finish_date);
-            cropFinishEventName = `Fin del cultivo: Parcela N°. ${crop.landplot_id} - ${crop.species_name}`;
-          }
-          const cropFinishEvent = {
-            id: crop.id,
-            class: "crop_finish",
-            name: cropFinishEventName,
-            crop_id: crop.id,
-            landplot: crop.landplot_id,
-            species_name: crop.species_name,
-            crop_start_date: formattedCropStartDate,
-            stage_start_date: formattedStageStartDate,
-            color: cropColor,
-            stage_name: stageName,
-            due_date: formattedStageDoneDate,
-            done_date: formattedCropDoneDate,
-            min_date: formattedStageDoneDate,
-          };
-
-          restructuredData.push(cropFinishEvent);
-        }
-      });
-    });
+    const restructuredData = calendarStructuredTasks(cropsTasks);
 
     return res.status(200).json(restructuredData);
   } catch (e) {

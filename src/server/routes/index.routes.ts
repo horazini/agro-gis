@@ -138,6 +138,8 @@ import {
   getCropTasksById,
   getAllTenantTasks,
   getAllCalendarTenantTasks,
+  getOngoingCropsCalendarTenantTasks,
+  getFulfilledCropsCalendarTenantTasks,
 } from "../controllers/crop.controllers";
 
 router.get("/crop", getCrops);
@@ -150,5 +152,13 @@ router.get("/tenantcropdata/:tenantId", getTenantCropData);
 router.get("/croptasks/:id", getCropTasksById);
 router.get("/alltenanttasks/:tenantId", getAllTenantTasks);
 router.get("/allcalendartenanttasks/:tenantId", getAllCalendarTenantTasks);
+router.get(
+  "/ongoingcalendartasks/:tenantId",
+  getOngoingCropsCalendarTenantTasks
+);
+router.get(
+  "/fulfilledcalendartasks/:tenantId",
+  getFulfilledCropsCalendarTenantTasks
+);
 
 export default router;

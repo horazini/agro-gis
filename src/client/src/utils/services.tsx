@@ -415,6 +415,19 @@ export const getAllCalendarTenantTasks = async (tenantId: number) => {
   return data;
 };
 
+export const getOngoingCropsCalendarTenantTasks = async (tenantId: number) => {
+  const response = await fetch(`${API}/ongoingcalendartasks/${tenantId}`);
+  const data = await response.json();
+  return data;
+};
+export const getFulfilledCropsCalendarTenantTasks = async (
+  tenantId: number
+) => {
+  const response = await fetch(`${API}/fulfilledcalendartasks/${tenantId}`);
+  const data = await response.json();
+  return data;
+};
+
 export const postLandplotSnapshot = async (snapshotData: any) => {
   const res = await fetch(`${API}/snapshot`, {
     method: "POST",

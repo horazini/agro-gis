@@ -656,11 +656,11 @@ export default function EditControlFC() {
           alignItems: "center",
         }}
       >
-        <CancelButton navigateDir={"/croplandplots"} />
+        <CancelButton navigateDir={"/landplots"} />
         <ConfirmButton
           msg={"Se registrarán todos los cambios realizados."}
           onConfirm={handleSubmit}
-          navigateDir={"/croplandplots"}
+          navigateDir={"/landplots"}
           disabled={false}
         />
       </Box>

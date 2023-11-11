@@ -165,7 +165,7 @@ const landplotAreasPanel = (areasSum: any, navigate: any) => {
       style={{
         cursor: "pointer",
       }}
-      onClick={() => navigate(`/croplandplots`)}
+      onClick={() => navigate(`/landplots`)}
       data={pieData}
       options={{
         responsive: true,
@@ -240,7 +240,7 @@ const NextHarvestPanel = (nextHarvest: any, navigate: any) => {
               ? theme.palette.grey[200]
               : "#121212",
         }}
-        onClick={() => navigate(`/cropdetails/${id}`)}
+        onClick={() => navigate(`/crops/${id}`)}
       >
         <p>
           Parcela N°. {landplot_id} - {species_name}

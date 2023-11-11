@@ -115,7 +115,7 @@ const TenantHeader = (tenantInfo: any) => {
                 ? "Se habilitará al cliente, devolviendo el acceso a todos sus usuarios."
                 : "Se inhabilitará al cliente, impidiendo el acceso a todos sus usuarios."
             }
-            navigateDir={"/tenants/list"}
+            navigateDir={"/tenants"}
             onConfirm={deleted ? handleEnableTenant : handleDisableTenant}
           />
         </Box>

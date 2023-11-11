@@ -134,7 +134,7 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
           <Box>
             <Button
               variant="outlined"
-              onClick={() => navigate(`/landplotdetails/${landplot.id}`)}
+              onClick={() => navigate(`/landplots/${landplot.id}`)}
             >
               detalles de la parcela
             </Button>

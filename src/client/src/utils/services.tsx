@@ -456,3 +456,23 @@ export const deleteSnapshot = async (snapshotId: number) => {
   });
   return res.status;
 };
+
+export const getNextHarvest = async (tenantId: number) => {
+  const res = await fetch(`${API}/nextharvest/${tenantId}`);
+  const data = await res.json();
+  return data;
+};
+
+export const getAvailableAndOccupiedTenantAreasSum = async (
+  tenantId: number
+) => {
+  const res = await fetch(`${API}/availabletenantareas/${tenantId}`);
+  const data = await res.json();
+  return data;
+};
+
+export const getTenantPendingTasksNumber = async (tenantId: number) => {
+  const res = await fetch(`${API}/pendingtasksnumber/${tenantId}`);
+  const data = await res.json();
+  return data;
+};

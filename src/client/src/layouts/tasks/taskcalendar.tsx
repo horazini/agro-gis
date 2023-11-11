@@ -533,10 +533,7 @@ const EventDialogs = ({
             }}
           >
             <Button onClick={() => setEventDialogOpen(false)}>Cerrar</Button>
-            <Button
-              onClick={() => navigate(`/cropdetails/${crop_id}`)}
-              autoFocus
-            >
+            <Button onClick={() => navigate(`/crops/${crop_id}`)} autoFocus>
               Ver cultivo
             </Button>
           </DialogActions>
@@ -607,7 +604,7 @@ const EventDialogs = ({
             alignItems: "center",
           }}
         >
-          <Button onClick={() => navigate(`/cropdetails/${crop_id}`)} autoFocus>
+          <Button onClick={() => navigate(`/crops/${crop_id}`)} autoFocus>
             Ver cultivo
           </Button>
           <DialogComponent

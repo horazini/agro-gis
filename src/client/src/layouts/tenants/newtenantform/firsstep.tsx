@@ -55,7 +55,7 @@ const FirstStep = ({
   };
 
   const handleCancel = () => {
-    navigate("/tenants/list");
+    navigate("/tenants");
   };
 
   const [tenantNameError, setTenantNameError] = useState(false);
@@ -218,13 +218,13 @@ const FirstStep = ({
           alignItems: "center",
         }}
       >
-        <CancelButton navigateDir="/tenants/list" />
+        <CancelButton navigateDir="/tenants" />
         {isEditingForm ? (
           <ConfirmButton
             handleValidation={handleConfirmEditFormValidation}
             msg={"Se modificarán los datos del cliente"}
             onConfirm={onConfirm}
-            navigateDir={"/tenants/list"}
+            navigateDir={"/tenants"}
             disabled={false}
           />
         ) : (

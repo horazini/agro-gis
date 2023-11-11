@@ -442,7 +442,7 @@ const CropInfo = (crop: Crop, navigate: NavigateFunction) => {
         <Box>
           <Button
             variant="outlined"
-            onClick={() => navigate(`/cropdetails/${crop.id}`)}
+            onClick={() => navigate(`/crops/${crop.id}`)}
           >
             detalles del cultivo
           </Button>
@@ -465,7 +465,7 @@ export const FeatureInfo = (
         <Box>
           <Button
             variant="outlined"
-            onClick={() => navigate(`/landplotdetails/${landplot.id}`)}
+            onClick={() => navigate(`/landplots/${landplot.id}`)}
           >
             detalles de la parcela
           </Button>

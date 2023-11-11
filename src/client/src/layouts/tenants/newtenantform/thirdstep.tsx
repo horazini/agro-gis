@@ -56,7 +56,7 @@ const ThirdStep = ({
         <ConfirmButton
           msg={msg}
           onConfirm={onConfirm}
-          navigateDir={"/tenants/list"}
+          navigateDir={"/tenants"}
           disabled={false}
         />
       </Box>

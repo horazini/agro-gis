@@ -27,7 +27,7 @@ const CropsList = (crops: any[]) => {
       renderCell: (params: GridRenderCellParams<any>) => (
         <Box alignItems={"center"}>
           <FormatListBulleted
-            onClick={() => navigate(`/cropdetails/${params.value}`)}
+            onClick={() => navigate(`/crops/${params.value}`)}
             sx={{ cursor: "pointer" }}
           />
         </Box>
@@ -146,7 +146,7 @@ const CropsList = (crops: any[]) => {
   );
 };
 
-const TenantDetails = () => {
+const CropsLoader = () => {
   PageTitle("Cultivos");
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
@@ -171,4 +171,4 @@ const TenantDetails = () => {
   return <Fragment>{CropsList(crops)}</Fragment>;
 };
 
-export default TenantDetails;
+export default CropsLoader;

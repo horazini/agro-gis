@@ -41,7 +41,7 @@ const routeList = [
     allowed: [1, 2, 3, 4, 5, 6],
   },
   {
-    path: "/tenants/list",
+    path: "/tenants",
     element: <TenantList />,
     allowed: [1],
   },
@@ -81,7 +81,7 @@ const routeList = [
     allowed: [1, 2, 3],
   },
   {
-    path: "/species/list",
+    path: "/species",
     element: <SpeciesList />,
     allowed: [2, 3, 5, 6],
   },
@@ -101,24 +101,39 @@ const routeList = [
     allowed: [3, 5],
   },
   {
-    path: "/landplotmanagement",
-    element: <LandplotManagementMap />,
-    allowed: [3, 4],
-  },
-  {
-    path: "/croplandplots",
+    path: "/landplots",
     element: <CropLandplotsMap />,
     allowed: [2, 3, 4, 6],
   },
   {
-    path: "/landplotdetails/:id",
+    path: "/landplots/management",
+    element: <LandplotManagementMap />,
+    allowed: [3, 4],
+  },
+  {
+    path: "/landplots/:id",
     element: <LandplotDetails />,
     allowed: [2, 3, 4, 6],
+  },
+  {
+    path: "/landplots/:id/snapshots",
+    element: <LandplotLoader />,
+    allowed: [2, 3, 4, 5, 6],
   },
   {
     path: "/crops",
     element: <CropsList />,
     allowed: [2, 3, 4, 6],
+  },
+  {
+    path: "/crops/:id",
+    element: <CropDetails />,
+    allowed: [2, 3, 4, 5, 6],
+  },
+  {
+    path: "/crops/:id/snapshots",
+    element: <CropLoader />,
+    allowed: [2, 3, 4, 5, 6],
   },
   {
     path: "/map",
@@ -134,21 +149,6 @@ const routeList = [
     path: "/calendar",
     element: <Calendar />,
     allowed: [2, 3, 6],
-  },
-  {
-    path: "/cropdetails/:id",
-    element: <CropDetails />,
-    allowed: [2, 3, 4, 5, 6],
-  },
-  {
-    path: "/cropsnapshots/:id",
-    element: <CropLoader />,
-    allowed: [2, 3, 4, 5, 6],
-  },
-  {
-    path: "/landplotsnapshots/:id",
-    element: <LandplotLoader />,
-    allowed: [2, 3, 4, 5, 6],
   },
 ];
 

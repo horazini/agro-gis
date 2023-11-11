@@ -82,7 +82,7 @@ const CropsDataGrid = ({ crops }: any) => {
       renderCell: (params: GridRenderCellParams<any>) => (
         <Box alignItems={"center"}>
           <FormatListBulleted
-            onClick={() => navigate(`/cropdetails/${params.value}`)}
+            onClick={() => navigate(`/crops/${params.value}`)}
             sx={{ cursor: "pointer" }}
           />
         </Box>

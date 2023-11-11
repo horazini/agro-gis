@@ -961,11 +961,11 @@ function SpeciesForm(): JSX.Element {
             alignItems: "center",
           }}
         >
-          <CancelButton navigateDir={"/species/list"} />
+          <CancelButton navigateDir={"/species"} />
           <ConfirmButton
             msg={msg}
             onConfirm={handleSubmitForm}
-            navigateDir={"/species/list"}
+            navigateDir={"/species"}
             disabled={!species.name || stagesList.length === 0}
           />
         </Box>

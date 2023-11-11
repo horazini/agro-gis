@@ -121,7 +121,7 @@ const routeList = [
   {
     text: "Clientes",
     icon: <StoreIcon />,
-    to: "/tenants/list",
+    to: "/tenants",
     allowed: [1],
   },
   {
@@ -136,23 +136,22 @@ const routeList = [
     to: "/users",
     allowed: [2, 3],
   },
-
   {
     text: "Especies",
     icon: <InventoryIcon />,
-    to: "/species/list",
+    to: "/species",
     allowed: [3, 5, 6],
   },
   {
     text: "Administración de parcelas",
     icon: <LayersIcon />,
-    to: "/landplotmanagement",
+    to: "/landplots/management",
     allowed: [3, 4],
   },
   {
     text: "Parcelas y cultivos",
     icon: <MapIcon />,
-    to: "/croplandplots",
+    to: "/landplots",
     allowed: [3, 4, 6],
   },
   {

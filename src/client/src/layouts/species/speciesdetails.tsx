@@ -194,7 +194,7 @@ function SpeciesForm(): JSX.Element {
                   ? "Se habilitará a la especie, devolviendo al cliente su acceso a la misma."
                   : "Se eliminará la especie, impidiendo la creación de nuevos cultivos de la misma."
               }
-              navigateDir={"/species/list"}
+              navigateDir={"/species"}
               onConfirm={deleted ? handleEnableSpecies : handleDisableSpecies}
             />
           </Box>
@@ -212,8 +212,8 @@ function SpeciesForm(): JSX.Element {
         {finishedCropsNumber > 0 ? (
           <h3>
             Se han relizado {finishedCropsNumber} cosechas de esta especie,
-            sumando {finishedCropsWeightSum} toneladas cultivadas en{" "}
-            {formattedArea}
+            sumando {finishedCropsWeightSum} toneladas cosechadas en{" "}
+            {formattedArea} de tierra.
           </h3>
         ) : (
           <h3> No se registran cosechas de esta especie. </h3>

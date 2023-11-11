@@ -109,6 +109,7 @@ import {
   getLandplotSnapshots,
   getCropSnapshots,
   deleteSnapshot,
+  getAvailableAndOccupiedTenantAreasSum,
 } from "../controllers/landplot.controllers";
 
 router.get("/geo", getGeo); // not used
@@ -118,6 +119,10 @@ router.get("/tenantgeo/:tenantId", getTenantGeo); // used only on development co
 router.get("/tenantgeocurrentdata/:tenantId", getTenantGeoWithCurrentCrops);
 router.get("/availabletenantGeo/:tenantId", getAvailableAndOccupiedTenantGeo);
 router.put("/features", updateFeatures);
+router.get(
+  "/availabletenantareas/:tenantId",
+  getAvailableAndOccupiedTenantAreasSum
+);
 
 router.post("/snapshot", createSnapshot);
 router.get("/landplotsnapshots/:id", getLandplotSnapshots);
@@ -128,7 +133,6 @@ router.delete("/snapshot/:id", deleteSnapshot);
 
 import {
   getCrops,
-  //getTenantCrops,
   createCrop,
   getCropDataById,
   setDoneCropEvent,
@@ -140,6 +144,9 @@ import {
   getAllCalendarTenantTasks,
   getOngoingCropsCalendarTenantTasks,
   getFulfilledCropsCalendarTenantTasks,
+  getNextHarvest,
+  //getTenantPendingTasks,
+  getTenantPendingTasksNumber,
 } from "../controllers/crop.controllers";
 
 router.get("/crop", getCrops);
@@ -160,5 +167,8 @@ router.get(
   "/fulfilledcalendartasks/:tenantId",
   getFulfilledCropsCalendarTenantTasks
 );
+router.get("/nextharvest/:tenantId", getNextHarvest);
+//router.get("/pendingtasks/:tenantId", getTenantPendingTasks);
+router.get("/pendingtasksnumber/:tenantId", getTenantPendingTasksNumber);
 
 export default router;

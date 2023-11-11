@@ -661,7 +661,54 @@ async function cropTasksById(id: number) {
 
   return crop;
 }
+/* 
+async function pendingCropTasksById(id: number) {
+  const cropQuery = `
+      SELECT id,
+      landplot_id, landplot_description,
+      species_name, 
+      start_date  
+      FROM crop WHERE id = $1 AND finish_date IS NULL
+    `;
+  const cropResponse = (await pool.query(cropQuery, [id])).rows[0];
 
+  const stagesQuery = `
+  SELECT id
+   FROM crop_stage 
+   WHERE crop_id = $1 AND start_date IS NOT NULL AND finish_date IS NULL
+ `;
+  const stagesResponse: QueryResult = await pool.query(stagesQuery, [id]);
+
+  const stage = stagesResponse.rows[0];
+  if (stage !== undefined) {
+    const eventsQuery = `
+       SELECT 
+       id,
+       crop_id,
+       crop_stage_id,
+       name, description,
+       due_date
+       FROM crop_event
+       WHERE crop_stage_id = $1 
+       AND due_date <= CURRENT_DATE
+       AND done_date IS NULL
+     `;
+
+    const eventsResponse: QueryResult = await pool.query(eventsQuery, [
+      stage.id,
+    ]);
+    const events = eventsResponse.rows;
+    //if (events[0] !== undefined) {
+    if (events.length > 0) {
+      const crop = {
+        ...cropResponse,
+        events,
+      };
+      return crop;
+    }
+  }
+}
+ */
 export const getCropTasksById = async (
   req: Request,
   res: Response,
@@ -997,15 +1044,172 @@ export const getOngoingCropsCalendarTenantTasks = async (
     next(e);
   }
 };
-
-export const getTenantCurrentCropsTasks = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {};
-
+/* 
 export const getTenantPendingTasks = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {};
+) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
+
+    const cropsQuery = `
+      SELECT id
+      FROM crop 
+      WHERE tenant_id = $1 AND deleted IS false
+      AND finish_date IS NULL`;
+    const cropsResponse: QueryResult = await pool.query(cropsQuery, [tenantId]);
+
+    const cropsTasks = await Promise.all(
+      cropsResponse.rows.map(async (crop: any) => {
+        const cropTasks = await pendingCropTasksById(crop.id);
+        return cropTasks;
+      })
+    );
+
+    const filteredCropsTasks = cropsTasks.filter(
+      (cropTasks) => cropTasks !== undefined
+    );
+
+    return res.status(200).json(filteredCropsTasks);
+  } catch (e) {
+    next(e);
+  }
+};
+ */
+export const getTenantPendingTasksNumber = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
+
+    const cropsQuery = `
+      SELECT id
+      FROM crop 
+      WHERE tenant_id = $1 AND deleted IS false
+      AND finish_date IS NULL`;
+    const cropsResponse: QueryResult = await pool.query(cropsQuery, [tenantId]);
+
+    const cropsPendingTasksNumbers = await Promise.all(
+      cropsResponse.rows.map(async (crop: any) => {
+        const stagesQuery = `
+      SELECT id
+       FROM crop_stage 
+       WHERE crop_id = $1 AND start_date IS NOT NULL AND finish_date IS NULL
+     `;
+        const stagesResponse: QueryResult = await pool.query(stagesQuery, [
+          crop.id,
+        ]);
+
+        const stage = stagesResponse.rows[0];
+        if (stage !== undefined) {
+          const tasksQuery: QueryResult = await pool.query(
+            `SELECT 
+          COUNT(id) AS pendingtasksnumber FROM crop_event
+          WHERE crop_stage_id = $1 AND due_date <= CURRENT_DATE AND done_date IS NULL`,
+            [stagesResponse.rows[0].id]
+          );
+          const cropPendingTasksNumber = tasksQuery.rows[0].pendingtasksnumber;
+          return Number(cropPendingTasksNumber);
+        } else {
+          return 0;
+        }
+      })
+    );
+
+    let totalPendingTasks: number = cropsPendingTasksNumbers.reduce(
+      (total, numero) => total + numero,
+      0
+    );
+
+    return res.status(200).json(totalPendingTasks);
+  } catch (e) {
+    next(e);
+  }
+};
+
+async function getCurrentCropsWithFinishDate(tenantId: number): Promise<any> {
+  const cropsResponse: QueryResult = await pool.query(
+    `
+  SELECT
+  id,
+  landplot_id, 
+  species_id, species_name, 
+  description, comments, start_date
+  FROM crop 
+  WHERE tenant_id = $1 AND deleted IS false
+  AND finish_date IS NULL`,
+    [tenantId]
+  );
+
+  const finalObject = await Promise.all(
+    cropsResponse.rows.map(async (crop: any) => {
+      const stagesQuery = `
+      SELECT id,
+      species_growth_stage_estimated_time, species_growth_stage_sequence_number,
+      start_date, finish_date
+      FROM crop_stage WHERE crop_id = $1
+      ORDER BY species_growth_stage_sequence_number `;
+
+      const stagesResponse: QueryResult = await pool.query(stagesQuery, [
+        crop.id,
+      ]);
+
+      const stages = stagesResponse.rows;
+
+      let estimatedCropFinishDate = crop.start_date;
+      stages.forEach((stage: any) => {
+        if (stage.finish_date) {
+          estimatedCropFinishDate = stage.finish_date;
+        } else {
+          estimatedCropFinishDate = sumIntervalToDate(
+            estimatedCropFinishDate,
+            stage.species_growth_stage_estimated_time
+          );
+        }
+      });
+
+      crop.estimatedCropFinishDate = estimatedCropFinishDate;
+
+      return {
+        ...crop,
+        estimatedCropFinishDate,
+      };
+    })
+  );
+
+  return finalObject;
+}
+
+export const getNextHarvest = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
+
+    const crops = await getCurrentCropsWithFinishDate(tenantId);
+
+    let nextHatvestCrop = crops[0];
+
+    // Utiliza el método reduce para encontrar la fecha más baja.
+    nextHatvestCrop = crops.reduce((prevCrop: any, currentCrop: any) => {
+      const fechaAnterior = new Date(prevCrop.estimatedCropFinishDate);
+      const fechaActual = new Date(currentCrop.estimatedCropFinishDate);
+
+      // Compara las fechas y actualiza el objeto si la fecha actual es más baja.
+      if (fechaActual < fechaAnterior) {
+        return currentCrop;
+      } else {
+        return prevCrop;
+      }
+    }, nextHatvestCrop);
+
+    return res.status(200).json(nextHatvestCrop);
+  } catch (e) {
+    next(e);
+  }
+};

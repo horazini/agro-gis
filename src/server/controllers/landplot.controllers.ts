@@ -539,3 +539,61 @@ export const deleteSnapshot = async (
     next(e);
   }
 };
+
+export const getAvailableAndOccupiedTenantAreasSum = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
+    const response: QueryResult = await pool.query(
+      `
+      SELECT l.id AS id, 
+      c.id AS crop_id, c.finish_date, 
+      CASE 
+        WHEN l.circle_radius IS NULL THEN ROUND(st_area(l.area, true)::numeric)
+        ELSE ROUND((pi() * l.circle_radius * l.circle_radius)::numeric)
+      END AS area 
+      FROM landplot l
+      LEFT JOIN crop c ON l.id = c.landplot_id
+      WHERE l.tenant_id = $1 AND (
+        c.finish_date IS NULL OR
+        c.finish_date = (
+          SELECT CASE WHEN EXISTS (
+            SELECT 1
+            FROM crop
+            WHERE landplot_id = l.id AND finish_date IS NULL
+          ) THEN NULL ELSE MAX(finish_date) END
+          FROM crop 
+          WHERE landplot_id = l.id
+        )
+      )
+      `,
+      [tenantId]
+    );
+
+    const rows = response.rows;
+
+    let occupiedAreasSum: number = 0;
+    let availableAreasSum: number = 0;
+
+    rows.forEach((landplot) => {
+      if (landplot.crop_id !== null && landplot.finish_date === null) {
+        // Sumatoria de áreas con crop_id distinta de null y finish_date igual a null
+        occupiedAreasSum += Number(landplot.area);
+      } else {
+        // Sumatoria de áreas del resto de los objetos
+        availableAreasSum += Number(landplot.area);
+      }
+    });
+
+    const totalAreas = {
+      occupiedAreasSum,
+      availableAreasSum,
+    };
+    return res.status(200).json(totalAreas);
+  } catch (e) {
+    next(e);
+  }
+};

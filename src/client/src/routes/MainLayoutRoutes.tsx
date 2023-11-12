@@ -5,6 +5,11 @@ import { Route, Routes } from "react-router";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 
+// Error boundary
+import { Component, ReactNode } from "react";
+import { Typography } from "@mui/material";
+import { Link } from "react-router-dom";
+
 import NoMatch from "../layouts/app/nomatch";
 
 import Profile from "../layouts/user/profile";
@@ -152,6 +157,78 @@ const routeList = [
   },
 ];
 
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    // Puedes agregar lógica de registro de errores aquí
+    console.error(error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // Puedes renderizar un componente de error personalizado aquí
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "15vh",
+          }}
+        >
+          <Typography
+            component={"span"}
+            style={{
+              textAlign: "center",
+            }}
+          >
+            <h1>
+              ¡Vaya! 😧 Algo ha salido mal.
+              <br />
+            </h1>
+            <h1>
+              Intente nuevamente.
+              <br />
+              Si el problema persiste contacte a su proveedor de servicio.
+              <br />
+              <br />
+            </h1>
+            <h1>
+              <Link
+                to="/"
+                style={{
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
+              >
+                Ir a inicio
+              </Link>
+            </h1>
+          </Typography>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 export default function MainLayoutRoutes(): JSX.Element {
   const { userTypeId } = useSelector((state: RootState) => state.auth);
   const allowedRoutes = routeList.filter((route) =>
@@ -159,11 +236,13 @@ export default function MainLayoutRoutes(): JSX.Element {
   );
 
   return (
-    <Routes>
-      {allowedRoutes.map((route, index) => (
-        <Route key={index} path={route.path} element={route.element} />
-      ))}
-      <Route path="*" element={<NoMatch />} />
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        {allowedRoutes.map((route, index) => (
+          <Route key={index} path={route.path} element={route.element} />
+        ))}
+        <Route path="*" element={<NoMatch />} />
+      </Routes>
+    </ErrorBoundary>
   );
 }

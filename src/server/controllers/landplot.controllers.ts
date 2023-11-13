@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { QueryResult } from "pg";
 import pool from "../database";
 import { Feature, FeatureCollection } from "geojson";
+import convert from "color-convert";
 
 /**
  *
@@ -92,38 +93,7 @@ CASE
   ELSE NULL
 END as circle_radius`;
 
-export const getGeo = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const response: QueryResult = await pool.query(
-      `SELECT id, ${shape_data_query}, description FROM landplot;
-    `
-    );
-
-    const features = response.rows.map((row: any) => {
-      const landplot = {
-        id: row.id,
-        geometry: row.geometry,
-        center: row.center,
-        circle_radius: row.circle_radius,
-        description: row.description,
-      };
-
-      return { landplot };
-    });
-
-    const FeatureCollection = PostGISToGeoJSONFeatureCollection(features);
-
-    return res.status(200).json(FeatureCollection);
-  } catch (e) {
-    next(e);
-  }
-};
-
-export const getTenantGeo = async (
+export const getTenantLandplots = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -145,7 +115,7 @@ export const getTenantGeo = async (
   }
 };
 
-export const getGeoWithCrops = async (
+export const getLandplotWithCrops = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -593,6 +563,75 @@ export const getAvailableAndOccupiedTenantAreasSum = async (
       availableAreasSum,
     };
     return res.status(200).json(totalAreas);
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const getTenantSpeciesCropsAreasSum = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const tenantId = parseInt(req.params.tenantId);
+    const response: QueryResult = await pool.query(
+      `
+      SELECT l.id AS id, 
+      c.id AS crop_id, c.finish_date, c.species_name, 
+      CASE 
+        WHEN l.circle_radius IS NULL THEN ROUND(st_area(l.area, true)::numeric)
+        ELSE ROUND((pi() * l.circle_radius * l.circle_radius)::numeric)
+      END AS area 
+      FROM landplot l
+      LEFT JOIN crop c ON l.id = c.landplot_id
+      WHERE l.tenant_id = $1 AND (
+        c.finish_date IS NULL OR
+        c.finish_date = (
+          SELECT CASE WHEN EXISTS (
+            SELECT 1
+            FROM crop
+            WHERE landplot_id = l.id AND finish_date IS NULL
+          ) THEN NULL ELSE MAX(finish_date) END
+          FROM crop 
+          WHERE landplot_id = l.id
+        )
+      )
+      `,
+      [tenantId]
+    );
+
+    const rows = response.rows;
+
+    const result: Record<string, number> = {};
+
+    rows
+      .filter(
+        (landplot) => landplot.crop_id !== null && landplot.finish_date === null
+      )
+      .forEach((landplot) => {
+        const speciesName = landplot.species_name || "Sin Nombre de Especie";
+        const area = Number(landplot.area);
+
+        if (result[speciesName]) {
+          result[speciesName] += area;
+        } else {
+          result[speciesName] = area;
+        }
+      });
+    // Convertir el objeto result en un array de objetos con el formato deseado
+    const resultArray = Object.keys(result).map((key) => ({
+      label: key,
+      data: [result[key]],
+    }));
+
+    resultArray.forEach((species: any, index: number) => {
+      const hue = (index * 360) / resultArray.length;
+      const color = `#${convert.hsv.hex([hue, 85, 75])}`;
+      species.backgroundColor = color;
+    });
+
+    return res.status(200).json(resultArray);
   } catch (e) {
     next(e);
   }

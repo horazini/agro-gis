@@ -99,10 +99,9 @@ router.put("/enablespecies/:id", enableSpecies);
 // Geo
 
 import {
-  getGeo,
-  getGeoWithCrops,
+  getLandplotWithCrops,
   getTenantGeoWithCurrentCrops,
-  getTenantGeo,
+  getTenantLandplots,
   getAvailableAndOccupiedTenantGeo,
   updateFeatures,
   createSnapshot,
@@ -110,18 +109,21 @@ import {
   getCropSnapshots,
   deleteSnapshot,
   getAvailableAndOccupiedTenantAreasSum,
+  getTenantSpeciesCropsAreasSum,
 } from "../controllers/landplot.controllers";
 
-router.get("/geo", getGeo); // not used
-
-router.get("/geodata/:id", getGeoWithCrops); // not used (yet)
-router.get("/tenantgeo/:tenantId", getTenantGeo); // used only on development components
+router.get("/landplotdata/:id", getLandplotWithCrops);
+router.get("/tenantgeo/:tenantId", getTenantLandplots); // used only on development components
 router.get("/tenantgeocurrentdata/:tenantId", getTenantGeoWithCurrentCrops);
 router.get("/availabletenantGeo/:tenantId", getAvailableAndOccupiedTenantGeo);
 router.put("/features", updateFeatures);
 router.get(
   "/availabletenantareas/:tenantId",
   getAvailableAndOccupiedTenantAreasSum
+);
+router.get(
+  "/tenantspeciescropsareassum/:tenantId",
+  getTenantSpeciesCropsAreasSum
 );
 
 router.post("/snapshot", createSnapshot);

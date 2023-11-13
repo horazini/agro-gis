@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 
-import { getGeoData } from "../../utils/services";
+import { getLandplotData } from "../../utils/services";
 import { Feature } from "geojson";
 
 import {
@@ -29,7 +29,7 @@ const CropDetails = () => {
 
   const loadCrop = async (id: string) => {
     try {
-      const data = await getGeoData(Number(id));
+      const data = await getLandplotData(Number(id));
       setLandplotData(data);
     } catch (error) {
       console.log(error);
@@ -67,7 +67,7 @@ const LandplotData = ({ landplot }: any) => {
   return (
     <Box ml={2} mb={2} mr={2}>
       {landplot.description && <p>Descripción: {landplot.description}</p>}
-      <p>Área: {FormattedArea(landplot.area)} m.</p>
+      <p>Área: {FormattedArea(landplot.area)}</p>
       {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
     </Box>
   );

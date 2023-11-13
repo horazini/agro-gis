@@ -335,8 +335,8 @@ export const putFeatures = async (features: any) => {
   return res.status;
 };
 
-export const getGeoData = async (tenantId: number) => {
-  const response = await fetch(`${API}/geodata/${tenantId}`);
+export const getLandplotData = async (tenantId: number) => {
+  const response = await fetch(`${API}/landplotdata/${tenantId}`);
   const data = await response.json();
   return data;
 };
@@ -467,6 +467,12 @@ export const getAvailableAndOccupiedTenantAreasSum = async (
   tenantId: number
 ) => {
   const res = await fetch(`${API}/availabletenantareas/${tenantId}`);
+  const data = await res.json();
+  return data;
+};
+
+export const getTenantSpeciesCropsAreasSum = async (tenantId: number) => {
+  const res = await fetch(`${API}/tenantspeciescropsareassum/${tenantId}`);
   const data = await res.json();
   return data;
 };

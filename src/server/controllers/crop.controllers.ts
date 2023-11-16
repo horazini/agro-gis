@@ -452,6 +452,29 @@ export const setDoneCropEvent = async (
   }
 };
 
+export const setCropStageComment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const stage_id = parseInt(req.params.id);
+    const { comments } = req.body;
+
+    await pool.query(
+      `
+      UPDATE crop_stage SET comments = $1 WHERE id = $2
+    `,
+      [comments, stage_id]
+    );
+
+    return res.sendStatus(200);
+  } catch (e) {
+    console.log(e);
+    next(e);
+  }
+};
+
 export const setFinishedCropStage = async (
   req: Request,
   res: Response,
@@ -536,6 +559,29 @@ export const setFinishedCropStage = async (
     next(e);
   } finally {
     client.release();
+  }
+};
+
+export const setCropComment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const crop_id = parseInt(req.params.id);
+    const { comments } = req.body;
+
+    await pool.query(
+      `
+      UPDATE crop SET comments = $1 WHERE id = $2
+    `,
+      [comments, crop_id]
+    );
+
+    return res.sendStatus(200);
+  } catch (e) {
+    console.log(e);
+    next(e);
   }
 };
 

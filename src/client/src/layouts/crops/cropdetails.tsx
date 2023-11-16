@@ -3,6 +3,8 @@ import "leaflet/dist/leaflet.css";
 
 import {
   getCropById,
+  setCropComment,
+  setCropStageComment,
   setDoneCropEvent,
   setFinishedCrop,
   setFinishedCropStage,
@@ -42,6 +44,8 @@ import {
   KeyboardArrowDown,
   KeyboardArrowUp,
   PlaylistAdd as PlaylistAddIcon,
+  AddComment as AddCommentIcon,
+  RateReview as RateReviewIcon,
 } from "@mui/icons-material";
 import {
   ButtonDatePicker,
@@ -111,7 +115,7 @@ const CropDetails = () => {
 
       {cropFeature && (
         <CropInfo
-          feature={cropFeature}
+          cropData={cropFeature.properties}
           setDataReloadCounter={setDataReloadCounter}
         />
       )}
@@ -119,12 +123,36 @@ const CropDetails = () => {
   );
 };
 
-const CropInfo = ({ feature, setDataReloadCounter }: any) => {
-  const { crop, landplot, species, stages } = feature.properties;
-
-  const [open, setOpen] = useState(-1);
+const CropInfo = ({ cropData, setDataReloadCounter }: any) => {
+  const { crop, landplot, species, stages } = cropData;
 
   const navigate = useNavigate();
+
+  //#region Snackbar
+
+  const [snackBar, setSnackBar] = useState<MySnackBarProps>({
+    open: false,
+    severity: undefined,
+    msg: "",
+  });
+
+  const handleSnackbarClose = (
+    event: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackBar((prevObject) => ({
+      ...prevObject,
+      open: false,
+    }));
+  };
+
+  //#endregion
+
+  const [loading, setLoading] = useState(false);
+
   return (
     <Box>
       <Box>
@@ -160,7 +188,54 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
             {formatedDate(crop.estimatedCropFinishDate)}
           </p>
         )}
+        <CommentsSection
+          comments={crop.comments}
+          setDataReloadCounter={setDataReloadCounter}
+          setLoading={setLoading}
+          setSnackBar={setSnackBar}
+          objectTable={"crop"}
+          objectId={crop.id}
+        />
+        <StagesList
+          stages={stages}
+          setDataReloadCounter={setDataReloadCounter}
+          setLoading={setLoading}
+          setSnackBar={setSnackBar}
+        />
       </Box>
+      {stages[stages.length - 1].finish_date && !crop.finish_date ? (
+        <FinalHarvestReport
+          cropId={crop.id}
+          minDate={stages[stages.length - 1].finish_date}
+          setDataReloadCounter={setDataReloadCounter}
+          setLoading={setLoading}
+          setSnackBar={setSnackBar}
+        />
+      ) : null}
+
+      <Fragment>
+        <CircularProgressBackdrop loading={loading} />
+        <SnackBarAlert
+          handleSnackbarClose={handleSnackbarClose}
+          msg={snackBar.msg}
+          open={snackBar.open}
+          severity={snackBar.severity}
+        />
+      </Fragment>
+    </Box>
+  );
+};
+
+const StagesList = ({
+  stages,
+  setDataReloadCounter,
+  setLoading,
+  setSnackBar,
+}: any) => {
+  const [open, setOpen] = useState(-1);
+
+  return (
+    <Box>
       <h3>Etapas de cultivo:</h3>
 
       <TableContainer component={Paper}>
@@ -184,17 +259,13 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
                 species_growth_stage_estimated_time,
                 start_date,
                 finish_date,
-                comments,
               } = stage;
               const formatedEstimatedTime = TimeIntervalToReadableString(
                 species_growth_stage_estimated_time
               );
               return (
                 <Fragment key={id}>
-                  <TableRow
-                    //onClick={() => setOpen(open === id ? -1 : id)}
-                    sx={{ "& > *": { borderBottom: "unset" } }}
-                  >
+                  <TableRow sx={{ "& td": { border: 0 } }}>
                     <TableCell>{species_growth_stage_name}</TableCell>
                     <TableCell>{species_growth_stage_description}</TableCell>
                     <TableCell>{formatedEstimatedTime}</TableCell>
@@ -237,10 +308,11 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
                     >
                       <Collapse in={open === id} timeout="auto" unmountOnExit>
                         <Box>
-                          <p>Comentarios: {comments}</p>
                           <StageInfo
                             stage={stage}
                             setDataReloadCounter={setDataReloadCounter}
+                            setLoading={setLoading}
+                            setSnackBar={setSnackBar}
                           />
                         </Box>
                       </Collapse>
@@ -252,23 +324,21 @@ const CropInfo = ({ feature, setDataReloadCounter }: any) => {
           </TableBody>
         </Table>
       </TableContainer>
-      {stages[stages.length - 1].finish_date && !crop.finish_date ? (
-        <FinalHarvestReport
-          cropId={crop.id}
-          minDate={stages[stages.length - 1].finish_date}
-          setDataReloadCounter={setDataReloadCounter}
-        />
-      ) : null}
     </Box>
   );
 };
-
 //#region Snackbar
 
 const eventSuccessSnackBar: MySnackBarProps = {
   open: true,
   severity: "success",
   msg: "Tarea realizada!",
+};
+
+const commentSuccessSnackBar: MySnackBarProps = {
+  open: true,
+  severity: "success",
+  msg: "Comentario registrado!",
 };
 
 const errorSnackBar: MySnackBarProps = {
@@ -279,8 +349,136 @@ const errorSnackBar: MySnackBarProps = {
 
 //#endregion
 
-const StageInfo = ({ stage, setDataReloadCounter }: any) => {
-  const { events, start_date, finish_date } = stage;
+const CommentsSection = ({
+  comments,
+  setDataReloadCounter,
+  setLoading,
+  setSnackBar,
+  objectTable,
+  objectId,
+}: any) => {
+  const [textFieldOpen, setTextFieldOpen] = useState<boolean>(false);
+
+  const [newComment, setNewComment] = useState<string>(comments || "");
+
+  const handleSubmitComments = async () => {
+    setLoading(true);
+    try {
+      const sentData = {
+        comments: newComment,
+      };
+      let res;
+
+      if (objectTable === "crop_stage") {
+        res = await setCropStageComment(sentData, objectId);
+      } else if (objectTable === "crop") {
+        res = await setCropComment(sentData, objectId);
+      }
+
+      if (res === 200) {
+        setTextFieldOpen(false);
+        setDataReloadCounter((prevCounter: number) => prevCounter + 1);
+        setSnackBar(commentSuccessSnackBar);
+      } else {
+        setSnackBar(errorSnackBar);
+      }
+    } catch (error) {
+      console.log(error);
+      setSnackBar(errorSnackBar);
+    }
+    setLoading(false);
+  };
+
+  const isStageForm = objectTable === "crop_stage";
+  const maxLength = isStageForm ? 500 : 5000;
+  return (
+    <Fragment>
+      {textFieldOpen ? (
+        <Box>
+          <h2>Comentarios:</h2>
+          <TextField
+            inputProps={{ maxLength: maxLength }}
+            id="comments"
+            multiline
+            fullWidth
+            variant="filled"
+            value={newComment}
+            onChange={(e) => {
+              setNewComment(e.target.value);
+            }}
+          />
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Button
+              variant="outlined"
+              color="error"
+              sx={{ mt: 3, ml: 1 }}
+              onClick={() => setTextFieldOpen(false)}
+            >
+              Cancelar
+            </Button>
+
+            <DialogComponent
+              component={
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  sx={{ mt: 3, ml: 1 }}
+                  disabled={newComment === comments}
+                >
+                  Guardar comentarios
+                </Button>
+              }
+              dialogTitle={"¿Confirmar comentarios?"}
+              dialogSubtitle={
+                isStageForm
+                  ? "Se registrarán los comentarios para esta etapa."
+                  : "Se registrarán los comentarios para el cultivo."
+              }
+              disabled={newComment === comments}
+              onConfirm={() => handleSubmitComments()}
+            />
+          </Box>
+        </Box>
+      ) : comments ? (
+        <Fragment>
+          <Box
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <h2>Comentarios:</h2>
+            <Button variant="outlined" onClick={() => setTextFieldOpen(true)}>
+              <RateReviewIcon sx={{ mr: 1 }} />
+              Editar comentarios
+            </Button>
+          </Box>
+          <p>{comments}</p>
+        </Fragment>
+      ) : (
+        <Button variant="outlined" onClick={() => setTextFieldOpen(true)}>
+          <AddCommentIcon sx={{ mr: 1 }} />
+          Agregar comentarios
+        </Button>
+      )}
+    </Fragment>
+  );
+};
+
+const StageInfo = ({
+  stage,
+  setDataReloadCounter,
+  setLoading,
+  setSnackBar,
+}: any) => {
+  const { events, comments, start_date, finish_date } = stage;
 
   //#region Done task/stage data
 
@@ -296,31 +494,6 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
   };
 
   //#endregion
-
-  //#region Snackbar
-
-  const [snackBar, setSnackBar] = useState<MySnackBarProps>({
-    open: false,
-    severity: undefined,
-    msg: "",
-  });
-
-  const handleSnackbarClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setSnackBar((prevObject) => ({
-      ...prevObject,
-      open: false,
-    }));
-  };
-
-  //#endregion
-
-  const [loading, setLoading] = useState(false);
 
   const handleDoneDateSelect = async (
     date: any,
@@ -513,6 +686,14 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
 
   return (
     <Fragment>
+      <CommentsSection
+        comments={comments}
+        setDataReloadCounter={setDataReloadCounter}
+        setLoading={setLoading}
+        setSnackBar={setSnackBar}
+        objectTable={"crop_stage"}
+        objectId={stage.id}
+      />
       <Box>
         <h2>Tareas:</h2>
         {sortedEvents(events).map((event: any) => {
@@ -582,15 +763,6 @@ const StageInfo = ({ stage, setDataReloadCounter }: any) => {
           />
         ) : null}
       </Box>
-      <Fragment>
-        <CircularProgressBackdrop loading={loading} />
-        <SnackBarAlert
-          handleSnackbarClose={handleSnackbarClose}
-          msg={snackBar.msg}
-          open={snackBar.open}
-          severity={snackBar.severity}
-        />
-      </Fragment>
       <TaskDialog />
     </Fragment>
   );
@@ -726,14 +898,18 @@ const PeriodicEvent = ({ event, start_date, handleDoneDateSelect }: any) => {
   );
 };
 
-const FinalHarvestReport = ({ cropId, minDate, setDataReloadCounter }: any) => {
+const FinalHarvestReport = ({
+  cropId,
+  minDate,
+  setDataReloadCounter,
+  setLoading,
+  setSnackBar,
+}: any) => {
   const [weight_in_tons, setWeight_in_tons] = useState<any>(0);
 
   const [date, setDate] = useState<Date | null>(null);
 
   // submit data
-
-  const [loading, setLoading] = useState(false);
 
   const handleSubmitData = async () => {
     if (!date) {
@@ -760,25 +936,6 @@ const FinalHarvestReport = ({ cropId, minDate, setDataReloadCounter }: any) => {
       setSnackBar(errorSnackBar);
     }
     setLoading(false);
-  };
-
-  const [snackBar, setSnackBar] = useState<MySnackBarProps>({
-    open: false,
-    severity: undefined,
-    msg: "",
-  });
-
-  const handleSnackbarClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setSnackBar((prevObject) => ({
-      ...prevObject,
-      open: false,
-    }));
   };
 
   return (
@@ -859,13 +1016,6 @@ const FinalHarvestReport = ({ cropId, minDate, setDataReloadCounter }: any) => {
           />
         </Box>
       </Paper>
-      <CircularProgressBackdrop loading={loading} />
-      <SnackBarAlert
-        handleSnackbarClose={handleSnackbarClose}
-        msg={snackBar.msg}
-        open={snackBar.open}
-        severity={snackBar.severity}
-      />
     </Box>
   );
 };

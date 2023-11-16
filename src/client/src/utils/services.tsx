@@ -482,3 +482,25 @@ export const getTenantPendingTasksNumber = async (tenantId: number) => {
   const data = await res.json();
   return data;
 };
+
+export const getWeather = async (coords: number[]) => {
+  let lat = coords[0];
+  let lon = coords[1];
+
+  const weatherResponse = await fetch(`
+  https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&current=is_day,temperature_2m,wind_speed_10m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,precipitation_probability,precipitation,wind_speed_10m,weather_code
+`);
+  const weatherData = await weatherResponse.json();
+
+  const locationResponse = await fetch(`
+  https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es
+  `);
+  const locationData = await locationResponse.json();
+
+  const { city, principalSubdivision, countryCode, countryName } = locationData;
+  const formatedLocationName =
+    city + ", " + principalSubdivision + ". " + countryName;
+
+  weatherData.formated_location_name = formatedLocationName;
+  return weatherData;
+};

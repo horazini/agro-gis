@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 
 import {
+  addCropEvent,
   getCropById,
   setCropComment,
   setCropStageComment,
@@ -65,8 +66,12 @@ import {
   sumIntervalToDate,
 } from "../../utils/functions";
 
-const { eventSuccessSnackBar, commentSuccessSnackBar, errorSnackBar } =
-  mySnackBars;
+const {
+  eventSuccessSnackBar,
+  eventAddSuccessSnackBar,
+  commentSuccessSnackBar,
+  errorSnackBar,
+} = mySnackBars;
 
 function sortedEvents(
   events: { due_date: string; done_date: string | undefined }[]
@@ -535,7 +540,6 @@ const StageInfo = ({ stage, HandlePutData }: any) => {
   };
 
   const handleNewTaskCancel = () => {
-    //clear
     setNewTaskDialogOpen(false);
   };
 
@@ -555,17 +559,22 @@ const StageInfo = ({ stage, HandlePutData }: any) => {
     };
 
     const [estimatedDate, setEstimatedDate] = useState<Date | null>(null);
-
     const [finishDate, setFinishDate] = useState<Date | null>(null);
 
-    const handleNewTaskConfirm = () => {
+    const params = useParams();
+    const handleNewTaskConfirm = async () => {
       const newTaskSent = {
         ...newTask,
         estimatedDate: estimatedDate?.toISOString(),
         finishDate: finishDate?.toISOString(),
+        cropId: params.id,
+        stageId: stage.id,
       };
-      console.log(newTaskSent);
-      setNewTaskDialogOpen(false);
+      await HandlePutData(
+        () => addCropEvent(newTaskSent),
+        eventAddSuccessSnackBar,
+        () => setNewTaskDialogOpen(false)
+      );
     };
 
     return (
@@ -583,6 +592,7 @@ const StageInfo = ({ stage, HandlePutData }: any) => {
             variant="filled"
             label="Nombre"
             name="name"
+            inputProps={{ maxLength: 100 }}
             value={newTask.name}
             onChange={handleEventChange}
           />
@@ -592,6 +602,9 @@ const StageInfo = ({ stage, HandlePutData }: any) => {
             variant="filled"
             label="Descripción"
             name="description"
+            inputProps={{ maxLength: 500 }}
+            fullWidth
+            multiline
             value={newTask.description}
             onChange={handleEventChange}
           />
@@ -745,32 +758,33 @@ const UniqueEvent = ({ event, start_date, handleDoneDateSelect }: any) => {
           <Typography mt={2}>
             Fecha estimada: {formatedDate(event.due_date)}
           </Typography>
-          <Box display={"flex"} alignItems="center">
-            {event.done_date ? (
-              <Typography mt={2}>
-                {"Fecha de realización: "} {formatedDate(event.done_date)}
-              </Typography>
-            ) : (
-              <Fragment>
-                <Typography mt={2} mr={1}>
-                  {"Fecha de realización: "}
-                </Typography>
-
-                <StandardDatePicker
-                  onOpenDateSelector={() => setDoneEventId(event.id)}
-                  //date
-                  onDateSelect={handleDateSelect}
-                  minDate={start_date}
-                  //maxDate
-                  label="Marcar como realizado"
-                />
-              </Fragment>
-            )}
-          </Box>
         </Fragment>
-      ) : (
+      ) : event.species_growth_event_et_from_stage_start ? (
         <p>Tiempo desde incio de la etapa: {formatedETFromStageStart}</p>
-      )}
+      ) : null}
+
+      <Box display={"flex"} alignItems="center">
+        {event.done_date ? (
+          <Typography mt={2}>
+            {"Fecha de realización: "} {formatedDate(event.done_date)}
+          </Typography>
+        ) : (
+          <Fragment>
+            <Typography mt={2} mr={1}>
+              {"Fecha de realización: "}
+            </Typography>
+
+            <StandardDatePicker
+              onOpenDateSelector={() => setDoneEventId(event.id)}
+              //date
+              onDateSelect={handleDateSelect}
+              minDate={start_date}
+              //maxDate
+              label="Marcar como realizado"
+            />
+          </Fragment>
+        )}
+      </Box>
     </Fragment>
   );
 };

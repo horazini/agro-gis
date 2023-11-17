@@ -386,6 +386,12 @@ const eventSuccessSnackBar: MySnackBarProps = {
   msg: "Tarea realizada!",
 };
 
+const eventAddSuccessSnackBar: MySnackBarProps = {
+  open: true,
+  severity: "success",
+  msg: "Tarea agregada exitosamente!",
+};
+
 const commentSuccessSnackBar: MySnackBarProps = {
   open: true,
   severity: "success",
@@ -400,6 +406,7 @@ const errorSnackBar: MySnackBarProps = {
 
 export const mySnackBars = {
   eventSuccessSnackBar,
+  eventAddSuccessSnackBar,
   commentSuccessSnackBar,
   errorSnackBar,
 };

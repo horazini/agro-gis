@@ -138,6 +138,7 @@ import {
   createCrop,
   getCropDataById,
   setDoneCropEvent,
+  addCropEvent,
   setCropStageComment,
   setFinishedCropStage,
   setCropComment,
@@ -157,6 +158,7 @@ router.get("/crop", getCrops);
 router.post("/crop", createCrop);
 router.get("/cropdata/:id", getCropDataById);
 router.put("/donecropevent/:id", setDoneCropEvent);
+router.post("/cropevent", addCropEvent);
 router.put("/cropstagecomment/:id", setCropStageComment);
 router.put("/donecropstage/:id", setFinishedCropStage);
 router.put("/cropcomment/:id", setCropComment);

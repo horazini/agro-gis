@@ -452,6 +452,31 @@ export const setDoneCropEvent = async (
   }
 };
 
+export const addCropEvent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { cropId, stageId, name, description, estimatedDate, finishDate } =
+      req.body;
+
+    await pool.query(
+      `
+      INSERT INTO crop_event (crop_id, crop_stage_id, 
+        name, description, due_date, done_date)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      `,
+      [cropId, stageId, name, description, estimatedDate, finishDate]
+    );
+
+    return res.sendStatus(200);
+  } catch (e) {
+    console.log(e);
+    next(e);
+  }
+};
+
 export const setCropStageComment = async (
   req: Request,
   res: Response,

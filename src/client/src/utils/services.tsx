@@ -376,6 +376,15 @@ export const setDoneCropEvent = async (
   return res.status;
 };
 
+export const addCropEvent = async (eventData: any) => {
+  const res = await fetch(`${API}/cropevent`, {
+    method: "POST",
+    body: JSON.stringify(eventData),
+    headers: { "Content-type": "application/json" },
+  });
+  return res.status;
+};
+
 export const setFinishedCropStage = async (
   updateData: any,
   cropStageId: number

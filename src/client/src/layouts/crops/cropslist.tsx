@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -116,29 +116,71 @@ const CropsList = (crops: any[]) => {
     },
   ];
 
+  const options = [
+    { label: "No filtrar", value: "any" },
+    { label: "Pendientes", value: "todo" },
+    { label: "Realizados", value: "done" },
+  ];
+
+  const [status, setStatus] = useState("any");
+
+  let filteredCrops = crops;
+  if (status === "done") {
+    filteredCrops = filteredCrops?.filter((crop) => crop?.finish_date);
+  } else if (status === "todo") {
+    filteredCrops = filteredCrops?.filter((crop) => !crop?.finish_date);
+  }
+
   return (
     <Fragment>
       <h1>Cultivos</h1>
       {crops.length > 0 ? (
-        <Box sx={{ height: 400, width: "100%" }}>
-          <DataGrid
-            rows={crops}
-            columns={columns}
-            initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: 5,
+        <Fragment>
+          <FormControl
+            variant="outlined"
+            size="small"
+            sx={{ my: 1, minWidth: 220 }}
+          >
+            <InputLabel>Filtrar por estado</InputLabel>
+
+            <Select
+              name="taskstatus"
+              value={status}
+              label="Filtrar por estado"
+              onChange={(e) => {
+                setStatus(e.target.value);
+              }}
+            >
+              {options.map((option, index) => (
+                <MenuItem key={index} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Box sx={{ height: 400, width: "100%" }}>
+            <DataGrid
+              rows={filteredCrops}
+              columns={columns}
+              initialState={{
+                pagination: {
+                  paginationModel: {
+                    pageSize: 5,
+                  },
                 },
-              },
-            }}
-            pageSizeOptions={[5]}
-            disableRowSelectionOnClick
-            sx={{
-              backgroundColor: (theme) =>
-                theme.palette.mode === "light" ? theme.palette.grey[50] : null,
-            }}
-          />
-        </Box>
+              }}
+              pageSizeOptions={[5]}
+              disableRowSelectionOnClick
+              sx={{
+                backgroundColor: (theme) =>
+                  theme.palette.mode === "light"
+                    ? theme.palette.grey[50]
+                    : null,
+              }}
+            />
+          </Box>
+        </Fragment>
       ) : (
         <h3> No se registran cultivos. </h3>
       )}

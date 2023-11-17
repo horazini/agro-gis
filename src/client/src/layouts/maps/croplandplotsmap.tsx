@@ -36,6 +36,7 @@ import { ConfirmButton, PageTitle } from "../../components/customComponents";
 import { useNavigate } from "react-router";
 import { LatLngExpression } from "leaflet";
 import L from "leaflet";
+import dayjs from "dayjs";
 
 interface ICrop {
   landplot: number;
@@ -89,6 +90,23 @@ const LandplotsAndCrops = () => {
     ) {
       return;
     }
+
+    //#region minDate handling
+
+    if (minDate === null) {
+      setIsDateValid(true);
+    } else {
+      if (crop.date !== "") {
+        if (crop.date > minDate.toISOString()) {
+          setIsDateValid(true);
+        } else {
+          setIsDateValid(false);
+        }
+      }
+    }
+
+    //#endregion
+
     const { properties, geometry } = selectedFeature;
 
     let coords: LatLngExpression = position;
@@ -130,18 +148,29 @@ const LandplotsAndCrops = () => {
       )
     : null;
 
-  const [isDateValid, setIsDateValid] = useState<boolean>(false);
+  const minDate = selectedFeature?.properties?.crop?.finish_date
+    ? dayjs(selectedFeature.properties.crop.finish_date).add(1, "day")
+    : null;
+
+  const [isDateValid, setIsDateValid] = useState<boolean>(true);
 
   function handleDateChange(date: any) {
-    if (!Number.isNaN(new Date(date).getTime())) {
+    if (date !== null && !Number.isNaN(new Date(date).getTime())) {
       const isoDate = date.toISOString(); // Convertir la fecha a formato ISO 8601
-      setCrop((prevCrop) => ({
-        ...prevCrop,
-        date: isoDate,
-      }));
-      setIsDateValid(true);
-    } else {
-      setIsDateValid(false);
+
+      if (minDate !== null) {
+        if (isoDate >= minDate.toISOString()) {
+          setIsDateValid(true);
+        } else {
+          setIsDateValid(false);
+        }
+      } else {
+        setCrop((prevCrop) => ({
+          ...prevCrop,
+          date: isoDate,
+        }));
+        setIsDateValid(true);
+      }
     }
   }
 
@@ -345,6 +374,15 @@ const LandplotsAndCrops = () => {
                 format="DD/MM/YYYY"
                 label="Fecha"
                 onChange={handleDateChange}
+                minDate={minDate}
+                slotProps={{
+                  textField: {
+                    error: !isDateValid,
+                    helperText: isDateValid
+                      ? null
+                      : "La fecha de inicio no puede coincidir con un cultivo anterior en la parcela",
+                  },
+                }}
               />
             </FormControl>
 

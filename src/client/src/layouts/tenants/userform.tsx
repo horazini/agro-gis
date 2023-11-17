@@ -202,6 +202,7 @@ const UserForm = ({ userData, isEditingForm, setUserData }: any) => {
                   <TextField
                     name="username"
                     variant="standard"
+                    inputProps={{ maxLength: 50 }}
                     value={username}
                     onChange={handleFormChange}
                     error={usernameError}
@@ -220,6 +221,7 @@ const UserForm = ({ userData, isEditingForm, setUserData }: any) => {
                   <TextField
                     name="mail_address"
                     variant="standard"
+                    inputProps={{ maxLength: 100 }}
                     value={mail_address}
                     onChange={handleFormChange}
                     error={emailError}
@@ -240,6 +242,7 @@ const UserForm = ({ userData, isEditingForm, setUserData }: any) => {
                   <TextField
                     name="surname"
                     variant="standard"
+                    inputProps={{ maxLength: 50 }}
                     value={surname}
                     onChange={handleFormChange}
                   />
@@ -251,6 +254,7 @@ const UserForm = ({ userData, isEditingForm, setUserData }: any) => {
                   <TextField
                     name="names"
                     variant="standard"
+                    inputProps={{ maxLength: 50 }}
                     value={names}
                     onChange={handleFormChange}
                   />

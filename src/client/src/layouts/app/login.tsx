@@ -144,6 +144,7 @@ export default function SignIn() {
           >
             <TextField
               margin="normal"
+              inputProps={{ maxLength: 50 }}
               required
               fullWidth
               id="user"
@@ -154,6 +155,7 @@ export default function SignIn() {
             />
             <TextField
               margin="normal"
+              inputProps={{ maxLength: 50 }}
               required
               fullWidth
               name="password"

@@ -621,7 +621,14 @@ function SpeciesForm(): JSX.Element {
                 label="Tiempo estimado"
                 name="estimatedTime"
                 value={stageData.estimatedTime}
-                onChange={handleStageChange}
+                onChange={(e) => {
+                  var value = parseInt(e.target.value, 10);
+                  if (value > 9999) {
+                    return;
+                  } else {
+                    handleStageChange(e);
+                  }
+                }}
                 type="number"
                 onKeyPress={(event) => {
                   if (
@@ -853,7 +860,14 @@ function SpeciesForm(): JSX.Element {
                   name="ETFromStageStart"
                   sx={{ m: 1, minWidth: 500 }}
                   value={growthEventData.ETFromStageStart}
-                  onChange={handleEventChange}
+                  onChange={(e) => {
+                    var value = parseInt(e.target.value, 10);
+                    if (value > 9999) {
+                      return;
+                    } else {
+                      handleEventChange(e);
+                    }
+                  }}
                   type="number"
                   error={timeFromStartError}
                   helperText={
@@ -896,7 +910,14 @@ function SpeciesForm(): JSX.Element {
                   name="timePeriod"
                   sx={{ m: 1, minWidth: 500 }}
                   value={growthEventData.timePeriod}
-                  onChange={handleEventChange}
+                  onChange={(e) => {
+                    var value = parseInt(e.target.value, 10);
+                    if (value > 9999 || value < 1) {
+                      return;
+                    } else {
+                      handleEventChange(e);
+                    }
+                  }}
                   type="number"
                   onKeyPress={(event) => {
                     if (

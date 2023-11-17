@@ -915,7 +915,14 @@ const FinalHarvestReport = ({ cropId, minDate, HandlePutData }: any) => {
                 required
                 name="weight_in_tons"
                 value={weight_in_tons}
-                onChange={(e) => setWeight_in_tons(e.target.value)}
+                onChange={(e) => {
+                  var value = parseInt(e.target.value, 10);
+                  if (value > 9999999999) {
+                    return;
+                  } else {
+                    setWeight_in_tons(value);
+                  }
+                }}
                 variant="standard"
                 sx={{ margin: 1 }}
                 type="number"

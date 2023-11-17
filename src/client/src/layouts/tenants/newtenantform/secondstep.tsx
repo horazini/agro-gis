@@ -247,6 +247,7 @@ const SecondStep = ({
             <TextField
               label="Apellido"
               name="surname"
+              inputProps={{ maxLength: 50 }}
               sx={{ m: 1 }}
               value={userData.surname}
               onChange={handleFormChange}
@@ -254,6 +255,7 @@ const SecondStep = ({
             <TextField
               label="Nombres"
               name="names"
+              inputProps={{ maxLength: 50 }}
               sx={{ m: 1 }}
               value={userData.names}
               onChange={handleFormChange}
@@ -262,6 +264,7 @@ const SecondStep = ({
             <TextField
               label="Email"
               name="mail_address"
+              inputProps={{ maxLength: 100 }}
               sx={{ m: 1 }}
               value={userData.mail_address}
               onChange={handleFormChange}
@@ -278,6 +281,7 @@ const SecondStep = ({
             <TextField
               label="Nombre de usuario"
               name="username"
+              inputProps={{ maxLength: 50 }}
               sx={{ m: 1 }}
               value={userData.username}
               onChange={handleFormChange}

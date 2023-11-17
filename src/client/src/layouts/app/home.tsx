@@ -72,9 +72,7 @@ const DashboardLoader = () => {
 
   //#region geolocation
 
-  const [coords, setCoords] = useState([
-    -27.469999313354492, -58.83000183105469,
-  ]);
+  const [coords, setCoords] = useState([-27.469999, -58.830001]);
 
   const loadWeatherData = async () => {
     try {

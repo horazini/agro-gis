@@ -250,10 +250,7 @@ function SpeciesForm(): JSX.Element {
                     } = stage;
                     return (
                       <Fragment key={id}>
-                        <TableRow
-                          key={index}
-                          sx={{ "& > *": { borderBottom: "unset" } }}
-                        >
+                        <TableRow key={index} sx={{ "& td": { border: 0 } }}>
                           <TableCell>{index + 1}</TableCell>
                           <TableCell>{name}</TableCell>
                           <TableCell>{description}</TableCell>

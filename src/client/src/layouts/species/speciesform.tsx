@@ -487,10 +487,11 @@ function SpeciesForm(): JSX.Element {
           <br />
           <Grid item xs={12}>
             <TextField
-              inputProps={{ maxLength: 50 }}
+              inputProps={{ maxLength: 500 }}
               id="description"
               name="description"
               label="Descripción"
+              multiline
               fullWidth
               variant="standard"
               value={species.description || ""}
@@ -591,31 +592,36 @@ function SpeciesForm(): JSX.Element {
             <Typography variant="h6" sx={{ margin: 1 }}>
               {editingStageRowId !== null ? "Editar etapa" : "Agregar etapa"}
             </Typography>{" "}
-            <Box>
+            <Box sx={{ padding: 1 }}>
               <TextField
+                sx={{ my: 1 }}
                 required
                 label="Nombre"
                 name="name"
+                inputProps={{ maxLength: 100 }}
                 value={stageData.name}
                 onChange={handleStageChange}
-                sx={{ margin: 1 }}
               />
               <br />
+              <Grid item xs={12} lg={6}>
+                <TextField
+                  sx={{ my: 1 }}
+                  label="Descripción"
+                  name="description"
+                  inputProps={{ maxLength: 500 }}
+                  multiline
+                  fullWidth
+                  value={stageData.description}
+                  onChange={handleStageChange}
+                />
+              </Grid>
               <TextField
-                label="Descripción"
-                name="description"
-                value={stageData.description}
-                onChange={handleStageChange}
-                sx={{ margin: 1 }}
-              />
-              <br />
-              <TextField
+                sx={{ my: 1 }}
                 required
                 label="Tiempo estimado"
                 name="estimatedTime"
                 value={stageData.estimatedTime}
                 onChange={handleStageChange}
-                sx={{ margin: 1 }}
                 type="number"
                 onKeyPress={(event) => {
                   if (
@@ -792,18 +798,24 @@ function SpeciesForm(): JSX.Element {
                 required
                 label="Nombre"
                 name="name"
+                inputProps={{ maxLength: 100 }}
                 sx={{ margin: 1 }}
                 value={growthEventData.name}
                 onChange={handleEventChange}
               />
-              <TextField
-                label="Descripción"
-                name="description"
-                sx={{ margin: 1 }}
-                value={growthEventData.description}
-                onChange={handleEventChange}
-              />
-              <br />
+
+              <Grid item xs={12} lg={6}>
+                <TextField
+                  label="Descripción"
+                  name="description"
+                  inputProps={{ maxLength: 500 }}
+                  multiline
+                  fullWidth
+                  sx={{ margin: 1 }}
+                  value={growthEventData.description}
+                  onChange={handleEventChange}
+                />
+              </Grid>
 
               <FormControl
                 required

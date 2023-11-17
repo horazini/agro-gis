@@ -341,6 +341,7 @@ const LandplotsAndCrops = () => {
             </FormControl>
             <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
               <DatePicker
+                showDaysOutsideCurrentMonth
                 format="DD/MM/YYYY"
                 label="Fecha"
                 onChange={handleDateChange}

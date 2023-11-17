@@ -55,6 +55,7 @@ import {
   PageTitle,
   SnackBarAlert,
   StandardDatePicker,
+  mySnackBars,
 } from "../../components/customComponents";
 
 import { format } from "date-fns";
@@ -63,6 +64,9 @@ import {
   formatedDate,
   sumIntervalToDate,
 } from "../../utils/functions";
+
+const { eventSuccessSnackBar, commentSuccessSnackBar, errorSnackBar } =
+  mySnackBars;
 
 function sortedEvents(
   events: { due_date: string; done_date: string | undefined }[]
@@ -153,6 +157,29 @@ const CropInfo = ({ cropData, setDataReloadCounter }: any) => {
 
   const [loading, setLoading] = useState(false);
 
+  const HandlePutData = async (
+    awaitFunction: () => Promise<number>,
+    successSnackBar: MySnackBarProps,
+    onSuccess?: () => void
+  ) => {
+    setLoading(true);
+    try {
+      const res = await awaitFunction();
+
+      if (res === 200) {
+        onSuccess && onSuccess();
+        setDataReloadCounter((prevCounter: number) => prevCounter + 1);
+        setSnackBar(successSnackBar);
+      } else {
+        setSnackBar(errorSnackBar);
+      }
+    } catch (error) {
+      console.log(error);
+      setSnackBar(errorSnackBar);
+    }
+    setLoading(false);
+  };
+
   return (
     <Box>
       <Box>
@@ -190,26 +217,17 @@ const CropInfo = ({ cropData, setDataReloadCounter }: any) => {
         )}
         <CommentsSection
           comments={crop.comments}
-          setDataReloadCounter={setDataReloadCounter}
-          setLoading={setLoading}
-          setSnackBar={setSnackBar}
+          HandlePutData={HandlePutData}
           objectTable={"crop"}
           objectId={crop.id}
         />
-        <StagesList
-          stages={stages}
-          setDataReloadCounter={setDataReloadCounter}
-          setLoading={setLoading}
-          setSnackBar={setSnackBar}
-        />
+        <StagesList stages={stages} HandlePutData={HandlePutData} />
       </Box>
       {stages[stages.length - 1].finish_date && !crop.finish_date ? (
         <FinalHarvestReport
           cropId={crop.id}
           minDate={stages[stages.length - 1].finish_date}
-          setDataReloadCounter={setDataReloadCounter}
-          setLoading={setLoading}
-          setSnackBar={setSnackBar}
+          HandlePutData={HandlePutData}
         />
       ) : null}
 
@@ -226,12 +244,7 @@ const CropInfo = ({ cropData, setDataReloadCounter }: any) => {
   );
 };
 
-const StagesList = ({
-  stages,
-  setDataReloadCounter,
-  setLoading,
-  setSnackBar,
-}: any) => {
+const StagesList = ({ stages, HandlePutData }: any) => {
   const [open, setOpen] = useState(-1);
 
   return (
@@ -310,9 +323,7 @@ const StagesList = ({
                         <Box>
                           <StageInfo
                             stage={stage}
-                            setDataReloadCounter={setDataReloadCounter}
-                            setLoading={setLoading}
-                            setSnackBar={setSnackBar}
+                            HandlePutData={HandlePutData}
                           />
                         </Box>
                       </Collapse>
@@ -327,33 +338,10 @@ const StagesList = ({
     </Box>
   );
 };
-//#region Snackbar
-
-const eventSuccessSnackBar: MySnackBarProps = {
-  open: true,
-  severity: "success",
-  msg: "Tarea realizada!",
-};
-
-const commentSuccessSnackBar: MySnackBarProps = {
-  open: true,
-  severity: "success",
-  msg: "Comentario registrado!",
-};
-
-const errorSnackBar: MySnackBarProps = {
-  open: true,
-  severity: "error",
-  msg: "Algo ha fallado.",
-};
-
-//#endregion
 
 const CommentsSection = ({
   comments,
-  setDataReloadCounter,
-  setLoading,
-  setSnackBar,
+  HandlePutData,
   objectTable,
   objectId,
 }: any) => {
@@ -362,31 +350,22 @@ const CommentsSection = ({
   const [newComment, setNewComment] = useState<string>(comments || "");
 
   const handleSubmitComments = async () => {
-    setLoading(true);
-    try {
-      const sentData = {
-        comments: newComment,
-      };
-      let res;
-
-      if (objectTable === "crop_stage") {
-        res = await setCropStageComment(sentData, objectId);
-      } else if (objectTable === "crop") {
-        res = await setCropComment(sentData, objectId);
-      }
-
-      if (res === 200) {
-        setTextFieldOpen(false);
-        setDataReloadCounter((prevCounter: number) => prevCounter + 1);
-        setSnackBar(commentSuccessSnackBar);
-      } else {
-        setSnackBar(errorSnackBar);
-      }
-    } catch (error) {
-      console.log(error);
-      setSnackBar(errorSnackBar);
+    const sentData = {
+      comments: newComment,
+    };
+    if (objectTable === "crop_stage") {
+      await HandlePutData(
+        () => setCropStageComment(sentData, objectId),
+        commentSuccessSnackBar,
+        setTextFieldOpen(false)
+      );
+    } else if (objectTable === "crop") {
+      await HandlePutData(
+        () => setCropComment(sentData, objectId),
+        commentSuccessSnackBar,
+        setTextFieldOpen(false)
+      );
     }
-    setLoading(false);
   };
 
   const isStageForm = objectTable === "crop_stage";
@@ -472,15 +451,8 @@ const CommentsSection = ({
   );
 };
 
-const StageInfo = ({
-  stage,
-  setDataReloadCounter,
-  setLoading,
-  setSnackBar,
-}: any) => {
+const StageInfo = ({ stage, HandlePutData }: any) => {
   const { events, comments, start_date, finish_date } = stage;
-
-  //#region Done task/stage data
 
   type GrowthEvent = {
     id: number;
@@ -493,8 +465,6 @@ const StageInfo = ({
     done_date?: string;
   };
 
-  //#endregion
-
   const handleDoneDateSelect = async (
     date: any,
     recordTable: string,
@@ -503,34 +473,22 @@ const StageInfo = ({
     if (id === undefined) {
       return;
     }
-    setLoading(true);
-    try {
-      const isoDate = date.toISOString(); // Convertir la fecha a formato ISO 8601
-      let updateData = {
-        doneDate: isoDate,
-      };
+    const isoDate = date.toISOString();
+    let updateData = {
+      doneDate: isoDate,
+    };
 
-      let res;
-
-      if (recordTable === "crop_event") {
-        res = await setDoneCropEvent(updateData, id);
-      } else if (recordTable === "crop_stage") {
-        res = await setFinishedCropStage(updateData, id);
-      }
-
-      if (res === 200) {
-        // Increment the data reload counter to trigger a data refresh
-        setDataReloadCounter((prevCounter: number) => prevCounter + 1);
-
-        setSnackBar(eventSuccessSnackBar);
-      } else {
-        setSnackBar(errorSnackBar);
-      }
-    } catch (error) {
-      console.log(error);
-      setSnackBar(errorSnackBar);
+    if (recordTable === "crop_event") {
+      await HandlePutData(
+        () => setDoneCropEvent(updateData, id),
+        eventSuccessSnackBar
+      );
+    } else if (recordTable === "crop_stage") {
+      await HandlePutData(
+        () => setFinishedCropStage(updateData, id),
+        eventSuccessSnackBar
+      );
     }
-    setLoading(false);
   };
 
   //#region Stage finishing handling
@@ -688,9 +646,7 @@ const StageInfo = ({
     <Fragment>
       <CommentsSection
         comments={comments}
-        setDataReloadCounter={setDataReloadCounter}
-        setLoading={setLoading}
-        setSnackBar={setSnackBar}
+        HandlePutData={HandlePutData}
         objectTable={"crop_stage"}
         objectId={stage.id}
       />
@@ -698,7 +654,7 @@ const StageInfo = ({
         <h2>Tareas:</h2>
         {sortedEvents(events).map((event: any) => {
           return (
-            <Box key={event.id} mb={2}>
+            <Box key={event.id || event.name} mb={2}>
               <Card
                 variant="outlined"
                 sx={{
@@ -773,8 +729,6 @@ const UniqueEvent = ({ event, start_date, handleDoneDateSelect }: any) => {
     event.species_growth_event_et_from_stage_start
   );
 
-  // Event finishing handling
-
   const [doneEventId, setDoneEventId] = useState(0);
 
   const handleDateSelect = (date: Date) => {
@@ -831,8 +785,6 @@ const PeriodicEvent = ({ event, start_date, handleDoneDateSelect }: any) => {
   );
 
   const periodicEvents = sortedEvents(event.periodic_events);
-
-  // Event finishing handling
 
   const [doneEventId, setDoneEventId] = useState(0);
 
@@ -898,44 +850,26 @@ const PeriodicEvent = ({ event, start_date, handleDoneDateSelect }: any) => {
   );
 };
 
-const FinalHarvestReport = ({
-  cropId,
-  minDate,
-  setDataReloadCounter,
-  setLoading,
-  setSnackBar,
-}: any) => {
+const FinalHarvestReport = ({ cropId, minDate, HandlePutData }: any) => {
   const [weight_in_tons, setWeight_in_tons] = useState<any>(0);
 
   const [date, setDate] = useState<Date | null>(null);
-
-  // submit data
 
   const handleSubmitData = async () => {
     if (!date) {
       return;
     }
-    setLoading(true);
-    try {
-      const isoDate = date.toISOString();
-      const sentData = {
-        date: isoDate,
-        weight_in_tons: weight_in_tons,
-      };
 
-      let res = await setFinishedCrop(sentData, cropId);
+    const isoDate = date.toISOString();
+    const sentData = {
+      date: isoDate,
+      weight_in_tons: weight_in_tons,
+    };
 
-      if (res === 200) {
-        setDataReloadCounter((prevCounter: number) => prevCounter + 1);
-        setSnackBar(eventSuccessSnackBar);
-      } else {
-        setSnackBar(errorSnackBar);
-      }
-    } catch (error) {
-      console.log(error);
-      setSnackBar(errorSnackBar);
-    }
-    setLoading(false);
+    await HandlePutData(
+      () => setFinishedCrop(sentData, cropId),
+      eventSuccessSnackBar
+    );
   };
 
   return (

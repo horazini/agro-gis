@@ -380,6 +380,30 @@ export type MySnackBarProps = {
   msg: string;
 };
 
+const eventSuccessSnackBar: MySnackBarProps = {
+  open: true,
+  severity: "success",
+  msg: "Tarea realizada!",
+};
+
+const commentSuccessSnackBar: MySnackBarProps = {
+  open: true,
+  severity: "success",
+  msg: "Comentario registrado!",
+};
+
+const errorSnackBar: MySnackBarProps = {
+  open: true,
+  severity: "error",
+  msg: "Algo ha fallado.",
+};
+
+export const mySnackBars = {
+  eventSuccessSnackBar,
+  commentSuccessSnackBar,
+  errorSnackBar,
+};
+
 export type SnackBarAlertProps = {
   open: boolean;
   severity: AlertColor | undefined;

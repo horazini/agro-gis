@@ -44,7 +44,10 @@ import {
   PageTitle,
   SnackBarAlert,
   StandardDatePicker,
+  mySnackBars,
 } from "../../components/customComponents";
+
+const { eventSuccessSnackBar, errorSnackBar } = mySnackBars;
 
 export type TaskType = {
   id: number;
@@ -393,7 +396,7 @@ const EventDialogs = ({
         // Increment the data reload counter to trigger a data refresh
         setDataReloadCounter((prevCounter: number) => prevCounter + 1);
 
-        setSnackBar(successSnackBar);
+        setSnackBar(eventSuccessSnackBar);
       } else {
         setSnackBar(errorSnackBar);
       }
@@ -408,18 +411,6 @@ const EventDialogs = ({
   //#endregion
 
   //#region Snackbar
-
-  const successSnackBar: MySnackBarProps = {
-    open: true,
-    severity: "success",
-    msg: "Tarea realizada!",
-  };
-
-  const errorSnackBar: MySnackBarProps = {
-    open: true,
-    severity: "error",
-    msg: "Algo ha fallado.",
-  };
 
   const [snackBar, setSnackBar] = useState<MySnackBarProps>({
     open: false,
@@ -463,7 +454,7 @@ const EventDialogs = ({
 
       if (res === 200) {
         setDataReloadCounter((prevCounter: number) => prevCounter + 1);
-        setSnackBar(successSnackBar);
+        setSnackBar(eventSuccessSnackBar);
       } else {
         setSnackBar(errorSnackBar);
       }

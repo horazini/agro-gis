@@ -23,7 +23,10 @@ import {
   MenuItem,
   Avatar,
   Switch,
+  useTheme,
 } from "@mui/material";
+
+import { green } from "@mui/material/colors";
 
 import { styled, Theme, CSSObject } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
@@ -391,11 +394,15 @@ export default function NavbarDrawer() {
     setOpen(false);
   };
 
+  const theme = useTheme();
+  const backgroundColor =
+    theme.palette.mode === "light" ? green[500] : "#121212";
+
   return (
     <Fragment>
       <Box>
         <CssBaseline />
-        <AppBar position="fixed" open={open}>
+        <AppBar position="fixed" style={{ backgroundColor }} open={open}>
           <Toolbar>
             <IconButton
               color="inherit"
@@ -416,7 +423,7 @@ export default function NavbarDrawer() {
               component="div"
             >
               <Link to="/" style={{ textDecoration: "none", color: "white" }}>
-                IR A INICIO {/* AgTracker */}
+                AgroSense {/* AgTracker */}
               </Link>
             </Typography>
 

@@ -8,7 +8,7 @@ function Copyright() {
     <Typography variant="body2" color="text.secondary">
       {"Copyright © "}
       <Link color="inherit" href="/">
-        Nombre aplicación
+        AgroSense
       </Link>{" "}
       {new Date().getFullYear()}
       {"."}

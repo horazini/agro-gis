@@ -30,7 +30,7 @@ function Copyright(props: any) {
     >
       {"Copyright © "}
       <Link color="inherit" href="/">
-        Nombre aplicación
+        AgroSense
       </Link>{" "}
       {new Date().getFullYear()}
       {"."}
@@ -130,7 +130,15 @@ export default function SignIn() {
             boxShadow: 2,
           }}
         >
-          <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
+          <Avatar
+            sx={{
+              m: 1,
+              bgcolor: (theme) =>
+                theme.palette.mode === "light"
+                  ? "#4caf50"
+                  : theme.palette.grey[600],
+            }}
+          >
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">

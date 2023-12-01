@@ -26,7 +26,7 @@ import { useEffect } from "react";
 
 export const PageTitle = (title: string) => {
   useEffect(() => {
-    document.title = `${title} - Nombre App`;
+    document.title = `${title} - AgroSense`;
   }, [title]);
 
   return null;

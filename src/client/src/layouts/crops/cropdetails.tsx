@@ -118,7 +118,11 @@ const CropDetails = () => {
       }}
     >
       <h1>
-        Cultivo en curso - Parcela N.° {cropFeature?.properties?.landplot.id}
+        {cropFeature?.properties?.crop.finish_date
+          ? "Cultivo finalizado"
+          : "Cultivo en curso"}{" "}
+        - Parcela N.° {cropFeature?.properties?.landplot.id} -{" "}
+        {cropFeature?.properties?.species.name}
       </h1>
       <SentinelSnapshoter landplot={cropFeature} />
 

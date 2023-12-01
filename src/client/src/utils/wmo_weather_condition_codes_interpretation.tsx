@@ -26,11 +26,11 @@ export const WMOcodesInterpretation: WMOcodesInterpretation = {
   },
   "1": {
     day: {
-      description: "Mainly Sunny",
+      description: "Mayormente soleado",
       image: "http://openweathermap.org/img/wn/01d@2x.png",
     },
     night: {
-      description: "Mainly Clear",
+      description: "Mayormente despejado",
       image: "http://openweathermap.org/img/wn/01n@2x.png",
     },
   },

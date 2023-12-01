@@ -109,7 +109,7 @@ function SchedulerToolbar(props: SchedulerToolbarProps) {
     onModeChange(mode);
   }, [mode]);
 
-  // zxc
+  // Status selector
 
   const options = [
     { label: "No filtrar", value: "any" },

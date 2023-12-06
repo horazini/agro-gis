@@ -21,8 +21,11 @@
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@types/react-leaflet": "^3.0.0",
+    "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.0",
     "color-convert": "^2.0.1",
+    "crypto-browserify": "^3.12.0",
+    "date-fns": "^2.30.0",
     "dayjs": "^1.11.8",
     "dotenv": "^16.0.3",
     "leaflet": "^1.9.3",
@@ -64,6 +67,7 @@
     ]
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/color-convert": "^2.0.1"
   }
 }

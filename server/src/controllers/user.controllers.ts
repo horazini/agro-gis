@@ -79,18 +79,11 @@ export const updateUser = async (
   next: NextFunction
 ) => {
   try {
-    const {
-      id,
-      tenant_id,
-      usertype_id,
-      mail_address,
-      username,
-      names,
-      surname,
-    } = req.body;
+    const { id, usertype_id, mail_address, username, names, surname } =
+      req.body;
     await pool.query(
-      "UPDATE user_account SET tenant_id = $1, usertype_id = $2, mail_address = $3, username = $4, names = $5, surname = $6 WHERE id = $7",
-      [tenant_id, usertype_id, mail_address, username, names, surname, id]
+      "UPDATE user_account SET usertype_id = $1, mail_address = $2, username = $3, names = $4, surname = $5 WHERE id = $6",
+      [usertype_id, mail_address, username, names, surname, id]
     );
 
     return res.status(201).send("User added");

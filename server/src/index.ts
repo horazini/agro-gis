@@ -2,7 +2,6 @@ import express, { ErrorRequestHandler } from "express";
 import morgan from "morgan";
 import cors from "cors";
 import indexRoutes from "./routes/index.routes";
-import { REACT_CLIENT_URL } from "./config";
 import bodyParser from "body-parser";
 
 const app = express();

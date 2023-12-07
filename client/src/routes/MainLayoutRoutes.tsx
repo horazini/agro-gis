@@ -78,7 +78,7 @@ const routeList = [
   {
     path: "/users/:id",
     element: <UserDetails />,
-    allowed: [2, 3],
+    allowed: [1, 2, 3],
   },
   {
     path: "/users/:id/edit",

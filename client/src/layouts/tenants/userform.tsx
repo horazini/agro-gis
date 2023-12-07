@@ -1,11 +1,8 @@
 import {
   Box,
-  Button,
   Container,
   Divider,
-  FormControl,
   Grid,
-  InputLabel,
   MenuItem,
   Paper,
   Select,
@@ -144,7 +141,7 @@ const UserForm = ({ userData, isEditingForm, setUserData }: any) => {
 
   const handleSubmitForm = async () => {
     if (isEditingForm) {
-      const sentUserData = { ...userData, tenant_id: tenantId };
+      const sentUserData = { ...userData };
       const res = await putUser(sentUserData);
       return res;
     } else {

@@ -9,11 +9,9 @@ type WeatherCondition = {
   };
 };
 
-type WMOcodesInterpretation = {
+export const WMOcodesInterpretation: {
   [code: number]: WeatherCondition;
-};
-
-export const WMOcodesInterpretation: WMOcodesInterpretation = {
+} = {
   "0": {
     day: {
       description: "Soleado",

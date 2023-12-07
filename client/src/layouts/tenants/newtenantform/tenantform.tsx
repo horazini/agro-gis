@@ -162,13 +162,13 @@ const MyForm = () => {
           },
           users: userList.map((user: any) => {
             const usertype =
-              tenantUserTypes.find((type) => type.name === user.usertype) ||
-              userList[0];
+              tenantUserTypes.find((type) => type.id === user.usertype_id) ||
+              tenantUserTypes[tenantUserTypes.length - 1];
 
             const password_hash = hashFunction(user.username);
 
             return {
-              usertype_id: usertype?.id,
+              usertype_id: usertype.id,
               mail_address: user.mail_address,
               username: user.username,
               names: user.names,

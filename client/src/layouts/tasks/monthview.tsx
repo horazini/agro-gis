@@ -36,9 +36,9 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     borderTop: `1px ${theme.palette.divider} solid !important`,
     borderBottom: `1px ${theme.palette.divider} solid !important`,
     borderLeft: `1px ${theme.palette.divider} solid !important`,
-    ["&:nth-of-type(1)"]: {
+    /* ["&:nth-of-type(1)"]: {
       borderLeft: `0px !important`,
-    },
+    }, */
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 12,
@@ -48,23 +48,23 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
     cursor: "pointer",
     verticalAlign: "top",
     borderLeft: `1px ${theme.palette.divider} solid`,
-    ["&:nth-of-type(7n+1)"]: {
+    /* ["&:nth-of-type(7n+1)"]: {
       borderLeft: 0,
     },
     ["&:nth-of-type(even)"]: {
       //backgroundColor: theme.palette.action.hover
-    },
+    }, */
   },
   [`&.${tableCellClasses.body}:hover`]: {
     //backgroundColor: "#eee"
   },
 }));
 
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
+/* const StyledTableRow = styled(TableRow)(({ theme }) => ({
   ["&:last-child td, &:last-child th"]: {
     border: 0,
   },
-}));
+})); */
 
 function MonthModeView(props: any) {
   const {
@@ -331,7 +331,7 @@ function MonthModeView(props: any) {
         >
           <TableBody>
             {rows?.map((row: any, index: any) => (
-              <StyledTableRow
+              <TableRow //<StyledTableRow
                 key={`row-${row.id}-${index}`}
                 sx={{
                   "&:last-child th": {
@@ -387,7 +387,7 @@ function MonthModeView(props: any) {
                     </StyledTableCell>
                   );
                 })}
-              </StyledTableRow>
+              </TableRow> //</StyledTableRow>
             ))}
           </TableBody>
         </Table>

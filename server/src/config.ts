@@ -15,6 +15,4 @@ const dbconnect = {
 
 export const JWT_SECRET = process.env.JWT_SECRET || "defaultsecret";
 
-export const REACT_CLIENT_URL = process.env.REACT_CLIENT_URL || "defaulturl";
-
 export default dbconnect;

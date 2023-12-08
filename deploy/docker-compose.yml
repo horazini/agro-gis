@@ -1,0 +1,46 @@
+
+version: '3'
+
+services:
+  postgres:
+    container_name: postgres-db
+    image: postgis/postgis:14-3.4-alpine
+    restart: always
+    env_file: ./.env.prod
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - ../database/volume:/var/lib/postgresql/data
+      - ../database/pgseed.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
+
+  express-server:
+    container_name: express-server
+    build:
+      context: ../server
+    restart: always
+    depends_on:
+      - postgres
+    env_file: ./.env.prod
+
+  client:
+    container_name: nginx-react-client
+    restart: always
+    build: 
+      context: ../client
+    depends_on:
+      - express-server
+
+  nginx:
+    container_name: nginx-reverse-proxy
+    restart: always
+    build: ./nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - express-server
+      - client

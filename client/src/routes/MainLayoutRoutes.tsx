@@ -7,10 +7,10 @@ import { RootState } from "../redux/store";
 
 // Error boundary
 import { Component, ReactNode } from "react";
-import { Typography } from "@mui/material";
-import { Link } from "react-router-dom";
 
+// Layouts
 import NoMatch from "../layouts/app/nomatch";
+import RuntimeError from "../layouts/app/runtimeerror";
 
 import Profile from "../layouts/user/profile";
 
@@ -176,55 +176,14 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: any, errorInfo: any) {
-    // Puedes agregar lógica de registro de errores aquí
     console.error(error, errorInfo);
+    // Expand to send errors to the server
   }
 
   render() {
     if (this.state.hasError) {
-      // Puedes renderizar un componente de error personalizado aquí
-      return (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "15vh",
-          }}
-        >
-          <Typography
-            component={"span"}
-            style={{
-              textAlign: "center",
-            }}
-          >
-            <h1>
-              ¡Vaya! 😧 Algo ha salido mal.
-              <br />
-            </h1>
-            <h1>
-              Intente nuevamente.
-              <br />
-              Si el problema persiste contacte a su proveedor de servicio.
-              <br />
-              <br />
-            </h1>
-            <h1>
-              <Link
-                to="/"
-                style={{
-                  textDecoration: "none",
-                  color: "inherit",
-                }}
-              >
-                Ir a inicio
-              </Link>
-            </h1>
-          </Typography>
-        </div>
-      );
+      return <RuntimeError />;
     }
-
     return this.props.children;
   }
 }

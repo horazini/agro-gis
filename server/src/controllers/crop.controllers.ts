@@ -658,6 +658,7 @@ export const getTenantCropData = async (
         ELSE ROUND((pi() * landplot_circle_radius * landplot_circle_radius)::numeric)
       END AS landplot_area,
       landplot_description,
+      species_id,
       species_name,
       description,
       comments,

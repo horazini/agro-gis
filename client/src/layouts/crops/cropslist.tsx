@@ -1,10 +1,23 @@
-import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import {
+  Autocomplete,
+  Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+} from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { FormatListBulleted } from "@mui/icons-material";
 
-import { getTenantCrops } from "../../utils/services";
+import {
+  getTenantCrops,
+  getTenantGeo,
+  getTenantSpecies,
+  speciesMainData,
+} from "../../utils/services";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import {
@@ -17,7 +30,11 @@ import { FormattedArea } from "../../components/mapcomponents";
 import { formatedDate } from "../../utils/functions";
 import { PageTitle } from "../../components/customComponents";
 
-const CropsList = (crops: any[]) => {
+const CropsList = (
+  crops: any[],
+  landplots: { features: any[]; type: string },
+  species: speciesMainData[]
+) => {
   const navigate = useNavigate();
 
   const columns: GridColDef[] = [
@@ -43,7 +60,7 @@ const CropsList = (crops: any[]) => {
       width: 100,
       renderCell: (params: GridRenderCellParams<any>) => (
         <p>
-          {params.id}
+          {params.value}
           {params.row.landplot_description
             ? " - " + params.row.landplot_description
             : null}
@@ -118,17 +135,31 @@ const CropsList = (crops: any[]) => {
 
   const options = [
     { label: "No filtrar", value: "any" },
-    { label: "Pendientes", value: "todo" },
-    { label: "Realizados", value: "done" },
+    { label: "En curso", value: "todo" },
+    { label: "Terminados", value: "done" },
   ];
 
-  const [status, setStatus] = useState("any");
+  const [filterOptions, setFilterOptions] = useState({
+    status: "any",
+    landplotId: 0,
+    speciesId: 0,
+  });
 
   let filteredCrops = crops;
-  if (status === "done") {
+  if (filterOptions.status === "done") {
     filteredCrops = filteredCrops?.filter((crop) => crop?.finish_date);
-  } else if (status === "todo") {
+  } else if (filterOptions.status === "todo") {
     filteredCrops = filteredCrops?.filter((crop) => !crop?.finish_date);
+  }
+  if (filterOptions.landplotId !== 0) {
+    filteredCrops = filteredCrops?.filter(
+      (crop) => crop?.landplot_id === filterOptions.landplotId
+    );
+  }
+  if (filterOptions.speciesId !== 0) {
+    filteredCrops = filteredCrops?.filter(
+      (crop) => crop?.species_id === filterOptions.speciesId
+    );
   }
 
   return (
@@ -136,28 +167,102 @@ const CropsList = (crops: any[]) => {
       <h1>Cultivos</h1>
       {crops.length > 0 ? (
         <Fragment>
-          <FormControl
-            variant="outlined"
-            size="small"
-            sx={{ my: 1, minWidth: 220 }}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
           >
-            <InputLabel>Filtrar por estado</InputLabel>
-
-            <Select
-              name="taskstatus"
-              value={status}
-              label="Filtrar por estado"
-              onChange={(e) => {
-                setStatus(e.target.value);
-              }}
+            <FormControl
+              variant="outlined"
+              size="small"
+              sx={{ my: 1, minWidth: 220 }}
             >
-              {options.map((option, index) => (
-                <MenuItem key={index} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <InputLabel>Filtrar por estado</InputLabel>
+
+              <Select
+                name="taskstatus"
+                value={filterOptions.status}
+                label="Filtrar por estado"
+                onChange={(e) =>
+                  setFilterOptions((prevOptions) => ({
+                    ...prevOptions,
+                    status: e.target.value,
+                  }))
+                }
+              >
+                {options.map((option, index) => (
+                  <MenuItem key={index} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Box>
+              <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
+                {landplots ? (
+                  <Autocomplete
+                    size="small"
+                    sx={{ my: 1, minWidth: 220 }}
+                    id="landplot-autocomplete"
+                    options={landplots.features.sort(
+                      (a: any, b: any) =>
+                        a.properties.landplot.id - b.properties.landplot.id
+                    )}
+                    getOptionLabel={(option: any) =>
+                      "Parcela " +
+                      option.properties.landplot.id +
+                      (option.properties.landplot.description
+                        ? " - " + option.properties.landplot.description
+                        : "")
+                    }
+                    value={
+                      landplots.features.find(
+                        (feature: any) =>
+                          feature.properties.landplot.id ===
+                          filterOptions.landplotId
+                      ) || null
+                    }
+                    onChange={(_, newValue) =>
+                      setFilterOptions((prevOptions) => ({
+                        ...prevOptions,
+                        landplotId: newValue?.properties.landplot.id || 0,
+                      }))
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} label="Parcela" />
+                    )}
+                  />
+                ) : null}
+              </FormControl>
+              <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
+                {species ? (
+                  <Autocomplete
+                    size="small"
+                    sx={{ my: 1, minWidth: 220 }}
+                    id="species-autocomplete"
+                    options={species}
+                    getOptionLabel={(option: any) => option.name}
+                    value={
+                      species.find(
+                        (specie: any) => specie.id === filterOptions.speciesId
+                      ) || null
+                    }
+                    onChange={(_, newValue) =>
+                      setFilterOptions((prevOptions) => ({
+                        ...prevOptions,
+                        speciesId: newValue?.id || 0,
+                      }))
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} label="Especie" />
+                    )}
+                  />
+                ) : null}
+              </FormControl>
+            </Box>
+          </Box>
 
           <Box sx={{ height: 400, width: "100%" }}>
             <DataGrid
@@ -194,8 +299,10 @@ const CropsLoader = () => {
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const [crops, setCrops] = useState<[]>([]);
+  const [landplots, setLandplots] = useState<any>();
+  const [species, setSpecies] = useState<speciesMainData[]>([]);
 
-  const loadTenant = async (id: number) => {
+  const loadCrops = async (id: number) => {
     try {
       const data = await getTenantCrops(id);
       setCrops(data);
@@ -204,13 +311,33 @@ const CropsLoader = () => {
     }
   };
 
+  const loadLandplots = async (id: number) => {
+    try {
+      const data = await getTenantGeo(id);
+      setLandplots(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const loadSpecies = async (id: number) => {
+    try {
+      const data = await getTenantSpecies(id);
+      setSpecies(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     if (tenantId) {
-      loadTenant(tenantId);
+      loadCrops(tenantId);
+      loadLandplots(tenantId);
+      loadSpecies(tenantId);
     }
   }, [tenantId]);
 
-  return <Fragment>{CropsList(crops)}</Fragment>;
+  return <Fragment>{CropsList(crops, landplots, species)}</Fragment>;
 };
 
 export default CropsLoader;

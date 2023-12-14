@@ -13,6 +13,7 @@ import {
   Polygon,
   useMap,
   Pane,
+  LayerGroup,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L, { LatLngExpression } from "leaflet";
@@ -805,3 +806,167 @@ export const SentinelSnapshoter = ({ landplot }: any) => {
     </Box>
   );
 };
+
+/**
+ *
+ * @param {array} features - array of GeoJSON features
+ * @param {number} selectedLandplotId
+ * @param {function(number)} handleFeatureClick - function that would receive the selected feature ID, so it can be seted on your component context
+ * @returns {react-leaflet MapContainer} a map that flies to the selected feature, and in which you can select a feature by clicking on them
+ */
+export const FlyToSelectedFeatureMap = ({
+  features,
+  selectedLandplotId,
+  handleFeatureClick,
+}: any) => {
+  const mapRef = useRef<any>();
+
+  useEffect(() => {
+    if (
+      mapRef === null ||
+      selectedFeature === null ||
+      selectedFeature === undefined
+    ) {
+      return;
+    }
+
+    //#endregion
+
+    const { properties, geometry } = selectedFeature;
+
+    let coords: LatLngExpression = position;
+    let zoom = 13;
+
+    if (geometry.type === "Polygon") {
+      const coordinates = geometry.coordinates[0].map(([lng, lat]: any) => [
+        lat,
+        lng,
+      ]);
+
+      const p = L.polygon(coordinates).addTo(mapRef.current);
+      const bounds = p.getBounds();
+      coords = bounds.getCenter();
+      zoom = mapRef.current.getBoundsZoom(bounds);
+      p.remove();
+    } else if (
+      geometry.type === "Point" &&
+      properties.landplot.subType === "Circle"
+    ) {
+      coords = geometry.coordinates as LatLngExpression;
+
+      const radius = properties.landplot.radius as number;
+
+      const c = L.circle(geometry.coordinates, { radius }).addTo(
+        mapRef.current
+      );
+      const bounds = c.getBounds();
+      zoom = mapRef.current.getBoundsZoom(bounds);
+      c.remove();
+    }
+    mapRef.current.flyTo(coords, zoom);
+  }, [selectedLandplotId]);
+
+  const selectedFeature = features.find(
+    (feature: { properties: { landplot: { id: number } } }) =>
+      feature.properties.landplot.id === selectedLandplotId
+  );
+
+  // Comportamiento de las Layers
+
+  const CustomLayer = ({ feature }: any) => {
+    const { properties, geometry } = feature;
+
+    const [highlightedLayerId, setHighlightedLayerId] = useState<number | null>(
+      null
+    );
+    const handleLayerMouseOver = (layerId: number) => {
+      setHighlightedLayerId(layerId);
+    };
+
+    const handleLayerMouseOut = () => {
+      setHighlightedLayerId(null);
+    };
+
+    const isHighlighted = highlightedLayerId === properties.landplot.id;
+    const isSelected = selectedLandplotId === properties.landplot.id;
+    const isOccupied = properties.crop && properties.crop?.finish_date === null;
+
+    const pathOptions = {
+      color: isSelected
+        ? "#bf4000"
+        : isHighlighted
+        ? "#33ff33"
+        : isOccupied
+        ? "red"
+        : "#3388ff",
+      weight: isSelected ? 4 : isHighlighted ? 4 : 3,
+    };
+
+    const eventHandlers = {
+      click: () => handleFeatureClick(properties.landplot.id),
+      mouseover: () => handleLayerMouseOver(properties.landplot.id),
+      mouseout: handleLayerMouseOut,
+    };
+
+    const PopUp = (
+      <div>
+        <h3>ID: {properties.landplot.id}</h3>
+        <p>Descripción: {properties.landplot.description}</p>
+        {properties.landplot.radius && (
+          <p>Radio: {properties.landplot.radius} m.</p>
+        )}
+      </div>
+    );
+
+    if (geometry.type === "Polygon") {
+      const coordinates = geometry.coordinates[0].map(([lng, lat]: any) => [
+        lat,
+        lng,
+      ]);
+      return (
+        <Polygon
+          key={properties.landplot.id}
+          positions={coordinates}
+          pathOptions={pathOptions}
+          eventHandlers={eventHandlers}
+        >
+          <Popup>{PopUp}</Popup>
+        </Polygon>
+      );
+    } else if (
+      geometry.type === "Point" &&
+      properties.landplot.subType === "Circle"
+    ) {
+      return (
+        <Circle
+          key={properties.landplot.id}
+          center={geometry.coordinates}
+          radius={properties.landplot.radius}
+          pathOptions={pathOptions}
+          eventHandlers={eventHandlers}
+        >
+          <Popup>{PopUp}</Popup>
+        </Circle>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <MapContainer center={position} zoom={7} ref={mapRef}>
+      <LayerControler />
+      <LayerGroup>
+        {features.map((feature: any) => {
+          return (
+            <CustomLayer
+              key={feature.properties.landplot.id}
+              feature={feature}
+            />
+          );
+        })}
+      </LayerGroup>
+    </MapContainer>
+  );
+};
+
+export default FlyToSelectedFeatureMap;

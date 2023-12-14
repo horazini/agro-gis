@@ -1,11 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  MapContainer,
-  Popup,
-  Circle,
-  LayerGroup,
-  Polygon,
-} from "react-leaflet";
+import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 
 import { RootState } from "../../redux/store";
@@ -18,24 +11,13 @@ import {
   speciesMainData,
 } from "../../utils/services";
 
-import {
-  position,
-  LayerControler,
+import FlyToSelectedFeatureMap, {
   FeatureInfo,
 } from "../../components/mapcomponents";
-import {
-  FormControl,
-  Card,
-  Box,
-  Autocomplete,
-  TextField,
-  Button,
-} from "@mui/material";
+import { FormControl, Card, Box, Autocomplete, TextField } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import { ConfirmButton, PageTitle } from "../../components/customComponents";
 import { useNavigate } from "react-router";
-import { LatLngExpression } from "leaflet";
-import L from "leaflet";
 import dayjs from "dayjs";
 
 interface ICrop {
@@ -80,66 +62,12 @@ const LandplotsAndCrops = () => {
     date: "",
   });
 
-  const mapRef = useRef<any>();
-
-  useEffect(() => {
-    if (
-      mapRef === null ||
-      selectedFeature === null ||
-      selectedFeature === undefined
-    ) {
-      return;
-    }
-
-    //#region minDate handling
-
-    if (minDate === null) {
-      setIsDateValid(true);
-    } else {
-      if (crop.date !== "") {
-        if (crop.date > minDate.toISOString()) {
-          setIsDateValid(true);
-        } else {
-          setIsDateValid(false);
-        }
-      }
-    }
-
-    //#endregion
-
-    const { properties, geometry } = selectedFeature;
-
-    let coords: LatLngExpression = position;
-    let zoom = 13;
-
-    if (geometry.type === "Polygon") {
-      const coordinates = geometry.coordinates[0].map(([lng, lat]: any) => [
-        lat,
-        lng,
-      ]);
-
-      const p = L.polygon(coordinates).addTo(mapRef.current);
-      const bounds = p.getBounds();
-      coords = bounds.getCenter();
-      zoom = mapRef.current.getBoundsZoom(bounds);
-      p.remove();
-    } else if (
-      geometry.type === "Point" &&
-      properties.landplot.subType === "Circle"
-    ) {
-      coords = geometry.coordinates as LatLngExpression;
-
-      const radius = properties.landplot.radius as number;
-
-      const c = L.circle(geometry.coordinates, { radius }).addTo(
-        mapRef.current
-      );
-      const bounds = c.getBounds();
-      zoom = mapRef.current.getBoundsZoom(bounds);
-      c.remove();
-    }
-    mapRef.current.flyTo(coords, zoom);
-  }, [crop.landplot]);
+  const handleFeatureSelect = (value: number) => {
+    setCrop((prevCrop) => ({
+      ...prevCrop,
+      landplot: value,
+    }));
+  };
 
   const selectedFeature = geoData
     ? geoData.features.find(
@@ -153,6 +81,20 @@ const LandplotsAndCrops = () => {
     : null;
 
   const [isDateValid, setIsDateValid] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (minDate === null) {
+      setIsDateValid(true);
+    } else {
+      if (crop.date !== "") {
+        if (crop.date > minDate.toISOString()) {
+          setIsDateValid(true);
+        } else {
+          setIsDateValid(false);
+        }
+      }
+    }
+  }, [selectedFeature]);
 
   function handleDateChange(date: any) {
     if (date !== null && !Number.isNaN(new Date(date).getTime())) {
@@ -178,91 +120,6 @@ const LandplotsAndCrops = () => {
     }
   }
 
-  // Comportamiento de las Layers
-
-  const CustomLayer = ({ feature }: any) => {
-    const { properties, geometry } = feature;
-
-    const [highlightedLayerId, setHighlightedLayerId] = useState<number | null>(
-      null
-    );
-    const handleLayerMouseOver = (layerId: number) => {
-      setHighlightedLayerId(layerId);
-    };
-
-    const handleLayerMouseOut = () => {
-      setHighlightedLayerId(null);
-    };
-
-    const isHighlighted = highlightedLayerId === properties.landplot.id;
-    const isSelected = crop.landplot === properties.landplot.id;
-    const isOccupied = properties.crop && properties.crop?.finish_date === null;
-
-    const pathOptions = {
-      color: isSelected
-        ? "#bf4000"
-        : isHighlighted
-        ? "#33ff33"
-        : isOccupied
-        ? "red"
-        : "#3388ff",
-      weight: isSelected ? 4 : isHighlighted ? 4 : 3,
-    };
-
-    const eventHandlers = {
-      click: () =>
-        setCrop((prevCrop) => ({
-          ...prevCrop,
-          landplot: properties.landplot.id,
-        })),
-      mouseover: () => handleLayerMouseOver(properties.landplot.id),
-      mouseout: handleLayerMouseOut,
-    };
-
-    const PopUp = (
-      <div>
-        <h3>ID: {properties.landplot.id}</h3>
-        <p>Descripción: {properties.landplot.description}</p>
-        {properties.landplot.radius && (
-          <p>Radio: {properties.landplot.radius} m.</p>
-        )}
-      </div>
-    );
-
-    if (geometry.type === "Polygon") {
-      const coordinates = geometry.coordinates[0].map(([lng, lat]: any) => [
-        lat,
-        lng,
-      ]);
-      return (
-        <Polygon
-          key={properties.landplot.id}
-          positions={coordinates}
-          pathOptions={pathOptions}
-          eventHandlers={eventHandlers}
-        >
-          <Popup>{PopUp}</Popup>
-        </Polygon>
-      );
-    } else if (
-      geometry.type === "Point" &&
-      properties.landplot.subType === "Circle"
-    ) {
-      return (
-        <Circle
-          key={properties.landplot.id}
-          center={geometry.coordinates}
-          radius={properties.landplot.radius}
-          pathOptions={pathOptions}
-          eventHandlers={eventHandlers}
-        >
-          <Popup>{PopUp}</Popup>
-        </Circle>
-      );
-    }
-    return null;
-  };
-
   // Confirmar datos
 
   const handleSubmitForm: () => Promise<number> = async () => {
@@ -285,20 +142,13 @@ const LandplotsAndCrops = () => {
       }}
     >
       <h1>Parcelas y cultivos</h1>
-      <MapContainer center={position} zoom={7} ref={mapRef}>
-        <LayerControler />
-        <LayerGroup>
-          {geoData &&
-            geoData.features.map((feature: any) => {
-              return (
-                <CustomLayer
-                  key={feature.properties.landplot.id}
-                  feature={feature}
-                />
-              );
-            })}
-        </LayerGroup>
-      </MapContainer>
+      {geoData && (
+        <FlyToSelectedFeatureMap
+          features={geoData.features}
+          selectedLandplotId={crop.landplot}
+          handleFeatureClick={handleFeatureSelect}
+        />
+      )}
 
       <Box ml={2} mb={2} mr={2}>
         {(selectedFeature &&

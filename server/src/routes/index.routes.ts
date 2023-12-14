@@ -181,8 +181,12 @@ router.get("/pendingtasksnumber/:tenantId", getTenantPendingTasksNumber);
 
 // Reports
 
-import { getSpeciesReport } from "../controllers/report.controllers";
+import {
+  getSpeciesReport,
+  getLandplotReport,
+} from "../controllers/report.controllers";
 
 router.put("/speciesreport", getSpeciesReport);
+router.put("/landplotreport", getLandplotReport);
 
 export default router;

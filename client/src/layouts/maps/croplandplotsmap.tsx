@@ -160,6 +160,10 @@ const LandplotsAndCrops = () => {
 
       if (minDate !== null) {
         if (isoDate >= minDate.toISOString()) {
+          setCrop((prevCrop) => ({
+            ...prevCrop,
+            date: isoDate,
+          }));
           setIsDateValid(true);
         } else {
           setIsDateValid(false);
@@ -264,7 +268,7 @@ const LandplotsAndCrops = () => {
   const handleSubmitForm: () => Promise<number> = async () => {
     try {
       const res = await postCrop(crop);
-      return res;
+      return res.status;
     } catch (error) {
       console.log(error);
       return 400;

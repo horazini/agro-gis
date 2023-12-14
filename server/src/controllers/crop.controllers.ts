@@ -246,9 +246,10 @@ export const createCrop = async (
     }
 
     await client.query("COMMIT");
-    return res
-      .status(200)
-      .send("Crop, with its stages and events, created successfully");
+    return res.status(200).json({
+      message: "Crop, with its stages and events, created successfully",
+      cropId,
+    });
   } catch (e) {
     await client.query("ROLLBACK");
     next(e);
@@ -833,7 +834,6 @@ function formattedDate(dateString: string) {
   }
   const dateObject = new Date(dateString);
   const formattedDate = format(dateObject, "yyyy-MM-dd");
-  console.log(formattedDate);
   return formattedDate;
 }
 

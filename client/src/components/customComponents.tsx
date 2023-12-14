@@ -259,10 +259,10 @@ export const ConfirmFetchAndRedirect = ({
   const handleConfirm = async () => {
     setLoading(true);
     setOpen(false);
-    const res = await onConfirm();
+    const resStatus = await onConfirm();
 
     setLoading(false);
-    if (200 <= res && res < 300) {
+    if (200 <= resStatus && resStatus < 300) {
       setSuccess(true);
       setTimeout(() => {
         navigate(navigateDir);

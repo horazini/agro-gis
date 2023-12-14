@@ -349,7 +349,7 @@ export const postCrop = async (crop: any) => {
     body: JSON.stringify(crop),
     headers: { "Content-type": "application/json" },
   });
-  return res.status;
+  return res;
 };
 
 export const getCropById = async (id: string) => {

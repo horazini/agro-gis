@@ -353,6 +353,7 @@ const CommentsSection = ({
   HandlePutData,
   objectTable,
   objectId,
+  start_date,
 }: any) => {
   const [textFieldOpen, setTextFieldOpen] = useState<boolean>(false);
 
@@ -451,7 +452,11 @@ const CommentsSection = ({
           <p>{comments}</p>
         </Fragment>
       ) : (
-        <Button variant="outlined" onClick={() => setTextFieldOpen(true)}>
+        <Button
+          variant="outlined"
+          disabled={objectTable === "crop_stage" && !start_date}
+          onClick={() => setTextFieldOpen(true)}
+        >
           <AddCommentIcon sx={{ mr: 1 }} />
           Agregar comentarios
         </Button>
@@ -463,6 +468,7 @@ const CommentsSection = ({
 const StageInfo = ({ stage, HandlePutData }: any) => {
   const { events, comments, start_date, finish_date } = stage;
 
+  console.log(events);
   type GrowthEvent = {
     id: number;
     species_growth_event_id: number;
@@ -659,6 +665,8 @@ const StageInfo = ({ stage, HandlePutData }: any) => {
     );
   };
 
+  const sorteredEvents = sortedEvents(events);
+
   return (
     <Fragment>
       <CommentsSection
@@ -666,40 +674,43 @@ const StageInfo = ({ stage, HandlePutData }: any) => {
         HandlePutData={HandlePutData}
         objectTable={"crop_stage"}
         objectId={stage.id}
+        start_date={stage.start_date}
       />
       <Box>
         <h2>Tareas:</h2>
-        {sortedEvents(events).map((event: any) => {
-          return (
-            <Box key={event.id || event.name} mb={2}>
-              <Card
-                variant="outlined"
-                sx={{
-                  backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? theme.palette.grey[100]
-                      : null,
-                }}
-              >
-                <Box ml={2} mb={2} mr={2}>
-                  {event.id ? (
-                    <UniqueEvent
-                      event={event}
-                      start_date={start_date}
-                      handleDoneDateSelect={handleDoneDateSelect}
-                    />
-                  ) : (
-                    <PeriodicEvent
-                      event={event}
-                      start_date={start_date}
-                      handleDoneDateSelect={handleDoneDateSelect}
-                    />
-                  )}
+        {sorteredEvents.length !== 0
+          ? sortedEvents(events).map((event: any) => {
+              return (
+                <Box key={event.id || event.name} mb={2}>
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      backgroundColor: (theme) =>
+                        theme.palette.mode === "light"
+                          ? theme.palette.grey[100]
+                          : null,
+                    }}
+                  >
+                    <Box ml={2} mb={2} mr={2}>
+                      {event.id ? (
+                        <UniqueEvent
+                          event={event}
+                          start_date={start_date}
+                          handleDoneDateSelect={handleDoneDateSelect}
+                        />
+                      ) : (
+                        <PeriodicEvent
+                          event={event}
+                          start_date={start_date}
+                          handleDoneDateSelect={handleDoneDateSelect}
+                        />
+                      )}
+                    </Box>
+                  </Card>
                 </Box>
-              </Card>
-            </Box>
-          );
-        })}
+              );
+            })
+          : "Este etapa no registra tareas ni eventos."}
       </Box>
 
       <Box
@@ -755,40 +766,45 @@ const UniqueEvent = ({ event, start_date, handleDoneDateSelect }: any) => {
   return (
     <Fragment>
       <h3>{event.name}</h3>
-      <Typography mt={2}>Descripción: {event.description}</Typography>
+      {event.description ? (
+        <Typography mt={2}>Descripción: {event.description}</Typography>
+      ) : null}
 
       {event.due_date ? (
         <Fragment>
           <Typography mt={2}>
             Fecha estimada: {formatedDate(event.due_date)}
           </Typography>
+          <Box display={"flex"} alignItems="center">
+            {event.done_date ? (
+              <Typography mt={2}>
+                {"Fecha de realización: "} {formatedDate(event.done_date)}
+              </Typography>
+            ) : (
+              <Fragment>
+                <Typography mt={2} mr={1}>
+                  {"Fecha de realización: "}
+                </Typography>
+
+                <StandardDatePicker
+                  onOpenDateSelector={() => setDoneEventId(event.id)}
+                  //date
+                  onDateSelect={handleDateSelect}
+                  minDate={start_date}
+                  //maxDate
+                  label="Marcar como realizado"
+                />
+              </Fragment>
+            )}
+          </Box>
         </Fragment>
+      ) : event.done_date ? (
+        <Typography mt={2}>
+          {"Fecha de realización: "} {formatedDate(event.done_date)}
+        </Typography>
       ) : event.species_growth_event_et_from_stage_start ? (
         <p>Tiempo desde incio de la etapa: {formatedETFromStageStart}</p>
       ) : null}
-
-      <Box display={"flex"} alignItems="center">
-        {event.done_date ? (
-          <Typography mt={2}>
-            {"Fecha de realización: "} {formatedDate(event.done_date)}
-          </Typography>
-        ) : (
-          <Fragment>
-            <Typography mt={2} mr={1}>
-              {"Fecha de realización: "}
-            </Typography>
-
-            <StandardDatePicker
-              onOpenDateSelector={() => setDoneEventId(event.id)}
-              //date
-              onDateSelect={handleDateSelect}
-              minDate={start_date}
-              //maxDate
-              label="Marcar como realizado"
-            />
-          </Fragment>
-        )}
-      </Box>
     </Fragment>
   );
 };
@@ -824,7 +840,9 @@ const PeriodicEvent = ({ event, start_date, handleDoneDateSelect }: any) => {
           />
         </Box>
 
-        <Typography mt={2}>Descripción: {event.description}</Typography>
+        {event.description ? (
+          <Typography mt={2}>Descripción: {event.description}</Typography>
+        ) : null}
       </Box>
 
       <Divider />

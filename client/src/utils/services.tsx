@@ -458,6 +458,8 @@ export const getFulfilledCropsCalendarTenantTasks = async (
   return data;
 };
 
+// Snapshots
+
 export const postLandplotSnapshot = async (snapshotData: any) => {
   const res = await fetch(`${API}/snapshot`, {
     method: "POST",
@@ -487,6 +489,19 @@ export const deleteSnapshot = async (snapshotId: number) => {
   return res.status;
 };
 
+// Reports
+
+export const getSpeciesReport = async (speciesReportData: any) => {
+  const res = await fetch(`${API}/speciesreport`, {
+    method: "PUT",
+    body: JSON.stringify(speciesReportData),
+    headers: { "Content-type": "application/json" },
+  });
+  return res;
+};
+
+// Homepage Dashboard
+
 export const getNextHarvest = async (tenantId: number) => {
   const res = await fetch(`${API}/nextharvest/${tenantId}`);
   const data = await res.json();
@@ -512,6 +527,8 @@ export const getTenantPendingTasksNumber = async (tenantId: number) => {
   const data = await res.json();
   return data;
 };
+
+// External services
 
 export const getWeather = async (coords: number[]) => {
   let lat = coords[0];

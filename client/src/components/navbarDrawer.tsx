@@ -130,7 +130,7 @@ const routeList = [
   {
     text: "Reportes",
     icon: <BarChartIcon />,
-    to: "/",
+    to: "/reports",
     allowed: [3],
   },
   {

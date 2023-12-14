@@ -22,6 +22,8 @@ import TenantUsers from "../layouts/tenants/userlist";
 import UserDetails from "../layouts/tenants/userdetails";
 import UserForm from "../layouts/tenants/userform";
 
+import Reports from "../layouts/reports/reports";
+
 import SpeciesList from "../layouts/species/specieslist";
 import SpeciesDetails from "../layouts/species/speciesdetails";
 import SpeciesForm from "../layouts/species/speciesform";
@@ -84,6 +86,11 @@ const routeList = [
     path: "/users/:id/edit",
     element: <UserForm />,
     allowed: [1, 2, 3],
+  },
+  {
+    path: "/reports",
+    element: <Reports />,
+    allowed: [2, 3],
   },
   {
     path: "/species",

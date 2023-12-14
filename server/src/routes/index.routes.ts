@@ -179,4 +179,10 @@ router.get("/nextharvest/:tenantId", getNextHarvest);
 //router.get("/pendingtasks/:tenantId", getTenantPendingTasks);
 router.get("/pendingtasksnumber/:tenantId", getTenantPendingTasksNumber);
 
+// Reports
+
+import { getSpeciesReport } from "../controllers/report.controllers";
+
+router.put("/speciesreport", getSpeciesReport);
+
 export default router;

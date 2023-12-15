@@ -8,9 +8,9 @@ import {
   FormattedArea,
   SentinelSnapshoter,
 } from "../../components/mapcomponents";
-import { Box, Card } from "@mui/material";
+import { Box, Button, Card } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { FormatListBulleted } from "@mui/icons-material";
+import { FormatListBulleted, PhotoSizeSelectActual } from "@mui/icons-material";
 
 import { DataGrid } from "@mui/x-data-grid/DataGrid";
 import {
@@ -64,11 +64,31 @@ const CropDetails = () => {
 };
 
 const LandplotData = ({ landplot }: any) => {
+  const navigate = useNavigate();
+
   return (
-    <Box ml={2} mb={2} mr={2}>
-      {landplot.description && <p>Descripción: {landplot.description}</p>}
-      <p>Área: {FormattedArea(landplot.area)}</p>
-      {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}
+    >
+      <Box ml={2} mb={2} mr={2}>
+        {landplot.description && <p>Descripción: {landplot.description}</p>}
+        <p>Área: {FormattedArea(landplot.area)}</p>
+        {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
+      </Box>
+
+      <Button
+        variant={"contained"}
+        color="primary"
+        onClick={() => navigate(`/landplots/${landplot.id}/snapshots`)}
+        style={{ marginLeft: ".5rem" }}
+        startIcon={<PhotoSizeSelectActual />}
+      >
+        Ver snapshots
+      </Button>
     </Box>
   );
 };

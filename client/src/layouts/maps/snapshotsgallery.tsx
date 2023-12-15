@@ -216,6 +216,9 @@ const SnapshotGallery = ({
               <CardMedia
                 component="img"
                 image={selectedSnapshot.imageDataUri}
+                style={{
+                  padding: 10,
+                }}
               />
               <CardContent
                 style={{

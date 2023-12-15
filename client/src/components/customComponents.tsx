@@ -34,11 +34,12 @@ export const PageTitle = (title: string) => {
 
 //#region Dialog components
 
-export type MyDialogProps = {
+export type CustomDialogProps = {
   open: boolean;
   disabled?: boolean;
   dialogTitle: string;
   dialogSubtitle: string | JSX.Element;
+  confirmButtonText?: string;
   cancelButtonText?: string;
   onClose: () => void;
   handleValidation?: () => boolean | Promise<boolean>;
@@ -48,15 +49,16 @@ export type MyDialogProps = {
 /**
  * Basic dialog component that works with an "open" boolean prop.
  */
-export const MyDialog = ({
+export const CustomDialog = ({
   open,
   dialogTitle,
   dialogSubtitle,
+  confirmButtonText,
   cancelButtonText,
   onClose,
   handleValidation,
   onConfirm,
-}: MyDialogProps) => {
+}: CustomDialogProps) => {
   const handleClose = () => {
     onClose();
   };
@@ -105,7 +107,7 @@ export const MyDialog = ({
           }
           autoFocus
         >
-          Confirmar
+          {confirmButtonText ? confirmButtonText : "Confirmar"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -155,7 +157,7 @@ export const DialogComponent = ({
     <Fragment>
       <span onClick={handleClickOpen}>{component}</span>
 
-      <MyDialog
+      <CustomDialog
         open={open}
         dialogTitle={dialogTitle}
         dialogSubtitle={dialogSubtitle}
@@ -282,7 +284,7 @@ export const ConfirmFetchAndRedirect = ({
     <Fragment>
       <span onClick={handleComponentOpen}>{component}</span>
 
-      <MyDialog
+      <CustomDialog
         open={open}
         dialogTitle="¿Confirmar?"
         dialogSubtitle={msg}
@@ -398,6 +400,12 @@ const commentSuccessSnackBar: MySnackBarProps = {
   msg: "Comentario registrado!",
 };
 
+const snapshotSuccessSnackBar: MySnackBarProps = {
+  open: true,
+  severity: "success",
+  msg: "Captura guardada!",
+};
+
 const errorSnackBar: MySnackBarProps = {
   open: true,
   severity: "error",
@@ -408,6 +416,7 @@ export const mySnackBars = {
   eventSuccessSnackBar,
   eventAddSuccessSnackBar,
   commentSuccessSnackBar,
+  snapshotSuccessSnackBar,
   errorSnackBar,
 };
 

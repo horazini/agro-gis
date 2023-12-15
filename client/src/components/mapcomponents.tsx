@@ -19,7 +19,7 @@ import "leaflet/dist/leaflet.css";
 import L, { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-import { Box, Button, Menu, Switch } from "@mui/material";
+import { Box, Button, Card, CardMedia, Menu, Switch } from "@mui/material";
 import { Today as TodayIcon } from "@mui/icons-material";
 
 import { DateCalendar } from "@mui/x-date-pickers";
@@ -34,8 +34,17 @@ import {
 
 import { SimpleMapScreenshoter } from "leaflet-simple-map-screenshoter";
 import { postLandplotSnapshot } from "../utils/services";
+import {
+  CircularProgressBackdrop,
+  CustomDialog,
+  MySnackBarProps,
+  SnackBarAlert,
+  mySnackBars,
+} from "./customComponents";
 
 export const position: LatLngExpression = [-29, -58];
+
+const { snapshotSuccessSnackBar, errorSnackBar } = mySnackBars;
 
 const LeafIcon: any = L.Icon.extend({
   options: {
@@ -519,6 +528,13 @@ export const SentinelSnapshoter = ({ landplot }: any) => {
   const [featureBoundsZoom, setFeatureBoundsZoom] = useState<number>(7);
   const [alreadyFlyed, setAlreadyFlyed] = useState<boolean>(false);
 
+  const [JSONSnapshotData, setJSONSnapshotData] = useState<{
+    image: string;
+    landplot_id: any;
+    crop_id: any;
+    date: Date;
+  } | null>(null);
+
   const [snapshotButtonIsClicked, setSnapshotButtonIsClicked] =
     useState<boolean>(false);
 
@@ -639,16 +655,13 @@ export const SentinelSnapshoter = ({ landplot }: any) => {
             const base64Canvas = canvas.toDataURL("image/png");
 
             const cropId = landplot.properties?.crop?.id || null;
-            const formJSON = {
+
+            setJSONSnapshotData({
               image: base64Canvas,
               landplot_id: landplot.properties.landplot.id,
               crop_id: cropId,
               date: selectedDate,
-            };
-            console.log(formJSON);
-
-            const res = await postLandplotSnapshot(formJSON);
-            console.log(res);
+            });
           };
 
           // set the image source to what the snapshotter captured
@@ -668,6 +681,59 @@ export const SentinelSnapshoter = ({ landplot }: any) => {
           alert(e.toString());
         });
     }, 500);
+  };
+
+  const PreviewCard = (
+    <Card>
+      <CardMedia
+        component="img"
+        image={JSONSnapshotData?.image}
+        style={{ padding: 10 }}
+      />
+    </Card>
+  );
+
+  //#region Snackbar
+
+  const [snackBar, setSnackBar] = useState<MySnackBarProps>({
+    open: false,
+    severity: undefined,
+    msg: "",
+  });
+
+  const handleSnackbarClose = (
+    event: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackBar((prevObject) => ({
+      ...prevObject,
+      open: false,
+    }));
+  };
+
+  //#endregion
+
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirmSaveSnapshot = async () => {
+    setLoading(true);
+    try {
+      let res = await postLandplotSnapshot(JSONSnapshotData);
+
+      if (res === 200) {
+        setJSONSnapshotData(null);
+        setSnackBar(snapshotSuccessSnackBar);
+      } else {
+        setSnackBar(errorSnackBar);
+      }
+    } catch (error) {
+      console.log(error);
+      setSnackBar(errorSnackBar);
+    }
+    setLoading(false);
   };
 
   //#endregion
@@ -768,7 +834,7 @@ export const SentinelSnapshoter = ({ landplot }: any) => {
   };
 
   return (
-    <Box mb={2}>
+    <Fragment>
       <MapContainer
         doubleClickZoom={false}
         id="mapId"
@@ -803,7 +869,23 @@ export const SentinelSnapshoter = ({ landplot }: any) => {
           </div>
         </div>
       </MapContainer>
-    </Box>
+      <CustomDialog
+        open={JSONSnapshotData !== null}
+        dialogTitle="Snapshot tomada"
+        dialogSubtitle={PreviewCard}
+        onClose={() => setJSONSnapshotData(null)}
+        onConfirm={handleConfirmSaveSnapshot}
+        confirmButtonText="Guardar"
+        cancelButtonText="Descartar"
+      />
+      <CircularProgressBackdrop loading={loading} />
+      <SnackBarAlert
+        handleSnackbarClose={handleSnackbarClose}
+        msg={snackBar.msg}
+        open={snackBar.open}
+        severity={snackBar.severity}
+      />
+    </Fragment>
   );
 };
 

@@ -47,6 +47,7 @@ import {
   PlaylistAdd as PlaylistAddIcon,
   AddComment as AddCommentIcon,
   RateReview as RateReviewIcon,
+  PhotoSizeSelectActual,
 } from "@mui/icons-material";
 import {
   ButtonDatePicker,
@@ -209,7 +210,27 @@ const CropInfo = ({ cropData, setDataReloadCounter }: any) => {
         {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
       </Box>
       <Box>
-        <h2>Cultivo:</h2>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Box>
+            <h2>Cultivo:</h2>
+          </Box>
+
+          <Button
+            variant={"contained"}
+            color="primary"
+            onClick={() => navigate(`/landplots/${landplot.id}/snapshots`)}
+            style={{ marginLeft: ".5rem" }}
+            startIcon={<PhotoSizeSelectActual />}
+          >
+            Ver snapshots
+          </Button>
+        </Box>
         <p>Especie: {species.name}</p>
         {crop.description && <p>description: {crop.description}</p>}
         <p>Fecha de inicio: {formatedDate(crop.start_date)}</p>

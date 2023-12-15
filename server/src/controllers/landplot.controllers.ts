@@ -443,7 +443,7 @@ export const getLandplotSnapshots = async (
     const id = parseInt(req.params.id);
 
     const queryResponse: QueryResult = await pool.query(
-      "SELECT image, id, crop_id, crop_stage_id, date FROM landplot_snapshot WHERE landplot_id = $1",
+      "SELECT image, id, crop_id, crop_stage_id, date FROM landplot_snapshot WHERE landplot_id = $1 ORDER BY date DESC",
       [id]
     );
 
@@ -474,7 +474,7 @@ export const getCropSnapshots = async (
     const id = parseInt(req.params.id);
 
     const queryResponse: QueryResult = await pool.query(
-      "SELECT image, id, crop_stage_id, date FROM landplot_snapshot WHERE crop_id = $1",
+      "SELECT image, id, crop_stage_id, date FROM landplot_snapshot WHERE crop_id = $1 ORDER BY date DESC",
       [id]
     );
 

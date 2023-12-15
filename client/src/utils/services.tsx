@@ -500,6 +500,15 @@ export const getSpeciesReport = async (speciesReportData: any) => {
   return res;
 };
 
+export const getLandplotReport = async (landplotReportData: any) => {
+  const res = await fetch(`${API}/landplotreport`, {
+    method: "PUT",
+    body: JSON.stringify(landplotReportData),
+    headers: { "Content-type": "application/json" },
+  });
+  return res;
+};
+
 // Homepage Dashboard
 
 export const getNextHarvest = async (tenantId: number) => {

@@ -3,6 +3,8 @@ import {
   Box,
   Button,
   FormControl,
+  Grid,
+  Paper,
   TextField,
 } from "@mui/material";
 import { Fragment, SetStateAction, useEffect, useState } from "react";
@@ -14,6 +16,7 @@ import {
 } from "@mui/icons-material";
 
 import {
+  getLandplotReport,
   getSpeciesReport,
   getTenantGeo,
   getTenantSpecies,
@@ -30,7 +33,19 @@ import {
 } from "../../components/customComponents";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import { FeatureGroup } from "leaflet";
+import FlyToSelectedFeatureMap, {
+  FormattedArea,
+} from "../../components/mapcomponents";
+
+import {
+  Chart as ChartJS,
+  Tooltip,
+  Legend,
+  ArcElement,
+  Title,
+  Colors,
+} from "chart.js";
+import { Pie } from "react-chartjs-2";
 
 const { errorSnackBar } = mySnackBars;
 
@@ -42,7 +57,7 @@ const StatisticalReports = () => {
   const [landplots, setLandplots] = useState<any>();
   const [species, setSpecies] = useState<speciesMainData[]>([]);
 
-  const loadData = async () => {
+  const loadLandplots = async () => {
     if (tenantId) {
       const data = await getTenantGeo(tenantId);
       setLandplots(data);
@@ -57,11 +72,11 @@ const StatisticalReports = () => {
   };
 
   useEffect(() => {
-    loadData();
+    loadLandplots();
     loadSpecies();
   }, []);
 
-  const [report, setReport] = useState<{
+  const [reportRequest, setReportRequest] = useState<{
     class: null | string;
     objectId: number;
     fromDate: null | string;
@@ -73,23 +88,31 @@ const StatisticalReports = () => {
     toDate: null,
   });
 
+  const [reportResponse, setReportResponse] = useState<any>(null);
+
   async function handleGetReport() {
     setLoading(true);
     try {
       let res = null;
-      if (report.class === "species") {
+      if (reportRequest.class === "species") {
         const ReportSentData = {
-          speciesId: report.objectId,
-          fromDate: report.fromDate,
-          toDate: report.toDate,
+          speciesId: reportRequest.objectId,
+          fromDate: reportRequest.fromDate,
+          toDate: reportRequest.toDate,
         };
         res = await getSpeciesReport(ReportSentData);
-      } else if (report.class === "landplot") {
-        console.log("pending landplot report service!");
+      } else if (reportRequest.class === "landplot") {
+        const ReportSentData = {
+          landplotId: reportRequest.objectId,
+          fromDate: reportRequest.fromDate,
+          toDate: reportRequest.toDate,
+        };
+        res = await getLandplotReport(ReportSentData);
       }
 
       if (res?.status === 200) {
-        console.log(await res.json());
+        const reportResponse = await res.json();
+        setReportResponse(reportResponse);
       } else {
         setSnackBar(errorSnackBar);
       }
@@ -136,72 +159,19 @@ const StatisticalReports = () => {
       >
         <h1>Reportes estadísticos</h1>
       </Box>
-      <Box paddingBottom={3}>
-        <Button
-          variant={report.class === "species" ? "contained" : "outlined"}
-          color="primary"
-          onClick={() => {
-            report.class === "species"
-              ? console.log()
-              : setReport((prevReport) => ({
-                  ...prevReport,
-                  class: "species",
-                  objectId: 0,
-                }));
-          }}
-          style={{ marginLeft: ".5rem" }}
-          startIcon={<InventoryIcon />}
-          size="large"
-        >
-          Por especie
-        </Button>
-        <Button
-          variant={report.class === "landplot" ? "contained" : "outlined"}
-          color="primary"
-          onClick={() => {
-            report.class === "landplot"
-              ? console.log()
-              : setReport((prevReport) => ({
-                  ...prevReport,
-                  class: "landplot",
-                  objectId: 0,
-                }));
-          }}
-          style={{ marginLeft: ".5rem" }}
-          startIcon={<LayersIcon />}
-          size="large"
-        >
-          Por parcela
-        </Button>
-      </Box>
 
-      <Box paddingBottom={3}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          {report.class === "species" ? (
-            <Fragment>{SpeciesReports(species, report, setReport)}</Fragment>
-          ) : report.class === "landplot" ? (
-            <Fragment>{LadnplotReports(landplots, report, setReport)}</Fragment>
-          ) : null}
-          {report.class !== null ? DatesSelector(report, setReport) : null}
-        </Box>
-      </Box>
-      {report.class !== null ? (
-        <Button
-          variant={"contained"}
-          color="primary"
-          onClick={handleGetReport}
-          style={{ marginLeft: ".5rem" }}
-          startIcon={<ArticleIcon />}
-        >
-          Obtener reporte
-        </Button>
-      ) : null}
+      {reportResponse === null ? (
+        <ReportRequestMenu
+          species={species}
+          landplots={landplots}
+          reportRequest={reportRequest}
+          setReportRequest={setReportRequest}
+          handleGetReport={handleGetReport}
+        />
+      ) : (
+        <ReportResponseDisplay reportResponse={reportResponse} />
+      )}
+
       <Fragment>
         <CircularProgressBackdrop loading={loading} />
         <SnackBarAlert
@@ -215,7 +185,90 @@ const StatisticalReports = () => {
   );
 };
 
-const SpeciesReports = (
+const ReportRequestMenu = ({
+  species,
+  landplots,
+  reportRequest,
+  setReportRequest,
+  handleGetReport,
+}: any) => {
+  return (
+    <Fragment>
+      <Box paddingBottom={3}>
+        <Button
+          variant={reportRequest.class === "species" ? "contained" : "outlined"}
+          color="primary"
+          onClick={() => {
+            reportRequest.class === "species"
+              ? console.log()
+              : setReportRequest((prevReport: any) => ({
+                  ...prevReport,
+                  class: "species",
+                  objectId: 0,
+                }));
+          }}
+          style={{ marginLeft: ".5rem" }}
+          startIcon={<InventoryIcon />}
+          size="large"
+        >
+          Por especie
+        </Button>
+        <Button
+          variant={
+            reportRequest.class === "landplot" ? "contained" : "outlined"
+          }
+          color="primary"
+          onClick={() => {
+            reportRequest.class === "landplot"
+              ? console.log()
+              : setReportRequest((prevReport: any) => ({
+                  ...prevReport,
+                  class: "landplot",
+                  objectId: 0,
+                }));
+          }}
+          style={{ marginLeft: ".5rem" }}
+          startIcon={<LayersIcon />}
+          size="large"
+        >
+          Por parcela
+        </Button>
+      </Box>
+      <Box paddingBottom={3}>
+        {reportRequest.class === "species" ? (
+          <Fragment>
+            {SpeciesReportRequest(species, reportRequest, setReportRequest)}
+          </Fragment>
+        ) : reportRequest.class === "landplot" ? (
+          <Fragment>
+            {LandplotReportRequest(landplots, reportRequest, setReportRequest)}
+          </Fragment>
+        ) : null}
+      </Box>
+      {reportRequest.class !== null ? (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          <Button
+            variant={"contained"}
+            color="primary"
+            onClick={handleGetReport}
+            style={{ marginLeft: ".5rem" }}
+            startIcon={<ArticleIcon />}
+          >
+            Obtener reporte
+          </Button>
+        </Box>
+      ) : null}
+    </Fragment>
+  );
+};
+
+const SpeciesReportRequest = (
   species: speciesMainData[],
   report: {
     class?: string | null;
@@ -223,7 +276,7 @@ const SpeciesReports = (
     fromDate?: string | null;
     toDate?: string | null;
   },
-  setReport: {
+  setReportRequest: {
     (
       value: SetStateAction<{
         class: string | null;
@@ -237,7 +290,13 @@ const SpeciesReports = (
 ) => {
   return (
     <Fragment>
-      <Box>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
           {species ? (
             <Autocomplete
@@ -249,7 +308,7 @@ const SpeciesReports = (
                 null
               }
               onChange={(_, newValue) =>
-                setReport((prevReport) => ({
+                setReportRequest((prevReport) => ({
                   ...prevReport,
                   objectId: newValue?.id || 0,
                 }))
@@ -260,12 +319,13 @@ const SpeciesReports = (
             />
           ) : null}
         </FormControl>
+        {DatesSelector(report, setReportRequest)}
       </Box>
     </Fragment>
   );
 };
 
-const LadnplotReports = (
+const LandplotReportRequest = (
   landplots: { features: any[]; type: string },
   report: {
     class?: string | null;
@@ -273,7 +333,7 @@ const LadnplotReports = (
     fromDate?: string | null;
     toDate?: string | null;
   },
-  setReport: {
+  setReportRequest: {
     (
       value: SetStateAction<{
         class: string | null;
@@ -285,42 +345,66 @@ const LadnplotReports = (
     (arg0: (prevReport: any) => any): void;
   }
 ) => {
+  const handleFeatureSelect = (value: number) => {
+    setReportRequest((prevReport) => ({
+      ...prevReport,
+      objectId: value,
+    }));
+  };
+
   return (
     <Fragment>
       <Box>
-        <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
-          {landplots ? (
-            <Autocomplete
-              id="landplot-autocomplete"
-              options={landplots.features.sort(
-                (a: any, b: any) =>
-                  a.properties.landplot.id - b.properties.landplot.id
-              )}
-              getOptionLabel={(option: any) =>
-                "Parcela " +
-                option.properties.landplot.id +
-                (option.properties.landplot.description
-                  ? " - " + option.properties.landplot.description
-                  : "")
-              }
-              value={
-                landplots.features.find(
-                  (feature: any) =>
-                    feature.properties.landplot.id === report.objectId
-                ) || null
-              }
-              onChange={(_, newValue) =>
-                setReport((prevReport) => ({
-                  ...prevReport,
-                  objectId: newValue?.id || 0,
-                }))
-              }
-              renderInput={(params) => (
-                <TextField {...params} label="Parcela" />
-              )}
-            />
-          ) : null}
-        </FormControl>
+        {landplots && (
+          <FlyToSelectedFeatureMap
+            features={landplots.features}
+            selectedLandplotId={report.objectId}
+            handleFeatureClick={handleFeatureSelect}
+          />
+        )}
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <FormControl variant="filled" sx={{ m: 1, minWidth: 220 }}>
+            {landplots ? (
+              <Autocomplete
+                id="landplot-autocomplete"
+                options={landplots.features.sort(
+                  (a: any, b: any) =>
+                    a.properties.landplot.id - b.properties.landplot.id
+                )}
+                getOptionLabel={(option: any) =>
+                  "Parcela " +
+                  option.properties.landplot.id +
+                  (option.properties.landplot.description
+                    ? " - " + option.properties.landplot.description
+                    : "")
+                }
+                value={
+                  landplots.features.find(
+                    (feature: any) =>
+                      feature.properties.landplot.id === report.objectId
+                  ) || null
+                }
+                onChange={(_, newValue) =>
+                  setReportRequest((prevReport) => ({
+                    ...prevReport,
+                    objectId: newValue?.properties.landplot.id || 0,
+                  }))
+                }
+                renderInput={(params) => (
+                  <TextField {...params} label="Parcela" />
+                )}
+              />
+            ) : null}
+          </FormControl>
+          {DatesSelector(report, setReportRequest)}
+        </Box>
       </Box>
     </Fragment>
   );
@@ -333,7 +417,7 @@ const DatesSelector = (
     fromDate?: string | null;
     toDate?: string | null;
   },
-  setReport: {
+  setReportRequest: {
     (
       value: SetStateAction<{
         class: string | null;
@@ -349,11 +433,10 @@ const DatesSelector = (
     if (date !== null && !Number.isNaN(new Date(date).getTime())) {
       const isoDate = date.toISOString(); // Convertir la fecha a formato ISO 8601
 
-      setReport((prevReport) => ({
+      setReportRequest((prevReport) => ({
         ...prevReport,
         [pickerName]: isoDate,
       }));
-      //setIsDateValid(true);
     }
   }
 
@@ -377,18 +460,165 @@ const DatesSelector = (
           value={report.toDate ? dayjs(report.toDate) : null}
           onChange={(e) => handleDateChange(e, "toDate")}
           minDate={dayjs(report.fromDate)}
-
-          /* slotProps={{
-                    textField: {
-                      error: !isDateValid,
-                      helperText: isDateValid
-                        ? null
-                        : "La fecha de inicio no puede coincidir con un cultivo anterior en la parcela",
-                    },
-                  }} */
         />
       </FormControl>
     </Box>
+  );
+};
+
+const ReportResponseDisplay = ({ reportResponse }: any) => {
+  return (
+    <Fragment>
+      <SpeciesResponseResponse landplots={reportResponse.landplots} />
+    </Fragment>
+  );
+};
+
+const SpeciesResponseResponse = ({ landplots }: any) => {
+  ChartJS.register(ArcElement, Colors, Tooltip, Legend, Title);
+
+  const [variable, setVariable] = useState("area");
+
+  const labels = landplots.map(
+    (item: any) => `Parcela ${item.Feature.properties.landplot_id}`
+  );
+
+  const WeightInTonsData = {
+    labels,
+    datasets: [
+      {
+        label: "Peso total cosechado",
+        data: landplots.map(
+          (item: any) => item.Feature.properties.totalweightintons
+        ),
+      },
+    ],
+  };
+
+  const HarvestedAreaData = {
+    labels,
+    datasets: [
+      {
+        label: "Área total cosechada",
+        data: landplots.map(
+          (item: any) =>
+            parseInt(item.Feature.properties.landplot_area, 10) *
+            item.Feature.properties.numberofcrops
+        ),
+      },
+    ],
+  };
+
+  const NumberOfCropsData = {
+    labels,
+    datasets: [
+      {
+        label: "# de cosechas realizadas",
+        data: landplots.map(
+          (item: any) => item.Feature.properties.numberofcrops
+        ),
+      },
+    ],
+  };
+
+  return (
+    <Fragment>
+      {" "}
+      <Box paddingBottom={3}>
+        <Button
+          variant={variable === "weight" ? "contained" : "outlined"}
+          color="primary"
+          onClick={() => setVariable("weight")}
+          style={{ marginLeft: ".5rem" }}
+          size="small"
+        >
+          Peso
+        </Button>
+        <Button
+          variant={variable === "area" ? "contained" : "outlined"}
+          color="primary"
+          onClick={() => setVariable("area")}
+          style={{ marginLeft: ".5rem" }}
+          size="small"
+        >
+          Área
+        </Button>
+        <Button
+          variant={variable === "number" ? "contained" : "outlined"}
+          color="primary"
+          onClick={() => setVariable("number")}
+          style={{ marginLeft: ".5rem" }}
+          size="small"
+        >
+          Número de cosechas
+        </Button>
+      </Box>
+      <Grid container spacing={3}>
+        <Grid item xs={12} lg={3}>
+          <Paper
+            sx={{
+              p: 2,
+              display: "flex",
+              flexDirection: "column",
+              alignContent: "center",
+              alignItems: "center",
+              height: 290,
+            }}
+          >
+            <Pie
+              style={{
+                cursor: "pointer",
+              }}
+              data={
+                variable === "weight"
+                  ? WeightInTonsData
+                  : variable === "area"
+                  ? HarvestedAreaData
+                  : NumberOfCropsData
+              }
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: "bottom" as const,
+                  },
+                  title: {
+                    display: true,
+                    text:
+                      variable === "weight"
+                        ? "Peso total cosechado"
+                        : variable === "area"
+                        ? "Área total cosechada"
+                        : "Número de cosechas realizadas",
+
+                    position: "top",
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        if (variable === "weight") {
+                          return (
+                            context.dataset.label +
+                            ": " +
+                            String(context.parsed) +
+                            " toneladas"
+                          );
+                        } else if (variable === "area") {
+                          let formatedArea = FormattedArea(context.parsed);
+                          let label =
+                            context.dataset.label + ": " + formatedArea;
+                          return label;
+                        }
+                      },
+                    },
+                  },
+                },
+              }}
+            />
+          </Paper>
+        </Grid>
+      </Grid>
+    </Fragment>
   );
 };
 

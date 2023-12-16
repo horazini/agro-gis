@@ -33,8 +33,10 @@ import {
 } from "../../components/customComponents";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import FlyToSelectedFeatureMap, {
+import {
+  FlyToSelectedFeatureMap,
   FormattedArea,
+  OneFeatureMap,
 } from "../../components/mapcomponents";
 
 import {
@@ -469,18 +471,23 @@ const DatesSelector = (
 const ReportResponseDisplay = ({ reportResponse }: any) => {
   return (
     <Fragment>
-      <SpeciesResponseResponse landplots={reportResponse.landplots} />
+      {reportResponse.reportQuery.class === "species" ? (
+        <SpeciesReportDispay reportResponse={reportResponse} />
+      ) : reportResponse.reportQuery.class === "landplot" ? (
+        <LandplotReportDispay reportResponse={reportResponse} />
+      ) : null}
     </Fragment>
   );
 };
 
-const SpeciesResponseResponse = ({ landplots }: any) => {
+const SpeciesReportDispay = ({ reportResponse }: any) => {
   ChartJS.register(ArcElement, Colors, Tooltip, Legend, Title);
 
+  const { landplots } = reportResponse;
   const [variable, setVariable] = useState("area");
 
   const labels = landplots.map(
-    (item: any) => `Parcela ${item.Feature.properties.landplot_id}`
+    (landplot: any) => `Parcela ${landplot.Feature.properties.landplot_id}`
   );
 
   const WeightInTonsData = {
@@ -489,7 +496,7 @@ const SpeciesResponseResponse = ({ landplots }: any) => {
       {
         label: "Peso total cosechado",
         data: landplots.map(
-          (item: any) => item.Feature.properties.totalweightintons
+          (landplot: any) => landplot.Feature.properties.totalweightintons
         ),
       },
     ],
@@ -501,9 +508,9 @@ const SpeciesResponseResponse = ({ landplots }: any) => {
       {
         label: "Área total cosechada",
         data: landplots.map(
-          (item: any) =>
-            parseInt(item.Feature.properties.landplot_area, 10) *
-            item.Feature.properties.numberofcrops
+          (landplot: any) =>
+            parseInt(landplot.Feature.properties.landplot_area, 10) *
+            landplot.Feature.properties.numberofcrops
         ),
       },
     ],
@@ -515,7 +522,7 @@ const SpeciesResponseResponse = ({ landplots }: any) => {
       {
         label: "# de cosechas realizadas",
         data: landplots.map(
-          (item: any) => item.Feature.properties.numberofcrops
+          (landplot: any) => landplot.Feature.properties.numberofcrops
         ),
       },
     ],
@@ -523,37 +530,14 @@ const SpeciesResponseResponse = ({ landplots }: any) => {
 
   return (
     <Fragment>
-      {" "}
-      <Box paddingBottom={3}>
-        <Button
-          variant={variable === "weight" ? "contained" : "outlined"}
-          color="primary"
-          onClick={() => setVariable("weight")}
-          style={{ marginLeft: ".5rem" }}
-          size="small"
-        >
-          Peso
-        </Button>
-        <Button
-          variant={variable === "area" ? "contained" : "outlined"}
-          color="primary"
-          onClick={() => setVariable("area")}
-          style={{ marginLeft: ".5rem" }}
-          size="small"
-        >
-          Área
-        </Button>
-        <Button
-          variant={variable === "number" ? "contained" : "outlined"}
-          color="primary"
-          onClick={() => setVariable("number")}
-          style={{ marginLeft: ".5rem" }}
-          size="small"
-        >
-          Número de cosechas
-        </Button>
-      </Box>
-      <Grid container spacing={3}>
+      <Grid
+        container
+        direction="column"
+        spacing={3}
+        alignItems="center"
+        justifyContent="center"
+      >
+        <ChartModeSelector variable={variable} setVariable={setVariable} />
         <Grid item xs={12} lg={3}>
           <Paper
             sx={{
@@ -619,6 +603,165 @@ const SpeciesResponseResponse = ({ landplots }: any) => {
         </Grid>
       </Grid>
     </Fragment>
+  );
+};
+
+const LandplotReportDispay = ({ reportResponse }: any) => {
+  ChartJS.register(ArcElement, Colors, Tooltip, Legend, Title);
+
+  const { reportQuery, species } = reportResponse;
+
+  const [variable, setVariable] = useState("area");
+
+  const labels = species.map((specie: any) => specie.species_name);
+
+  const WeightInTonsData = {
+    labels,
+    datasets: [
+      {
+        label: "Peso total cosechado",
+        data: species.map((specie: any) => specie.totalweightintons),
+      },
+    ],
+  };
+
+  const HarvestedAreaData = {
+    labels,
+    datasets: [
+      {
+        label: "Área total cosechada",
+        data: species.map(
+          (specie: any) =>
+            parseInt(reportQuery.Feature.properties.area, 10) *
+            specie.numberofcrops
+        ),
+      },
+    ],
+  };
+
+  const NumberOfCropsData = {
+    labels,
+    datasets: [
+      {
+        label: "# de cosechas realizadas",
+        data: species.map((specie: any) => specie.numberofcrops),
+      },
+    ],
+  };
+
+  return (
+    <Fragment>
+      <Box paddingBottom={3}>
+        <OneFeatureMap feature={reportQuery.Feature} />
+      </Box>
+      <Grid
+        container
+        direction="column"
+        spacing={3}
+        alignItems="center"
+        justifyContent="center"
+      >
+        <ChartModeSelector variable={variable} setVariable={setVariable} />
+
+        <Grid item xs={12} lg={3}>
+          <Paper
+            sx={{
+              p: 2,
+              display: "flex",
+              flexDirection: "column",
+              alignContent: "center",
+              alignItems: "center",
+              height: 290,
+            }}
+          >
+            <Pie
+              style={{
+                cursor: "pointer",
+              }}
+              data={
+                variable === "weight"
+                  ? WeightInTonsData
+                  : variable === "area"
+                  ? HarvestedAreaData
+                  : NumberOfCropsData
+              }
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: "bottom" as const,
+                  },
+                  title: {
+                    display: true,
+                    text:
+                      variable === "weight"
+                        ? "Peso total cosechado"
+                        : variable === "area"
+                        ? "Área total cosechada"
+                        : "Número de cosechas realizadas",
+
+                    position: "top",
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        if (variable === "weight") {
+                          return (
+                            context.dataset.label +
+                            ": " +
+                            String(context.parsed) +
+                            " toneladas"
+                          );
+                        } else if (variable === "area") {
+                          let formatedArea = FormattedArea(context.parsed);
+                          let label =
+                            context.dataset.label + ": " + formatedArea;
+                          return label;
+                        }
+                      },
+                    },
+                  },
+                },
+              }}
+            />
+          </Paper>
+        </Grid>
+      </Grid>
+    </Fragment>
+  );
+};
+
+const ChartModeSelector = ({ variable, setVariable }: any) => {
+  return (
+    <Box paddingY={3}>
+      <Button
+        variant={variable === "weight" ? "contained" : "outlined"}
+        color="primary"
+        onClick={() => setVariable("weight")}
+        style={{ marginLeft: ".5rem" }}
+        size="small"
+      >
+        Peso
+      </Button>
+      <Button
+        variant={variable === "area" ? "contained" : "outlined"}
+        color="primary"
+        onClick={() => setVariable("area")}
+        style={{ marginLeft: ".5rem" }}
+        size="small"
+      >
+        Área
+      </Button>
+      <Button
+        variant={variable === "number" ? "contained" : "outlined"}
+        color="primary"
+        onClick={() => setVariable("number")}
+        style={{ marginLeft: ".5rem" }}
+        size="small"
+      >
+        Número de cosechas
+      </Button>
+    </Box>
   );
 };
 

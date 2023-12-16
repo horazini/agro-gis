@@ -814,7 +814,7 @@ export const SentinelSnapshoter = ({ landplot }: any) => {
 
     map = useMapEvents({
       layeradd() {
-        map.setView(coords, zoom);
+        map.flyTo(coords, zoom);
         if (!alreadyFlyed) {
           setAlreadyFlyed(true);
         }
@@ -1051,4 +1051,107 @@ export const FlyToSelectedFeatureMap = ({
   );
 };
 
-export default FlyToSelectedFeatureMap;
+export const OneFeatureMap = ({ feature }: any) => {
+  const mapRef = useRef<any>();
+
+  const [effectCounter, setEffectCounter] = useState(0);
+  const [alreadyFlyed, setAlreadyFlyed] = useState(false);
+
+  useEffect(() => {
+    if (alreadyFlyed) {
+      return;
+    }
+
+    if (mapRef.current === null || feature === null || feature === undefined) {
+      setEffectCounter((prevCounter: number) => prevCounter + 1);
+      return;
+    }
+
+    //#endregion
+
+    const { properties, geometry } = feature;
+
+    let coords: LatLngExpression = position;
+    let zoom = 13;
+
+    if (geometry.type === "Polygon") {
+      const coordinates = geometry.coordinates[0].map(([lng, lat]: any) => [
+        lat,
+        lng,
+      ]);
+
+      const p = L.polygon(coordinates).addTo(mapRef.current);
+      const bounds = p.getBounds();
+      coords = bounds.getCenter();
+      zoom = mapRef.current.getBoundsZoom(bounds);
+      p.remove();
+    } else if (
+      geometry.type === "Point" &&
+      properties.landplot.subType === "Circle"
+    ) {
+      coords = geometry.coordinates as LatLngExpression;
+
+      const radius = properties.landplot.radius as number;
+
+      const c = L.circle(geometry.coordinates, { radius }).addTo(
+        mapRef.current
+      );
+      const bounds = c.getBounds();
+      zoom = mapRef.current.getBoundsZoom(bounds);
+      c.remove();
+    }
+    mapRef.current.flyTo(coords, zoom);
+    setAlreadyFlyed(true);
+  }, [effectCounter]);
+
+  // Comportamiento de las Layers
+
+  const CustomLayer = ({ feature }: any) => {
+    const { properties, geometry } = feature;
+
+    const PopUp = (
+      <div>
+        <h3>ID: {properties.landplot.id}</h3>
+        <p>Descripción: {properties.landplot.description}</p>
+        {properties.landplot.radius && (
+          <p>Radio: {properties.landplot.radius} m.</p>
+        )}
+      </div>
+    );
+
+    if (geometry.type === "Polygon") {
+      const coordinates = geometry.coordinates[0].map(([lng, lat]: any) => [
+        lat,
+        lng,
+      ]);
+      return (
+        <Polygon key={properties.landplot.id} positions={coordinates}>
+          <Popup>{PopUp}</Popup>
+        </Polygon>
+      );
+    } else if (
+      geometry.type === "Point" &&
+      properties.landplot.subType === "Circle"
+    ) {
+      return (
+        <Circle
+          key={properties.landplot.id}
+          center={geometry.coordinates}
+          radius={properties.landplot.radius}
+        >
+          <Popup>{PopUp}</Popup>
+        </Circle>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <MapContainer center={position} zoom={7} ref={mapRef}>
+      <LayerControler />
+      <LayerGroup>
+        <CustomLayer key={feature.properties.landplot.id} feature={feature} />
+      </LayerGroup>
+    </MapContainer>
+  );
+};

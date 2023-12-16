@@ -11,7 +11,8 @@ import {
   speciesMainData,
 } from "../../utils/services";
 
-import FlyToSelectedFeatureMap, {
+import {
+  FlyToSelectedFeatureMap,
   FeatureInfo,
 } from "../../components/mapcomponents";
 import { FormControl, Card, Box, Autocomplete, TextField } from "@mui/material";

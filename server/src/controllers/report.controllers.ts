@@ -83,7 +83,7 @@ export const getSpeciesReport = async (
     };
 
     const JSONresponse = {
-      species,
+      reportQuery: { class: "species", ...species, fromDate, toDate },
       landplots,
       totals,
     };
@@ -180,7 +180,7 @@ export const getLandplotReport = async (
     };
 
     const JSONresponse = {
-      Feature,
+      reportQuery: { class: "landplot", Feature, fromDate, toDate },
       species,
       totals,
     };

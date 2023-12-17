@@ -424,18 +424,28 @@ export type SnackBarAlertProps = {
   open: boolean;
   severity: AlertColor | undefined;
   msg: string;
-  handleSnackbarClose: (
-    event: React.SyntheticEvent | Event,
-    reason?: string
-  ) => void;
+  setSnackBar: React.Dispatch<React.SetStateAction<MySnackBarProps>>;
 };
 
 export const SnackBarAlert = ({
   open,
   severity,
   msg,
-  handleSnackbarClose,
+  setSnackBar,
 }: SnackBarAlertProps) => {
+  const handleSnackbarClose = (
+    event: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackBar((prevObject: any) => ({
+      ...prevObject,
+      open: false,
+    }));
+  };
+
   return (
     <Snackbar
       open={open}

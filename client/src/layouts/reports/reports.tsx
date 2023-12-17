@@ -136,19 +136,6 @@ const StatisticalReports = () => {
     msg: "",
   });
 
-  const handleSnackbarClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setSnackBar((prevObject) => ({
-      ...prevObject,
-      open: false,
-    }));
-  };
-
   //#endregion
 
   const [loading, setLoading] = useState(false);
@@ -175,7 +162,7 @@ const StatisticalReports = () => {
       <Fragment>
         <CircularProgressBackdrop loading={loading} />
         <SnackBarAlert
-          handleSnackbarClose={handleSnackbarClose}
+          setSnackBar={setSnackBar}
           msg={snackBar.msg}
           open={snackBar.open}
           severity={snackBar.severity}
@@ -528,7 +515,7 @@ const SpeciesReportDispay = ({ reportResponse }: any) => {
   ChartJS.register(ArcElement, Colors, Tooltip, Legend, Title);
 
   const { landplots } = reportResponse;
-  const [variable, setVariable] = useState("area");
+  const [targetVariable, setTargetVariable] = useState("weight");
 
   const labels = landplots.map(
     (landplot: any) => `Parcela ${landplot.properties.landplot.id}`
@@ -578,9 +565,9 @@ const SpeciesReportDispay = ({ reportResponse }: any) => {
         <FeaturesHeatMap
           features={landplots}
           targetProp={
-            variable === "weight"
+            targetVariable === "weight"
               ? "totalweightintons"
-              : variable === "area"
+              : targetVariable === "area"
               ? "landplot.area"
               : "numberofcrops"
           }
@@ -594,7 +581,10 @@ const SpeciesReportDispay = ({ reportResponse }: any) => {
         alignItems="center"
         justifyContent="center"
       >
-        <ChartModeSelector variable={variable} setVariable={setVariable} />
+        <ChartModeSelector
+          variable={targetVariable}
+          setVariable={setTargetVariable}
+        />
         <Grid item xs={12} lg={3}>
           <Paper
             sx={{
@@ -611,9 +601,9 @@ const SpeciesReportDispay = ({ reportResponse }: any) => {
                 cursor: "pointer",
               }}
               data={
-                variable === "weight"
+                targetVariable === "weight"
                   ? WeightInTonsData
-                  : variable === "area"
+                  : targetVariable === "area"
                   ? HarvestedAreaData
                   : NumberOfCropsData
               }
@@ -626,9 +616,9 @@ const SpeciesReportDispay = ({ reportResponse }: any) => {
                   title: {
                     display: true,
                     text:
-                      variable === "weight"
+                      targetVariable === "weight"
                         ? "Peso total cosechado"
-                        : variable === "area"
+                        : targetVariable === "area"
                         ? "Área total cosechada"
                         : "Número de cosechas realizadas",
 
@@ -637,14 +627,14 @@ const SpeciesReportDispay = ({ reportResponse }: any) => {
                   tooltip: {
                     callbacks: {
                       label: function (context) {
-                        if (variable === "weight") {
+                        if (targetVariable === "weight") {
                           return (
                             context.dataset.label +
                             ": " +
                             String(context.parsed) +
                             " toneladas"
                           );
-                        } else if (variable === "area") {
+                        } else if (targetVariable === "area") {
                           let formatedArea = FormattedArea(context.parsed);
                           let label =
                             context.dataset.label + ": " + formatedArea;
@@ -668,7 +658,7 @@ const LandplotReportDispay = ({ reportResponse }: any) => {
 
   const { reportQuery, species } = reportResponse;
 
-  const [variable, setVariable] = useState("area");
+  const [targetVariable, setTargetVariable] = useState("weight");
 
   const labels = species.map((specie: any) => specie.species_name);
 
@@ -718,7 +708,10 @@ const LandplotReportDispay = ({ reportResponse }: any) => {
         alignItems="center"
         justifyContent="center"
       >
-        <ChartModeSelector variable={variable} setVariable={setVariable} />
+        <ChartModeSelector
+          variable={targetVariable}
+          setVariable={setTargetVariable}
+        />
 
         <Grid item xs={12} lg={3}>
           <Paper
@@ -736,9 +729,9 @@ const LandplotReportDispay = ({ reportResponse }: any) => {
                 cursor: "pointer",
               }}
               data={
-                variable === "weight"
+                targetVariable === "weight"
                   ? WeightInTonsData
-                  : variable === "area"
+                  : targetVariable === "area"
                   ? HarvestedAreaData
                   : NumberOfCropsData
               }
@@ -751,9 +744,9 @@ const LandplotReportDispay = ({ reportResponse }: any) => {
                   title: {
                     display: true,
                     text:
-                      variable === "weight"
+                      targetVariable === "weight"
                         ? "Peso total cosechado"
-                        : variable === "area"
+                        : targetVariable === "area"
                         ? "Área total cosechada"
                         : "Número de cosechas realizadas",
 
@@ -762,14 +755,14 @@ const LandplotReportDispay = ({ reportResponse }: any) => {
                   tooltip: {
                     callbacks: {
                       label: function (context) {
-                        if (variable === "weight") {
+                        if (targetVariable === "weight") {
                           return (
                             context.dataset.label +
                             ": " +
                             String(context.parsed) +
                             " toneladas"
                           );
-                        } else if (variable === "area") {
+                        } else if (targetVariable === "area") {
                           let formatedArea = FormattedArea(context.parsed);
                           let label =
                             context.dataset.label + ": " + formatedArea;

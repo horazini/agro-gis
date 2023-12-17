@@ -136,19 +136,6 @@ const SnapshotGallery = ({
     msg: "",
   });
 
-  const handleSnackbarClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setSnackBar((prevObject) => ({
-      ...prevObject,
-      open: false,
-    }));
-  };
-
   const eventSuccessSnackBar: MySnackBarProps = {
     open: true,
     severity: "success",
@@ -312,7 +299,7 @@ const SnapshotGallery = ({
 
       <CircularProgressBackdrop loading={loading} />
       <SnackBarAlert
-        handleSnackbarClose={handleSnackbarClose}
+        setSnackBar={setSnackBar}
         msg={snackBar.msg}
         open={snackBar.open}
         severity={snackBar.severity}

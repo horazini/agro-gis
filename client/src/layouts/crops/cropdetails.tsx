@@ -150,19 +150,6 @@ const CropInfo = ({ cropData, setDataReloadCounter }: any) => {
     msg: "",
   });
 
-  const handleSnackbarClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setSnackBar((prevObject) => ({
-      ...prevObject,
-      open: false,
-    }));
-  };
-
   //#endregion
 
   const [loading, setLoading] = useState(false);
@@ -264,7 +251,7 @@ const CropInfo = ({ cropData, setDataReloadCounter }: any) => {
       <Fragment>
         <CircularProgressBackdrop loading={loading} />
         <SnackBarAlert
-          handleSnackbarClose={handleSnackbarClose}
+          setSnackBar={setSnackBar}
           msg={snackBar.msg}
           open={snackBar.open}
           severity={snackBar.severity}

@@ -102,19 +102,6 @@ export default function SignIn() {
     }
   };
 
-  const handleSnackbarClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setSnackBar((prevObject) => ({
-      ...prevObject,
-      open: false,
-    }));
-  };
-
   return (
     <Fragment>
       <Container component="main" maxWidth="sm">
@@ -206,7 +193,7 @@ export default function SignIn() {
         </Paper>
       </Container>
       <SnackBarAlert
-        handleSnackbarClose={handleSnackbarClose}
+        setSnackBar={setSnackBar}
         msg={snackBar.msg}
         open={snackBar.open}
         severity={snackBar.severity}

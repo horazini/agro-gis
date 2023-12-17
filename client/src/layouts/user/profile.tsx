@@ -127,19 +127,6 @@ const Profile = ({ userData }: any) => {
     msg: "",
   });
 
-  const handleSnackbarClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: string
-  ) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setSnackBar((prevObject) => ({
-      ...prevObject,
-      open: false,
-    }));
-  };
-
   const handleConfirm = async () => {
     setLoading(true);
 
@@ -248,7 +235,7 @@ const Profile = ({ userData }: any) => {
       <Fragment>
         <CircularProgressBackdrop loading={loading} />
         <SnackBarAlert
-          handleSnackbarClose={handleSnackbarClose}
+          setSnackBar={setSnackBar}
           msg={snackBar.msg}
           open={snackBar.open}
           severity={snackBar.severity}

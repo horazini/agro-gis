@@ -6,6 +6,7 @@ import {
   Grid,
   Paper,
   TextField,
+  Typography,
 } from "@mui/material";
 import { Fragment, SetStateAction, useEffect, useState } from "react";
 
@@ -35,6 +36,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import {
   FlyToSelectedFeatureMap,
+  FeaturesHeatMap,
   FormattedArea,
   OneFeatureMap,
 } from "../../components/mapcomponents";
@@ -48,6 +50,7 @@ import {
   Colors,
 } from "chart.js";
 import { Pie } from "react-chartjs-2";
+import { formatedDate } from "../../utils/functions";
 
 const { errorSnackBar } = mySnackBars;
 
@@ -152,15 +155,7 @@ const StatisticalReports = () => {
 
   return (
     <Fragment>
-      <Box
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h1>Reportes estadísticos</h1>
-      </Box>
+      <h1>Reportes estadísticos</h1>
 
       {reportResponse === null ? (
         <ReportRequestMenu
@@ -171,7 +166,10 @@ const StatisticalReports = () => {
           handleGetReport={handleGetReport}
         />
       ) : (
-        <ReportResponseDisplay reportResponse={reportResponse} />
+        <ReportResponseDisplay
+          reportResponse={reportResponse}
+          setReportResponse={setReportResponse}
+        />
       )}
 
       <Fragment>
@@ -358,11 +356,13 @@ const LandplotReportRequest = (
     <Fragment>
       <Box>
         {landplots && (
-          <FlyToSelectedFeatureMap
-            features={landplots.features}
-            selectedLandplotId={report.objectId}
-            handleFeatureClick={handleFeatureSelect}
-          />
+          <Box paddingBottom={3}>
+            <FlyToSelectedFeatureMap
+              features={landplots.features}
+              selectedLandplotId={report.objectId}
+              handleFeatureClick={handleFeatureSelect}
+            />
+          </Box>
         )}
 
         <Box
@@ -468,14 +468,58 @@ const DatesSelector = (
   );
 };
 
-const ReportResponseDisplay = ({ reportResponse }: any) => {
+const ReportResponseDisplay = ({ reportResponse, setReportResponse }: any) => {
+  const { reportQuery, totals } = reportResponse;
+
+  const { reportClass, name, description, Feature, fromDate, toDate } =
+    reportQuery;
+
+  const { cultivatedAreas, numberOfCrops, weightInTons } = totals;
   return (
     <Fragment>
-      {reportResponse.reportQuery.class === "species" ? (
+      <Box paddingBottom={3}>
+        <Typography>
+          {reportClass === "species"
+            ? `Especie: ${name}`
+            : `Parcela ${Feature?.properties?.id}`}
+        </Typography>
+        <Typography>
+          {description ? `Descripción: ${description}` : null}
+        </Typography>
+        <Typography>
+          Periodo: Desde {formatedDate(fromDate)} hasta {formatedDate(toDate)}
+        </Typography>
+      </Box>
+
+      {reportClass === "species" ? (
         <SpeciesReportDispay reportResponse={reportResponse} />
-      ) : reportResponse.reportQuery.class === "landplot" ? (
+      ) : reportClass === "landplot" ? (
         <LandplotReportDispay reportResponse={reportResponse} />
       ) : null}
+
+      <h2>Totales</h2>
+      <Box paddingBottom={3}>
+        <Typography>Cosechas realizadas: {numberOfCrops}.</Typography>
+        <Typography>
+          Área cultivada: {FormattedArea(cultivatedAreas)}
+        </Typography>
+        <Typography>Peso recolectado: {weightInTons} toneladas.</Typography>
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+        }}
+      >
+        <Button
+          startIcon={<ArticleIcon />}
+          variant={"contained"}
+          onClick={() => setReportResponse(null)}
+        >
+          Generar nuevo reporte
+        </Button>
+      </Box>
     </Fragment>
   );
 };
@@ -487,7 +531,7 @@ const SpeciesReportDispay = ({ reportResponse }: any) => {
   const [variable, setVariable] = useState("area");
 
   const labels = landplots.map(
-    (landplot: any) => `Parcela ${landplot.Feature.properties.landplot_id}`
+    (landplot: any) => `Parcela ${landplot.properties.landplot.id}`
   );
 
   const WeightInTonsData = {
@@ -496,7 +540,7 @@ const SpeciesReportDispay = ({ reportResponse }: any) => {
       {
         label: "Peso total cosechado",
         data: landplots.map(
-          (landplot: any) => landplot.Feature.properties.totalweightintons
+          (landplot: any) => landplot.properties.totalweightintons
         ),
       },
     ],
@@ -509,8 +553,8 @@ const SpeciesReportDispay = ({ reportResponse }: any) => {
         label: "Área total cosechada",
         data: landplots.map(
           (landplot: any) =>
-            parseInt(landplot.Feature.properties.landplot_area, 10) *
-            landplot.Feature.properties.numberofcrops
+            parseInt(landplot.properties.landplot.area, 10) *
+            landplot.properties.numberofcrops
         ),
       },
     ],
@@ -522,7 +566,7 @@ const SpeciesReportDispay = ({ reportResponse }: any) => {
       {
         label: "# de cosechas realizadas",
         data: landplots.map(
-          (landplot: any) => landplot.Feature.properties.numberofcrops
+          (landplot: any) => landplot.properties.numberofcrops
         ),
       },
     ],
@@ -530,6 +574,19 @@ const SpeciesReportDispay = ({ reportResponse }: any) => {
 
   return (
     <Fragment>
+      <Box paddingBottom={3}>
+        <FeaturesHeatMap
+          features={landplots}
+          targetProp={
+            variable === "weight"
+              ? "totalweightintons"
+              : variable === "area"
+              ? "landplot.area"
+              : "numberofcrops"
+          }
+        />
+      </Box>
+
       <Grid
         container
         direction="column"
@@ -733,7 +790,7 @@ const LandplotReportDispay = ({ reportResponse }: any) => {
 
 const ChartModeSelector = ({ variable, setVariable }: any) => {
   return (
-    <Box paddingY={3}>
+    <Box paddingTop={3}>
       <Button
         variant={variable === "weight" ? "contained" : "outlined"}
         color="primary"

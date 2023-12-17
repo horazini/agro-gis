@@ -56,24 +56,29 @@ export const getSpeciesReport = async (
 
     response.rows.forEach((row: any) => {
       const {
+        landplot_id,
         landplot_geometry,
         landplot_center,
         landplot_circle_radius,
+        landplot_area,
         ...landplotRest
       } = row;
-      const { numberofcrops, landplot_area, totalweightintons } = landplotRest;
+      const { numberofcrops, totalweightintons } = landplotRest;
+      const cropNumber = Number(numberofcrops);
 
-      totalNumberOfCrops += Number(numberofcrops);
-      cultivatedAreas += parseFloat(landplot_area);
+      totalNumberOfCrops += cropNumber;
+      cultivatedAreas += parseFloat(landplot_area) * cropNumber;
       weightInTons += Number(totalweightintons);
 
       const landplot = {
+        id: landplot_id,
         geometry: landplot_geometry,
         center: landplot_center,
         circle_radius: landplot_circle_radius,
+        area: landplot_area,
       };
       const Feature = PostGISToGeoJSONFeature(landplot, landplotRest);
-      landplots.push({ Feature });
+      landplots.push({ ...Feature });
     });
 
     const totals = {
@@ -83,7 +88,7 @@ export const getSpeciesReport = async (
     };
 
     const JSONresponse = {
-      reportQuery: { class: "species", ...species, fromDate, toDate },
+      reportQuery: { reportClass: "species", ...species, fromDate, toDate },
       landplots,
       totals,
     };
@@ -175,12 +180,14 @@ export const getLandplotReport = async (
 
     const totals = {
       numberOfCrops: totalNumberOfCrops,
-      cultivatedAreas: Math.round(cultivatedAreas),
+      cultivatedAreas: Math.round(
+        totalNumberOfCrops * Number(landplotProperties.area)
+      ),
       weightInTons,
     };
 
     const JSONresponse = {
-      reportQuery: { class: "landplot", Feature, fromDate, toDate },
+      reportQuery: { reportClass: "landplot", Feature, fromDate, toDate },
       species,
       totals,
     };

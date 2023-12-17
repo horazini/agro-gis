@@ -42,6 +42,8 @@ import {
   mySnackBars,
 } from "./customComponents";
 
+import convert from "color-convert";
+
 export const position: LatLngExpression = [-29, -58];
 
 const { snapshotSuccessSnackBar, errorSnackBar } = mySnackBars;
@@ -1048,6 +1050,151 @@ export const FlyToSelectedFeatureMap = ({
         })}
       </LayerGroup>
     </MapContainer>
+  );
+};
+
+/**
+ *
+ * @param {array} features - array of GeoJSON features
+ * @param {string} targetProp - string representing the nested or direct property to be evaluated by the heat map, e.g., "landplot.area" or "totalweightintons"
+ * @returns {react-leaflet MapContainer} a map that assigns a color between green and red to each feature based on the value of one of its properties
+ */
+export const FeaturesHeatMap = ({ features, targetProp }: any) => {
+  const mapRef = useRef<any>();
+
+  // Target variable heating
+
+  function accessProperty(obj: any, propPath: string): any {
+    const parts = propPath.split(".");
+
+    if (parts.length === 1) {
+      // Base case: first order property
+      return obj[propPath];
+    } else {
+      // Recursive case: nested property
+      const currentProp = parts[0];
+      const remainingProps = parts.slice(1).join(".");
+      return accessProperty(obj[currentProp], remainingProps);
+    }
+  }
+
+  let varRangeMax = accessProperty(features[0].properties, targetProp) | 0;
+  let varRangeMin = accessProperty(features[0].properties, targetProp) | 0;
+
+  features.forEach((feature: any) => {
+    const value = accessProperty(feature.properties, targetProp) | 0;
+
+    if (value > varRangeMax) {
+      varRangeMax = value;
+    }
+
+    if (value < varRangeMin) {
+      varRangeMin = value;
+    }
+  });
+  const varRangeLength = varRangeMax - varRangeMin;
+
+  // Layer behavior
+
+  const CustomLayer = ({ feature }: any) => {
+    const { properties, geometry } = feature;
+
+    // Target variable heating
+
+    function valueToHue(originalValue: number): number {
+      if (varRangeLength < 1) {
+        return 120;
+      }
+      const originalValueRatio = (originalValue - varRangeMin) / varRangeLength;
+      const hueValue = originalValueRatio * 120;
+      return Math.round(hueValue);
+    }
+
+    const featureHue = valueToHue(
+      Number(accessProperty(properties, targetProp))
+    );
+    const cropColor = `#${convert.hsv.hex([120 - featureHue, 100, 100])}`;
+
+    const pathOptions = {
+      color: cropColor,
+    };
+
+    const eventHandlers = {
+      click: (e: any) => mapRef.current.flyToBounds(e.target.getBounds()),
+      mouseover: (e: any) => {
+        var layer = e.target;
+        layer.setStyle({
+          weight: 5,
+        });
+      },
+      mouseout: (e: any) => {
+        var layer = e.target;
+        layer.setStyle({
+          weight: 3,
+        });
+      },
+    };
+
+    const PopUp = (
+      <div>
+        <h3>Parclea N°. {properties.landplot.id}</h3>
+        {properties.landplot.radius && (
+          <p>Radio: {properties.landplot.radius} m.</p>
+        )}
+        <p>Área: {FormattedArea(properties.landplot.area)}</p>
+      </div>
+    );
+
+    if (geometry.type === "Polygon") {
+      const coordinates = geometry.coordinates[0].map(([lng, lat]: any) => [
+        lat,
+        lng,
+      ]);
+      return (
+        <Polygon
+          key={properties.landplot.id}
+          positions={coordinates}
+          pathOptions={pathOptions}
+          eventHandlers={eventHandlers}
+        >
+          <Popup>{PopUp}</Popup>
+        </Polygon>
+      );
+    } else if (
+      geometry.type === "Point" &&
+      properties.landplot.subType === "Circle"
+    ) {
+      return (
+        <Circle
+          key={properties.landplot.id}
+          center={geometry.coordinates}
+          radius={properties.landplot.radius}
+          pathOptions={pathOptions}
+          eventHandlers={eventHandlers}
+        >
+          <Popup>{PopUp}</Popup>
+        </Circle>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <Fragment>
+      <MapContainer center={position} zoom={7} ref={mapRef}>
+        <LayerControler />
+        <LayerGroup>
+          {features.map((feature: any) => {
+            return (
+              <CustomLayer
+                key={feature.properties.landplot.id}
+                feature={feature}
+              />
+            );
+          })}
+        </LayerGroup>
+      </MapContainer>
+    </Fragment>
   );
 };
 

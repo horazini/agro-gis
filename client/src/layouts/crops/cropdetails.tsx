@@ -96,6 +96,10 @@ const CropDetails = () => {
   // Data refresh trigger
   const [dataReloadCounter, setDataReloadCounter] = useState(0);
 
+  const refreshPage = () => {
+    setDataReloadCounter((prevCounter: number) => prevCounter + 1);
+  };
+
   const loadCrop = async (id: string) => {
     try {
       const data = await getCropById(id);
@@ -128,29 +132,24 @@ const CropDetails = () => {
       <SentinelSnapshoter landplot={cropFeature} />
 
       {cropFeature && (
-        <CropInfo
-          cropData={cropFeature.properties}
-          setDataReloadCounter={setDataReloadCounter}
-        />
+        <CropInfo cropData={cropFeature.properties} refreshPage={refreshPage} />
       )}
     </Box>
   );
 };
 
-const CropInfo = ({ cropData, setDataReloadCounter }: any) => {
+const CropInfo = ({ cropData, refreshPage }: any) => {
   const { crop, landplot, species, stages } = cropData;
 
   const navigate = useNavigate();
 
-  //#region Snackbar
+  //#region fetch, await and snackbar
 
   const [snackBar, setSnackBar] = useState<MySnackBarProps>({
     open: false,
     severity: undefined,
     msg: "",
   });
-
-  //#endregion
 
   const [loading, setLoading] = useState(false);
 
@@ -165,7 +164,7 @@ const CropInfo = ({ cropData, setDataReloadCounter }: any) => {
 
       if (res === 200) {
         onSuccess && onSuccess();
-        setDataReloadCounter((prevCounter: number) => prevCounter + 1);
+        refreshPage();
         setSnackBar(successSnackBar);
       } else {
         setSnackBar(errorSnackBar);
@@ -476,7 +475,6 @@ const CommentsSection = ({
 const StageInfo = ({ stage, HandlePutData }: any) => {
   const { events, comments, start_date, finish_date } = stage;
 
-  console.log(events);
   type GrowthEvent = {
     id: number;
     species_growth_event_id: number;
@@ -551,128 +549,6 @@ const StageInfo = ({ stage, HandlePutData }: any) => {
 
   //#endregion
 
-  const [newTaskDialogOpen, setNewTaskDialogOpen] = useState(false);
-
-  const handleNewTaskClick = () => {
-    setNewTaskDialogOpen(true);
-  };
-
-  const handleNewTaskCancel = () => {
-    setNewTaskDialogOpen(false);
-  };
-
-  const TaskDialog = () => {
-    const [newTask, setNewTask] = useState({
-      name: "",
-      description: "",
-    });
-
-    const handleEventChange = (
-      event:
-        | SelectChangeEvent<string>
-        | React.ChangeEvent<{ name: string; value: unknown }>
-    ) => {
-      const { name, value } = event.target;
-      setNewTask({ ...newTask, [name]: value });
-    };
-
-    const [estimatedDate, setEstimatedDate] = useState<Date | null>(null);
-    const [finishDate, setFinishDate] = useState<Date | null>(null);
-
-    const params = useParams();
-    const handleNewTaskConfirm = async () => {
-      const newTaskSent = {
-        ...newTask,
-        estimatedDate: estimatedDate?.toISOString(),
-        finishDate: finishDate?.toISOString(),
-        cropId: params.id,
-        stageId: stage.id,
-      };
-      await HandlePutData(
-        () => addCropEvent(newTaskSent),
-        eventAddSuccessSnackBar,
-        () => setNewTaskDialogOpen(false)
-      );
-    };
-
-    return (
-      <Dialog
-        open={newTaskDialogOpen}
-        onClose={handleNewTaskCancel}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">Nueva tarea</DialogTitle>
-        <DialogContent>
-          <h4>Etapa: {stage.species_growth_stage_name}</h4>
-          <TextField
-            required
-            variant="filled"
-            label="Nombre"
-            name="name"
-            inputProps={{ maxLength: 100 }}
-            value={newTask.name}
-            onChange={handleEventChange}
-          />
-          <p> </p>
-
-          <TextField
-            variant="filled"
-            label="Descripción"
-            name="description"
-            inputProps={{ maxLength: 500 }}
-            fullWidth
-            multiline
-            value={newTask.description}
-            onChange={handleEventChange}
-          />
-
-          <Box display={"flex"} alignItems="center">
-            <Typography mt={2} mr={1}>
-              {"Fecha estimada: "}
-            </Typography>
-
-            <StandardDatePicker
-              date={estimatedDate}
-              setDate={setEstimatedDate}
-              minDate={start_date}
-              maxDate={finish_date}
-            />
-          </Box>
-          <Box display={"flex"} alignItems="center">
-            <Typography mt={2} mr={1}>
-              {"Fecha de realización: "}
-            </Typography>
-
-            <StandardDatePicker
-              date={finishDate}
-              setDate={setFinishDate}
-              minDate={start_date}
-              maxDate={finish_date}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleNewTaskCancel}>Cancelar</Button>
-
-          <DialogComponent
-            component={
-              <Button
-                disabled={!newTask.name || (!estimatedDate && !finishDate)}
-              >
-                Confirmar
-              </Button>
-            }
-            dialogTitle={"¿Confirmar tarea?"}
-            dialogSubtitle={"Se añadirá la nueva tarea a la etapa."}
-            disabled={!newTask.name || (!estimatedDate && !finishDate)}
-            onConfirm={() => handleNewTaskConfirm()}
-          />
-        </DialogActions>
-      </Dialog>
-    );
-  };
-
   const sorteredEvents = sortedEvents(events);
 
   return (
@@ -729,16 +605,7 @@ const StageInfo = ({ stage, HandlePutData }: any) => {
         mb={3}
         mr={1}
       >
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 3, ml: 1 }}
-          disabled={!stage.start_date}
-          onClick={() => handleNewTaskClick()}
-          startIcon={<PlaylistAddIcon />}
-        >
-          Añadir tarea
-        </Button>
+        <NewTaskDialog stage={stage} HandlePutData={HandlePutData} />
         {!finish_date && start_date ? (
           <ButtonDatePicker
             label="Finalizar etapa"
@@ -755,7 +622,137 @@ const StageInfo = ({ stage, HandlePutData }: any) => {
           />
         ) : null}
       </Box>
-      <TaskDialog />
+    </Fragment>
+  );
+};
+
+const NewTaskDialog = ({ stage, HandlePutData }: any) => {
+  const [newTaskDialogOpen, setNewTaskDialogOpen] = useState(false);
+
+  const handleNewTaskCancel = () => {
+    setNewTaskDialogOpen(false);
+  };
+
+  const [newTask, setNewTask] = useState({
+    name: "",
+    description: "",
+  });
+
+  const handleEventChange = (
+    event:
+      | SelectChangeEvent<string>
+      | React.ChangeEvent<{ name: string; value: unknown }>
+  ) => {
+    const { name, value } = event.target;
+    setNewTask({ ...newTask, [name]: value });
+  };
+
+  const [estimatedDate, setEstimatedDate] = useState<Date | null>(null);
+  const [finishDate, setFinishDate] = useState<Date | null>(null);
+
+  const params = useParams();
+  const handleNewTaskConfirm = async () => {
+    const newTaskSent = {
+      ...newTask,
+      estimatedDate: estimatedDate?.toISOString(),
+      finishDate: finishDate?.toISOString(),
+      cropId: params.id,
+      stageId: stage.id,
+    };
+    await HandlePutData(
+      () => addCropEvent(newTaskSent),
+      eventAddSuccessSnackBar,
+      () => setNewTaskDialogOpen(false)
+    );
+    setNewTask({
+      name: "",
+      description: "",
+    });
+    setEstimatedDate(null);
+    setFinishDate(null);
+  };
+
+  return (
+    <Fragment>
+      <Button
+        variant="contained"
+        color="primary"
+        sx={{ mt: 3, ml: 1 }}
+        disabled={!stage.start_date}
+        onClick={() => setNewTaskDialogOpen(true)}
+        startIcon={<PlaylistAddIcon />}
+      >
+        Añadir tarea
+      </Button>
+      <Dialog open={newTaskDialogOpen} onClose={handleNewTaskCancel}>
+        <DialogTitle id="alert-dialog-title">Nueva tarea</DialogTitle>
+        <DialogContent>
+          <h4>Etapa: {stage.species_growth_stage_name}</h4>
+          <TextField
+            required
+            variant="filled"
+            label="Nombre"
+            name="name"
+            inputProps={{ maxLength: 100 }}
+            value={newTask.name}
+            onChange={handleEventChange}
+          />
+          <p> </p>
+
+          <TextField
+            variant="filled"
+            label="Descripción"
+            name="description"
+            inputProps={{ maxLength: 500 }}
+            fullWidth
+            multiline
+            value={newTask.description}
+            onChange={handleEventChange}
+          />
+
+          <Box display={"flex"} alignItems="center">
+            <Typography mt={2} mr={1}>
+              {"Fecha estimada: "}
+            </Typography>
+
+            <StandardDatePicker
+              date={estimatedDate}
+              setDate={setEstimatedDate}
+              minDate={stage.start_date}
+              maxDate={stage.finish_date}
+            />
+          </Box>
+          <Box display={"flex"} alignItems="center">
+            <Typography mt={2} mr={1}>
+              {"Fecha de realización: "}
+            </Typography>
+
+            <StandardDatePicker
+              date={finishDate}
+              setDate={setFinishDate}
+              minDate={stage.start_date}
+              maxDate={stage.finish_date}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleNewTaskCancel}>Cancelar</Button>
+
+          <DialogComponent
+            component={
+              <Button
+                disabled={!newTask.name || (!estimatedDate && !finishDate)}
+              >
+                Confirmar
+              </Button>
+            }
+            dialogTitle={"¿Confirmar tarea?"}
+            dialogSubtitle={"Se añadirá la nueva tarea a la etapa."}
+            disabled={!newTask.name || (!estimatedDate && !finishDate)}
+            onConfirm={() => handleNewTaskConfirm()}
+          />
+        </DialogActions>
+      </Dialog>
     </Fragment>
   );
 };

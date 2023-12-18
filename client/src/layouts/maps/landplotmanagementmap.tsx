@@ -69,10 +69,12 @@ declare module "leaflet" {
   }
 }
 
-export default function EditControlFC() {
+export default function LandplotManagementMap() {
   PageTitle("Parcelas");
-  const [features, setFeatures] = useState<Feature[]>([]);
   const { tenantId } = useSelector((state: RootState) => state.auth);
+
+  const [GeoJSONFeatures, setGeoJSONFeatures] = useState<Feature[]>([]);
+  const LeafletFeatures = useRef<L.FeatureGroup>(null);
 
   useEffect(() => {
     loadData();
@@ -81,17 +83,17 @@ export default function EditControlFC() {
   const loadData = async () => {
     if (tenantId) {
       const data = await getAvailableAndOccupiedTenantGeo(tenantId);
-      setFeatures(data.features);
+      setGeoJSONFeatures(data.features);
     }
   };
 
-  const mapFeatureGroup = useRef<L.FeatureGroup>(null);
+  // GeoJSON and Leaflet Layer features synchronization handling
 
   useEffect(() => {
-    if (mapFeatureGroup.current?.getLayers().length === 0 && features) {
+    if (LeafletFeatures.current?.getLayers().length === 0 && GeoJSONFeatures) {
       // Branch for first component load.
       // adds each geoJSON feature to the map featureGroup Ref.
-      L.geoJSON(features).eachLayer((layer) => {
+      L.geoJSON(GeoJSONFeatures).eachLayer((layer) => {
         if (layer.feature?.properties?.crop?.finish_date !== null) {
           if (layer instanceof L.Marker && layer.feature) {
             const featureData = layer.feature;
@@ -102,13 +104,13 @@ export default function EditControlFC() {
               radius,
             });
             circle.feature = featureData;
-            mapFeatureGroup.current?.addLayer(circle);
+            LeafletFeatures.current?.addLayer(circle);
           } else if (layer instanceof L.Polygon) {
-            mapFeatureGroup.current?.addLayer(layer);
+            LeafletFeatures.current?.addLayer(layer);
             /* 
             // forma alternativa
             new L.Polygon(layer.feature.geometry.coordinates).addTo(
-              mapFeatureGroup.current
+              LeafletFeatures.current
             ); 
             */
           } else {
@@ -119,18 +121,113 @@ export default function EditControlFC() {
       });
     } else {
       // Branch for aplying style to modified layers
-      mapFeatureGroup.current?.eachLayer(function (layer) {
+      LeafletFeatures.current?.eachLayer(function (layer) {
         if (layer.feature?.properties?.status === "modified") {
           layer.options.color = "#9933ff";
           // Workaround que soluciona el error de actualización de color un paso tarde
-          mapFeatureGroup.current?.removeLayer(layer);
-          mapFeatureGroup.current?.addLayer(layer);
+          LeafletFeatures.current?.removeLayer(layer);
+          LeafletFeatures.current?.addLayer(layer);
         }
       });
     }
-  }, [features]);
+  }, [GeoJSONFeatures]);
 
-  const circleToGeoJSON = (circleProperties: any, circleLatLng: L.LatLng) => {
+  // feature selection (by map or list) handling
+
+  const [selectedFeature, setSelectedFeature] = useState<any>();
+
+  useEffect(() => {
+    LeafletFeatures.current?.eachLayer(function (layer) {
+      const isSelected =
+        layer.feature?.properties?.landplot.id ===
+        selectedFeature.properties.landplot.id;
+
+      layer.options.color = isSelected ? "#bf4000" : "#3388ff";
+      LeafletFeatures.current?.removeLayer(layer);
+      LeafletFeatures.current?.addLayer(layer);
+    });
+  }, [selectedFeature]);
+
+  // Form Submit handling
+
+  const handleSubmit: () => Promise<number> = async () => {
+    try {
+      const featureArray = GeoJSONFeatures?.filter(
+        (f: any) => f.properties.status !== undefined
+      );
+
+      const FeatureCollection: FeatureCollection = {
+        type: "FeatureCollection",
+        features: featureArray,
+      };
+
+      const msg = {
+        tenantId: tenantId || 1,
+        FeatureCollection,
+      };
+
+      const res = await putFeatures(msg);
+      return res;
+    } catch (error) {
+      console.log(error);
+      return 400;
+    }
+  };
+
+  return (
+    <Box>
+      <h1>Administración de parcelas</h1>
+
+      <FeatureEditorMap
+        setGeoJSONFeatures={setGeoJSONFeatures}
+        selectedFeature={selectedFeature}
+        setSelectedFeature={setSelectedFeature}
+        LeafletFeatures={LeafletFeatures}
+        GeoJSONFeatures={GeoJSONFeatures}
+      />
+
+      <Box
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
+      >
+        <FeaturesTable
+          GeoJSONFeatures={GeoJSONFeatures}
+          setSelectedFeature={setSelectedFeature}
+        />
+
+        <SelectedFeatureCard selectedFeature={selectedFeature} />
+      </Box>
+
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <CancelButton navigateDir={"/landplots"} />
+        <ConfirmButton
+          msg={"Se registrarán todos los cambios realizados."}
+          onConfirm={handleSubmit}
+          navigateDir={"/landplots"}
+          disabled={false}
+        />
+      </Box>
+    </Box>
+  );
+}
+
+const FeatureEditorMap = ({
+  setGeoJSONFeatures,
+  selectedFeature,
+  setSelectedFeature,
+  LeafletFeatures,
+  GeoJSONFeatures,
+}: any) => {
+  function circleToGeoJSON(circleProperties: any, circleLatLng: L.LatLng) {
     const { lat, lng } = circleLatLng;
     const feature: CircleFeature = {
       type: "Feature",
@@ -143,7 +240,7 @@ export default function EditControlFC() {
       },
     };
     return feature;
-  };
+  }
 
   const onCreate = (e: any) => {
     const { layerType, layer } = e;
@@ -161,7 +258,7 @@ export default function EditControlFC() {
 
       const circle = circleToGeoJSON(circleProperties, circleLatLng);
 
-      setFeatures((layers: any) => [...layers, circle]); // Almacena en GeoJSON Features
+      setGeoJSONFeatures((layers: any) => [...layers, circle]); // Almacena en GeoJSON Features
     }
     if (layerType === "polygon") {
       const { _leaflet_id } = layer;
@@ -174,7 +271,7 @@ export default function EditControlFC() {
           description: null,
         },
       };
-      setFeatures((layers: any) => [...layers, polygon]);
+      setGeoJSONFeatures((layers: any) => [...layers, polygon]);
     }
   };
 
@@ -195,7 +292,7 @@ export default function EditControlFC() {
       if (layer.editing.latlngs) {
         // Acciones para polígonos
 
-        setFeatures((layers: any) =>
+        setGeoJSONFeatures((layers: any) =>
           layers.map((l: any) =>
             l.properties.landplot.id === FeatureToEditId
               ? {
@@ -220,7 +317,7 @@ export default function EditControlFC() {
       } else if (layer.editing._shape) {
         // Acciones para círculos
 
-        setFeatures((layers: any) =>
+        setGeoJSONFeatures((layers: any) =>
           layers.map((l: any) =>
             l.properties.landplot.id === FeatureToEditId
               ? {
@@ -258,7 +355,7 @@ export default function EditControlFC() {
 
       if (layer.feature) {
         FeatureToDeleteId = layer.feature.properties.landplot.id;
-        setFeatures((existingFeatures: any) =>
+        setGeoJSONFeatures((existingFeatures: any) =>
           existingFeatures.map((f: any) =>
             f.properties.landplot.id === FeatureToDeleteId
               ? {
@@ -272,7 +369,7 @@ export default function EditControlFC() {
           )
         );
       } else {
-        setFeatures((existingFeatures: any) =>
+        setGeoJSONFeatures((existingFeatures: any) =>
           existingFeatures.filter(
             (f: any) => f.properties.landplot.id !== FeatureToDeleteId
           )
@@ -341,32 +438,59 @@ export default function EditControlFC() {
     return null;
   };
 
-  const handleSubmit: () => Promise<number> = async () => {
-    try {
-      const featureArray = features?.filter(
-        (f: any) => f.properties.status !== undefined
-      );
-
-      const FeatureCollection: FeatureCollection = {
-        type: "FeatureCollection",
-        features: featureArray,
-      };
-
-      const msg = {
-        tenantId: tenantId || 1,
-        FeatureCollection,
-      };
-
-      const res = await putFeatures(msg);
-      return res;
-    } catch (error) {
-      console.log(error);
-      return 400;
-    }
+  const eventHandlers = {
+    click: (e: any) => setSelectedFeature(e.layer.feature),
   };
 
-  // Feature arrange
+  return (
+    <MapContainer center={position} zoom={7}>
+      <LayerControler />
+      <FeatureGroup ref={LeafletFeatures} eventHandlers={eventHandlers}>
+        <EditControl
+          position="topleft"
+          onEdited={handleChange}
+          onCreated={onCreate}
+          onDeleted={onDeleted}
+          draw={{
+            rectangle: false,
+            circle: {
+              shapeOptions: {
+                color: "lightgreen",
+              },
+            },
+            polyline: false,
+            polygon: {
+              shapeOptions: {
+                color: "lightgreen",
+              },
+            },
+            marker: false,
+            circlemarker: false,
+          }}
+        />
+      </FeatureGroup>
 
+      <LayerGroup>
+        {GeoJSONFeatures &&
+          GeoJSONFeatures.map((feature: any) => {
+            if (feature.properties.crop?.finish_date === null) {
+              return (
+                <CustomLayer
+                  key={feature.properties.landplot.id}
+                  feature={feature}
+                />
+              );
+            }
+          })}
+      </LayerGroup>
+    </MapContainer>
+  );
+};
+
+const FeaturesTable = ({ GeoJSONFeatures, setSelectedFeature }: any) => {
+  const [openGroups, setOpenGroups] = useState(["vacants", "occupieds"]);
+
+  // Features arrange by class
   function arrangeFeatures(features: Feature[]) {
     const arranged: any = {
       vacants: [],
@@ -400,270 +524,179 @@ export default function EditControlFC() {
     return arranged;
   }
 
-  const arrangedFeatures = arrangeFeatures(features);
+  const arrangedFeatures = arrangeFeatures(GeoJSONFeatures);
 
-  const [openGroups, setOpenGroups] = useState(["vacants", "occupieds"]);
-
-  // manual feature handling
-
-  const [selectedFeature, setSelectedFeature] = useState<any>();
-
-  const eventHandlers = {
-    click: (e: any) => setSelectedFeature(e.layer.feature),
-  };
-
-  useEffect(() => {
-    mapFeatureGroup.current?.eachLayer(function (layer) {
-      const isSelected =
-        layer.feature?.properties?.landplot.id ===
-        selectedFeature.properties.landplot.id;
-
-      layer.options.color = isSelected ? "#bf4000" : "#3388ff";
-      mapFeatureGroup.current?.removeLayer(layer);
-      mapFeatureGroup.current?.addLayer(layer);
-    });
-  }, [selectedFeature]);
   return (
-    <Box>
-      <h1>Administración de parcelas</h1>
+    <TableContainer
+      component={Paper}
+      sx={{
+        width: "max-content",
+        marginTop: 4,
+        borderRadius: 2,
+      }}
+    >
+      <Table>
+        <TableBody>
+          {arrangedFeatures &&
+            Object.keys(arrangedFeatures).map((featureArrange: any) => (
+              <>
+                <TableRow sx={{ backgroundColor: "rgba(211,211,211,.2)" }}>
+                  <TableCell></TableCell>
+                  <TableCell>
+                    {featureArrange === "occupieds"
+                      ? "Ocupados"
+                      : featureArrange === "addeds"
+                      ? "Creados"
+                      : featureArrange === "modifieds"
+                      ? "Modificados"
+                      : featureArrange === "deleteds"
+                      ? "Eliminados"
+                      : featureArrange === "vacants"
+                      ? "Libres"
+                      : null}
+                  </TableCell>
 
-      <MapContainer center={position} zoom={7}>
-        <LayerControler />
-        <FeatureGroup ref={mapFeatureGroup} eventHandlers={eventHandlers}>
-          <EditControl
-            position="topleft"
-            onEdited={handleChange}
-            onCreated={onCreate}
-            onDeleted={onDeleted}
-            draw={{
-              rectangle: false,
-              circle: {
-                shapeOptions: {
-                  color: "lightgreen",
-                },
-              },
-              polyline: false,
-              polygon: {
-                shapeOptions: {
-                  color: "lightgreen",
-                },
-              },
-              marker: false,
-              circlemarker: false,
-            }}
-          />
-        </FeatureGroup>
-
-        <LayerGroup>
-          {features &&
-            features.map((feature: any) => {
-              if (feature.properties.crop?.finish_date === null) {
-                return (
-                  <CustomLayer
-                    key={feature.properties.landplot.id}
-                    feature={feature}
-                  />
-                );
-              }
-            })}
-        </LayerGroup>
-      </MapContainer>
-
-      <Box
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-        }}
-      >
-        <TableContainer
-          component={Paper}
-          sx={{
-            width: "max-content",
-            marginTop: 4,
-            borderRadius: 2,
-          }}
-        >
-          <Table>
-            <TableBody>
-              {features &&
-                Object.keys(arrangedFeatures).map((featureArrange: any) => (
-                  <>
-                    <TableRow sx={{ backgroundColor: "rgba(211,211,211,.2)" }}>
-                      <TableCell></TableCell>
-                      <TableCell>
-                        {featureArrange === "occupieds"
-                          ? "Ocupados"
-                          : featureArrange === "addeds"
-                          ? "Creados"
-                          : featureArrange === "modifieds"
-                          ? "Modificados"
-                          : featureArrange === "deleteds"
-                          ? "Eliminados"
-                          : featureArrange === "vacants"
-                          ? "Libres"
-                          : null}
-                      </TableCell>
-
-                      <TableCell>
-                        <IconButton
-                          aria-label="expand row"
-                          size="small"
-                          onClick={() =>
-                            openGroups.includes(featureArrange)
-                              ? setOpenGroups((groups: any) =>
-                                  groups.filter(
-                                    (g: any) => g !== featureArrange
-                                  )
+                  <TableCell>
+                    <IconButton
+                      aria-label="expand row"
+                      size="small"
+                      onClick={() =>
+                        openGroups.includes(featureArrange)
+                          ? setOpenGroups((groups: any) =>
+                              groups.filter((g: any) => g !== featureArrange)
+                            )
+                          : setOpenGroups((groups: any) => [
+                              ...groups,
+                              featureArrange,
+                            ])
+                      }
+                    >
+                      {openGroups.includes(featureArrange) ? (
+                        <KeyboardArrowUpIcon />
+                      ) : (
+                        <KeyboardArrowDownIcon />
+                      )}
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell
+                    colSpan={3}
+                    sx={{
+                      paddingBottom: 0,
+                      paddingTop: 0,
+                      border: "0px",
+                    }}
+                  >
+                    <Collapse
+                      in={openGroups.includes(featureArrange)}
+                      timeout="auto"
+                      unmountOnExit
+                    >
+                      <Box sx={{ margin: 1 }}>
+                        <Table>
+                          <TableBody>
+                            {arrangedFeatures[featureArrange].length > 0 ? (
+                              arrangedFeatures[featureArrange]
+                                .sort(
+                                  (a: any, b: any) =>
+                                    a.properties.landplot.id -
+                                    b.properties.landplot.id
                                 )
-                              : setOpenGroups((groups: any) => [
-                                  ...groups,
-                                  featureArrange,
-                                ])
-                          }
-                        >
-                          {openGroups.includes(featureArrange) ? (
-                            <KeyboardArrowUpIcon />
-                          ) : (
-                            <KeyboardArrowDownIcon />
-                          )}
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell
-                        colSpan={3}
-                        sx={{
-                          paddingBottom: 0,
-                          paddingTop: 0,
-                          border: "0px",
-                        }}
-                      >
-                        <Collapse
-                          in={openGroups.includes(featureArrange)}
-                          timeout="auto"
-                          unmountOnExit
-                        >
-                          <Box sx={{ margin: 1 }}>
-                            <Table>
-                              <TableBody>
-                                {arrangedFeatures[featureArrange].length > 0 ? (
-                                  arrangedFeatures[featureArrange]
-                                    .sort(
-                                      (a: any, b: any) =>
-                                        a.properties.landplot.id -
-                                        b.properties.landplot.id
-                                    )
-                                    .map((feature: any) => (
-                                      <TableRow
-                                        key={feature.properties.landplot.id}
+                                .map((feature: any) => (
+                                  <TableRow
+                                    key={feature.properties.landplot.id}
+                                  >
+                                    <TableCell>
+                                      {feature.properties.status !== "added"
+                                        ? feature.properties.landplot.id
+                                        : ""}
+                                    </TableCell>
+                                    <TableCell>
+                                      {feature.geometry.type === "Polygon"
+                                        ? "Poligonal"
+                                        : "Circular"}
+                                    </TableCell>
+                                    <TableCell></TableCell>
+
+                                    <TableCell>
+                                      <IconButton
+                                        aria-label="expand row"
+                                        size="small"
+                                        onClick={() =>
+                                          setSelectedFeature(feature)
+                                        }
                                       >
-                                        <TableCell>
-                                          {feature.properties.status !== "added"
-                                            ? feature.properties.landplot.id
-                                            : ""}
-                                        </TableCell>
-                                        <TableCell>
-                                          {feature.geometry.type === "Polygon"
-                                            ? "Poligonal"
-                                            : "Circular"}
-                                        </TableCell>
-                                        <TableCell></TableCell>
-
-                                        <TableCell>
-                                          <IconButton
-                                            aria-label="expand row"
-                                            size="small"
-                                            onClick={() =>
-                                              setSelectedFeature(feature)
-                                            }
-                                          >
-                                            <AppsIcon />
-                                          </IconButton>
-                                        </TableCell>
-                                      </TableRow>
-                                    ))
-                                ) : featureArrange === "occupieds" ? (
-                                  <h3>No se registran parcelas ocupadas</h3>
-                                ) : featureArrange === "addeds" ? (
-                                  <h3>No se crearon nuevas parcelas</h3>
-                                ) : featureArrange === "modifieds" ? (
-                                  <h3>No se modificaron parcelas existentes</h3>
-                                ) : featureArrange === "deleteds" ? (
-                                  <h3>No se eliminaron parcelas existentes</h3>
-                                ) : featureArrange === "vacants" ? (
-                                  <h3>No se registran parcelas libres</h3>
-                                ) : null}
-                              </TableBody>
-                            </Table>
-                          </Box>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
-                  </>
-                ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        <Paper
-          variant="outlined"
-          sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }}
-        >
-          <Typography component="h1" variant="h4" align="center">
-            Parcela seleccionada
-          </Typography>
-          {selectedFeature ? (
-            <Box>
-              <Typography>
-                ID: {selectedFeature.properties.landplot.id}
-              </Typography>
-              <Typography>
-                Tipo:{" "}
-                {selectedFeature.geometry.type === "Polygon"
-                  ? "Poligonal"
-                  : "Circular"}
-              </Typography>
-              <Typography>
-                Estado:{" "}
-                {selectedFeature.properties.status === "added"
-                  ? "Creada"
-                  : selectedFeature.properties.status === "modified"
-                  ? "Modificada"
-                  : selectedFeature.properties.status === "deleted"
-                  ? "Eliminada"
-                  : selectedFeature.properties.crop?.finish_date === null
-                  ? "Ocupada"
-                  : "Libre"}
-              </Typography>
-              <Typography>
-                Descripción: {selectedFeature.properties.landplot.description}
-              </Typography>
-              {selectedFeature.properties.landplot.radius && (
-                <Typography>
-                  Radio: {selectedFeature.properties.landplot.radius}
-                </Typography>
-              )}{" "}
-            </Box>
-          ) : null}
-        </Paper>
-      </Box>
-
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <CancelButton navigateDir={"/landplots"} />
-        <ConfirmButton
-          msg={"Se registrarán todos los cambios realizados."}
-          onConfirm={handleSubmit}
-          navigateDir={"/landplots"}
-          disabled={false}
-        />
-      </Box>
-    </Box>
+                                        <AppsIcon />
+                                      </IconButton>
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                            ) : featureArrange === "occupieds" ? (
+                              <h3>No se registran parcelas ocupadas</h3>
+                            ) : featureArrange === "addeds" ? (
+                              <h3>No se crearon nuevas parcelas</h3>
+                            ) : featureArrange === "modifieds" ? (
+                              <h3>No se modificaron parcelas existentes</h3>
+                            ) : featureArrange === "deleteds" ? (
+                              <h3>No se eliminaron parcelas existentes</h3>
+                            ) : featureArrange === "vacants" ? (
+                              <h3>No se registran parcelas libres</h3>
+                            ) : null}
+                          </TableBody>
+                        </Table>
+                      </Box>
+                    </Collapse>
+                  </TableCell>
+                </TableRow>
+              </>
+            ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
-}
+};
+
+const SelectedFeatureCard = ({ selectedFeature }: any) => {
+  return (
+    <Paper
+      variant="outlined"
+      sx={{ my: { xs: 3, md: 6 }, p: { xs: 2, md: 3 } }}
+    >
+      <Typography component="h1" variant="h4" align="center">
+        Parcela seleccionada
+      </Typography>
+      {selectedFeature ? (
+        <Box>
+          <Typography>ID: {selectedFeature.properties.landplot.id}</Typography>
+          <Typography>
+            Tipo:{" "}
+            {selectedFeature.geometry.type === "Polygon"
+              ? "Poligonal"
+              : "Circular"}
+          </Typography>
+          <Typography>
+            Estado:{" "}
+            {selectedFeature.properties.status === "added"
+              ? "Creada"
+              : selectedFeature.properties.status === "modified"
+              ? "Modificada"
+              : selectedFeature.properties.status === "deleted"
+              ? "Eliminada"
+              : selectedFeature.properties.crop?.finish_date === null
+              ? "Ocupada"
+              : "Libre"}
+          </Typography>
+          <Typography>
+            Descripción: {selectedFeature.properties.landplot.description}
+          </Typography>
+          {selectedFeature.properties.landplot.radius && (
+            <Typography>
+              Radio: {selectedFeature.properties.landplot.radius}
+            </Typography>
+          )}{" "}
+        </Box>
+      ) : null}
+    </Paper>
+  );
+};

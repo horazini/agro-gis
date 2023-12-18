@@ -36,11 +36,14 @@ const formatUniqueAndPeriodicEvents = (events: any) => {
           periodic_events: [eventMainData],
         };
       }
-    } else {
+    } else if (species_growth_event_id) {
       formattedEvents[species_growth_event_id] = event;
+    } else {
+      formattedEvents[`addedEvent${event.id}`] = event;
     }
   }
 
+  console.log(formattedEvents);
   return Object.values(formattedEvents);
 };
 

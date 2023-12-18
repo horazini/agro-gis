@@ -156,6 +156,7 @@ const StatisticalReports = () => {
         <ReportResponseDisplay
           reportResponse={reportResponse}
           setReportResponse={setReportResponse}
+          setReportRequest={setReportRequest}
         />
       )}
 
@@ -246,6 +247,7 @@ const ReportRequestMenu = ({
             onClick={handleGetReport}
             style={{ marginLeft: ".5rem" }}
             startIcon={<ArticleIcon />}
+            disabled={!Object.values(reportRequest).every((value) => !!value)}
           >
             Obtener reporte
           </Button>
@@ -455,8 +457,16 @@ const DatesSelector = (
   );
 };
 
-const ReportResponseDisplay = ({ reportResponse, setReportResponse }: any) => {
+const ReportResponseDisplay = ({
+  reportResponse,
+  setReportResponse,
+  setReportRequest,
+}: any) => {
   const { reportQuery, totals } = reportResponse;
+
+  const reportResponseIsNull = Object.values(totals).every(
+    (value) => value === 0
+  );
 
   const { reportClass, name, description, Feature, fromDate, toDate } =
     reportQuery;
@@ -474,24 +484,36 @@ const ReportResponseDisplay = ({ reportResponse, setReportResponse }: any) => {
           {description ? `Descripción: ${description}` : null}
         </Typography>
         <Typography>
-          Periodo: Desde {formatedDate(fromDate)} hasta {formatedDate(toDate)}
+          Periodo: Desde el {formatedDate(fromDate)} hasta el{" "}
+          {formatedDate(toDate)}.
         </Typography>
       </Box>
 
-      {reportClass === "species" ? (
-        <SpeciesReportDispay reportResponse={reportResponse} />
-      ) : reportClass === "landplot" ? (
-        <LandplotReportDispay reportResponse={reportResponse} />
-      ) : null}
+      {!reportResponseIsNull ? (
+        <Fragment>
+          {reportClass === "species" ? (
+            <SpeciesReportDispay reportResponse={reportResponse} />
+          ) : reportClass === "landplot" ? (
+            <LandplotReportDispay reportResponse={reportResponse} />
+          ) : null}
 
-      <h2>Totales</h2>
-      <Box paddingBottom={3}>
-        <Typography>Cosechas realizadas: {numberOfCrops}.</Typography>
-        <Typography>
-          Área cultivada: {FormattedArea(cultivatedAreas)}
-        </Typography>
-        <Typography>Peso recolectado: {weightInTons} toneladas.</Typography>
-      </Box>
+          <Box paddingBottom={3}>
+            <h2>Totales</h2>{" "}
+            <Typography>Cosechas realizadas: {numberOfCrops}.</Typography>
+            <Typography>
+              Área cultivada: {FormattedArea(cultivatedAreas)}
+            </Typography>
+            <Typography>Peso recolectado: {weightInTons} toneladas.</Typography>
+          </Box>
+        </Fragment>
+      ) : (
+        <h3>
+          No se registran cultivos para esta{" "}
+          {reportClass === "species" ? "especie" : "parcela"} en el periodo{" "}
+          {formatedDate(fromDate)} - {formatedDate(toDate)}.
+        </h3>
+      )}
+
       <Box
         sx={{
           display: "flex",
@@ -502,7 +524,16 @@ const ReportResponseDisplay = ({ reportResponse, setReportResponse }: any) => {
         <Button
           startIcon={<ArticleIcon />}
           variant={"contained"}
-          onClick={() => setReportResponse(null)}
+          onClick={() => {
+            setReportRequest({
+              class: null,
+              objectId: 0,
+              fromDate: null,
+              toDate: null,
+            });
+
+            setReportResponse(null);
+          }}
         >
           Generar nuevo reporte
         </Button>

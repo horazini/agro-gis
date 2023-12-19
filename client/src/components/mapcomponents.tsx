@@ -892,6 +892,11 @@ export const FlyToSelectedFeatureMap = ({
 }: any) => {
   const mapRef = useRef<any>();
 
+  const selectedFeature = features.find(
+    (feature: { properties: { landplot: { id: number } } }) =>
+      feature.properties.landplot.id === selectedLandplotId
+  );
+
   useEffect(() => {
     if (
       mapRef === null ||
@@ -905,9 +910,6 @@ export const FlyToSelectedFeatureMap = ({
 
     const { properties, geometry } = selectedFeature;
 
-    let coords: LatLngExpression = position;
-    let zoom = 13;
-
     if (geometry.type === "Polygon") {
       const coordinates = geometry.coordinates[0].map(([lng, lat]: any) => [
         lat,
@@ -915,32 +917,21 @@ export const FlyToSelectedFeatureMap = ({
       ]);
 
       const p = L.polygon(coordinates).addTo(mapRef.current);
-      const bounds = p.getBounds();
-      coords = bounds.getCenter();
-      zoom = mapRef.current.getBoundsZoom(bounds);
+      mapRef.current.flyToBounds(L.polygon(coordinates).getBounds());
       p.remove();
     } else if (
       geometry.type === "Point" &&
       properties.landplot.subType === "Circle"
     ) {
-      coords = geometry.coordinates as LatLngExpression;
-
       const radius = properties.landplot.radius as number;
 
       const c = L.circle(geometry.coordinates, { radius }).addTo(
         mapRef.current
       );
-      const bounds = c.getBounds();
-      zoom = mapRef.current.getBoundsZoom(bounds);
+      mapRef.current.flyToBounds(c.getBounds());
       c.remove();
     }
-    mapRef.current.flyTo(coords, zoom);
-  }, [selectedLandplotId]);
-
-  const selectedFeature = features.find(
-    (feature: { properties: { landplot: { id: number } } }) =>
-      feature.properties.landplot.id === selectedLandplotId
-  );
+  }, [selectedFeature]);
 
   // Comportamiento de las Layers
 
@@ -953,7 +944,6 @@ export const FlyToSelectedFeatureMap = ({
     const handleLayerMouseOver = (layerId: number) => {
       setHighlightedLayerId(layerId);
     };
-
     const handleLayerMouseOut = () => {
       setHighlightedLayerId(null);
     };
@@ -1167,21 +1157,19 @@ export const FeaturesHeatMap = ({ features, targetProp }: any) => {
   };
 
   return (
-    <Fragment>
-      <MapContainer center={position} zoom={7} ref={mapRef}>
-        <LayerControler />
-        <LayerGroup>
-          {features.map((feature: any) => {
-            return (
-              <CustomLayer
-                key={feature.properties.landplot.id}
-                feature={feature}
-              />
-            );
-          })}
-        </LayerGroup>
-      </MapContainer>
-    </Fragment>
+    <MapContainer center={position} zoom={7} ref={mapRef}>
+      <LayerControler />
+      <LayerGroup>
+        {features.map((feature: any) => {
+          return (
+            <CustomLayer
+              key={feature.properties.landplot.id}
+              feature={feature}
+            />
+          );
+        })}
+      </LayerGroup>
+    </MapContainer>
   );
 };
 

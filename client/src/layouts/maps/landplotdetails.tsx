@@ -74,9 +74,10 @@ const LandplotData = ({ landplot }: any) => {
         alignItems: "center",
       }}
     >
-      <Box ml={2} mb={2} mr={2}>
+      <Box paddingTop={2} ml={2} mb={2} mr={2}>
+        <p>Parcela N.° {landplot.id}</p>
         {landplot.description && <p>Descripción: {landplot.description}</p>}
-        <p>Área: {FormattedArea(landplot.area)}</p>
+        {landplot.area && <p>Área: {FormattedArea(landplot.area)} </p>}
         {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
       </Box>
 

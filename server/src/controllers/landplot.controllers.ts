@@ -124,7 +124,7 @@ export const getLandplotWithCrops = async (
     const id = parseInt(req.params.id);
     const response: QueryResult = await pool.query(
       `
-      SELECT l.id AS landplot_id, ${shape_data_query_l}, l.description, 
+      SELECT l.id AS landplot_id, ${shape_data_query_l}, l.description AS landplot_description, 
       CASE 
         WHEN l.circle_radius IS NULL THEN ROUND(st_area(l.area, true)::numeric)
         ELSE ROUND((pi() * l.circle_radius * l.circle_radius)::numeric)
@@ -139,7 +139,7 @@ export const getLandplotWithCrops = async (
 
     const landplot = {
       id: response.rows[0].landplot_id,
-      description: response.rows[0].description,
+      description: response.rows[0].landplot_description,
       geometry: response.rows[0].geometry,
       center: response.rows[0].center,
       circle_radius: response.rows[0].circle_radius,

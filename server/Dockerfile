@@ -10,8 +10,11 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy the .js transpiled application code
-COPY ./dist ./dist
+# Copy the application code
+COPY . .
+
+# Build TypeScript code
+RUN npm run build
 
 # Expose the port the Express server runs on
 EXPOSE 4000

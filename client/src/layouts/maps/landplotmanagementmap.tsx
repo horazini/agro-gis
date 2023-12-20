@@ -9,7 +9,7 @@ import {
 } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
 import type { FeatureCollection, Feature } from "geojson";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { LayerControler, position } from "../../components/mapcomponents";
 import {
   getAvailableAndOccupiedTenantGeo,
@@ -35,12 +35,14 @@ import {
   TableCell,
   TableContainer,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
 import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon,
   Apps as AppsIcon,
+  BorderColor as BorderColorIcon,
 } from "@mui/icons-material";
 
 type CircleFeature = {
@@ -60,6 +62,21 @@ type CircleFeature = {
   };
 };
 
+function circleToGeoJSON(circleProperties: any, circleLatLng: L.LatLng) {
+  const { lat, lng } = circleLatLng;
+  const feature: CircleFeature = {
+    type: "Feature",
+    geometry: {
+      type: "Point",
+      coordinates: [lng, lat],
+    },
+    properties: {
+      ...circleProperties,
+    },
+  };
+  return feature;
+}
+
 declare module "leaflet" {
   interface Layer {
     feature?: Feature;
@@ -69,12 +86,11 @@ declare module "leaflet" {
   }
 }
 
-export default function LandplotManagementMap() {
+const LandplotManagementLoader = () => {
   PageTitle("Parcelas");
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const [GeoJSONFeatures, setGeoJSONFeatures] = useState<Feature[]>([]);
-  const LeafletFeatures = useRef<L.FeatureGroup>(null);
 
   useEffect(() => {
     loadData();
@@ -87,12 +103,32 @@ export default function LandplotManagementMap() {
     }
   };
 
+  return tenantId !== null ? (
+    <LandplotManagementMap
+      GeoJSONFeatures={GeoJSONFeatures}
+      setGeoJSONFeatures={setGeoJSONFeatures}
+      tenantId={tenantId}
+    />
+  ) : null;
+};
+
+const LandplotManagementMap = ({
+  GeoJSONFeatures,
+  setGeoJSONFeatures,
+  tenantId,
+}: {
+  GeoJSONFeatures: Feature[];
+  setGeoJSONFeatures: React.Dispatch<React.SetStateAction<Feature[]>>;
+  tenantId: number;
+}) => {
   // GeoJSON and Leaflet Layer features synchronization handling
+
+  const LeafletFeatures = useRef<L.FeatureGroup>(null);
 
   useEffect(() => {
     if (LeafletFeatures.current?.getLayers().length === 0 && GeoJSONFeatures) {
       // Branch for first component load.
-      // adds each geoJSON feature to the map featureGroup Ref.
+      // adds each GeoJSON Feature to the map FeatureGroup Ref.
       L.geoJSON(GeoJSONFeatures).eachLayer((layer) => {
         if (layer.feature?.properties?.crop?.finish_date !== null) {
           if (layer instanceof L.Marker && layer.feature) {
@@ -107,12 +143,10 @@ export default function LandplotManagementMap() {
             LeafletFeatures.current?.addLayer(circle);
           } else if (layer instanceof L.Polygon) {
             LeafletFeatures.current?.addLayer(layer);
-            /* 
             // forma alternativa
-            new L.Polygon(layer.feature.geometry.coordinates).addTo(
-              LeafletFeatures.current
-            ); 
-            */
+            // new L.Polygon(layer.feature.geometry.coordinates).addTo(
+            //   LeafletFeatures.current
+            // );
           } else {
             console.log("Invalid layer type.");
             console.log(layer);
@@ -142,48 +176,31 @@ export default function LandplotManagementMap() {
         layer.feature?.properties?.landplot.id ===
         selectedFeature.properties.landplot.id;
 
-      layer.options.color = isSelected ? "#bf4000" : "#3388ff";
+      const isAdded = layer.feature?.properties?.status === "added";
+      const isModified = layer.feature?.properties?.status === "modified";
+
+      layer.options.color = isSelected
+        ? "#ffaa00"
+        : isAdded
+        ? "lightgreen"
+        : isModified
+        ? "#9933ff"
+        : "#3388ff";
       LeafletFeatures.current?.removeLayer(layer);
       LeafletFeatures.current?.addLayer(layer);
     });
   }, [selectedFeature]);
-
-  // Form Submit handling
-
-  const handleSubmit: () => Promise<number> = async () => {
-    try {
-      const featureArray = GeoJSONFeatures?.filter(
-        (f: any) => f.properties.status !== undefined
-      );
-
-      const FeatureCollection: FeatureCollection = {
-        type: "FeatureCollection",
-        features: featureArray,
-      };
-
-      const msg = {
-        tenantId: tenantId || 1,
-        FeatureCollection,
-      };
-
-      const res = await putFeatures(msg);
-      return res;
-    } catch (error) {
-      console.log(error);
-      return 400;
-    }
-  };
 
   return (
     <Box>
       <h1>Administración de parcelas</h1>
 
       <FeatureEditorMap
+        GeoJSONFeatures={GeoJSONFeatures}
         setGeoJSONFeatures={setGeoJSONFeatures}
+        LeafletFeatures={LeafletFeatures}
         selectedFeature={selectedFeature}
         setSelectedFeature={setSelectedFeature}
-        LeafletFeatures={LeafletFeatures}
-        GeoJSONFeatures={GeoJSONFeatures}
       />
 
       <Box
@@ -198,57 +215,35 @@ export default function LandplotManagementMap() {
           setSelectedFeature={setSelectedFeature}
         />
 
-        <SelectedFeatureCard selectedFeature={selectedFeature} />
-      </Box>
-
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <CancelButton navigateDir={"/landplots"} />
-        <ConfirmButton
-          msg={"Se registrarán todos los cambios realizados."}
-          onConfirm={handleSubmit}
-          navigateDir={"/landplots"}
-          disabled={false}
+        <SelectedFeatureCard
+          selectedFeature={selectedFeature}
+          setSelectedFeature={setSelectedFeature}
+          setGeoJSONFeatures={setGeoJSONFeatures}
         />
       </Box>
+
+      <FormSubmitButtons
+        GeoJSONFeatures={GeoJSONFeatures}
+        tenantId={tenantId}
+      />
     </Box>
   );
-}
+};
 
 const FeatureEditorMap = ({
+  GeoJSONFeatures,
   setGeoJSONFeatures,
+  LeafletFeatures,
   selectedFeature,
   setSelectedFeature,
-  LeafletFeatures,
-  GeoJSONFeatures,
 }: any) => {
-  function circleToGeoJSON(circleProperties: any, circleLatLng: L.LatLng) {
-    const { lat, lng } = circleLatLng;
-    const feature: CircleFeature = {
-      type: "Feature",
-      geometry: {
-        type: "Point",
-        coordinates: [lng, lat],
-      },
-      properties: {
-        ...circleProperties,
-      },
-    };
-    return feature;
-  }
-
   const onCreate = (e: any) => {
     const { layerType, layer } = e;
     if (layerType === "circle") {
       const circleProperties = {
         status: "added",
         landplot: {
-          id: layer._leaflet_id,
+          id: `_leaflet_id${layer._leaflet_id}`,
           radius: layer.getRadius().toFixed(2),
           description: null,
           subType: "Circle",
@@ -258,24 +253,28 @@ const FeatureEditorMap = ({
 
       const circle = circleToGeoJSON(circleProperties, circleLatLng);
 
-      setGeoJSONFeatures((layers: any) => [...layers, circle]); // Almacena en GeoJSON Features
+      setGeoJSONFeatures((layers: any) => [...layers, circle]);
+      layer.feature = {
+        ...circle,
+      };
     }
     if (layerType === "polygon") {
-      const { _leaflet_id } = layer;
-
       const polygon = layer.toGeoJSON(); // convierte los polígonos dibujados en objetos GeoJSON.
       polygon.properties = {
         status: "added",
         landplot: {
-          id: _leaflet_id,
+          id: `_leaflet_id${layer._leaflet_id}`,
           description: null,
         },
       };
       setGeoJSONFeatures((layers: any) => [...layers, polygon]);
+      layer.feature = {
+        ...polygon,
+      };
     }
   };
 
-  const handleChange = (e: any) => {
+  const onEdit = (e: any) => {
     const {
       layers: { _layers },
     } = e;
@@ -283,7 +282,8 @@ const FeatureEditorMap = ({
     Object.values(_layers).forEach((layer: any) => {
       let FeatureToEditId = layer._leaflet_id;
       let status = "added";
-      if (layer.feature) {
+      if (typeof layer.feature.properties.landplot.id === "number") {
+        // branch for pre-existing features only
         FeatureToEditId = layer.feature.properties.landplot.id;
         status = "modified";
         layer.feature.properties.status = status;
@@ -291,7 +291,6 @@ const FeatureEditorMap = ({
 
       if (layer.editing.latlngs) {
         // Acciones para polígonos
-
         setGeoJSONFeatures((layers: any) =>
           layers.map((l: any) =>
             l.properties.landplot.id === FeatureToEditId
@@ -316,7 +315,6 @@ const FeatureEditorMap = ({
         );
       } else if (layer.editing._shape) {
         // Acciones para círculos
-
         setGeoJSONFeatures((layers: any) =>
           layers.map((l: any) =>
             l.properties.landplot.id === FeatureToEditId
@@ -385,17 +383,29 @@ const FeatureEditorMap = ({
       properties.landplot.id === selectedFeature?.properties.landplot.id;
 
     const pathOptions = {
-      color: isSelected
-        ? "#bf4000"
-        : /* : isHighlighted
-        ? "#33ff33" */
-          "red", //"#3388ff",
+      color: isSelected ? "#ffaa00" : "red",
     };
 
     const eventHandlers = {
-      click: () => setSelectedFeature(feature),
-      /* mouseover: () => handleLayerMouseOver(properties.landplot.id),
-      mouseout: handleLayerMouseOut, */
+      click: () =>
+        setSelectedFeature(
+          GeoJSONFeatures.find(
+            (feature: { properties: { landplot: { id: number } } }) =>
+              feature.properties.landplot.id === properties.landplot.id
+          )
+        ),
+      mouseover: (e: any) => {
+        var layer = e.target;
+        layer.setStyle({
+          weight: 5,
+        });
+      },
+      mouseout: (e: any) => {
+        var layer = e.target;
+        layer.setStyle({
+          weight: 3,
+        });
+      },
     };
 
     const PopUp = (
@@ -439,7 +449,26 @@ const FeatureEditorMap = ({
   };
 
   const eventHandlers = {
-    click: (e: any) => setSelectedFeature(e.layer.feature),
+    click: (e: any) =>
+      setSelectedFeature(
+        GeoJSONFeatures.find(
+          (feature: { properties: { landplot: { id: number } } }) =>
+            feature.properties.landplot.id ===
+            e.layer.feature.properties.landplot.id
+        )
+      ),
+    mouseover: (e: any) => {
+      var layer = e.layer;
+      layer.setStyle({
+        weight: 5,
+      });
+    },
+    mouseout: (e: any) => {
+      var layer = e.layer;
+      layer.setStyle({
+        weight: 3,
+      });
+    },
   };
 
   return (
@@ -448,7 +477,7 @@ const FeatureEditorMap = ({
       <FeatureGroup ref={LeafletFeatures} eventHandlers={eventHandlers}>
         <EditControl
           position="topleft"
-          onEdited={handleChange}
+          onEdited={onEdit}
           onCreated={onCreate}
           onDeleted={onDeleted}
           draw={{
@@ -657,7 +686,118 @@ const FeaturesTable = ({ GeoJSONFeatures, setSelectedFeature }: any) => {
   );
 };
 
-const SelectedFeatureCard = ({ selectedFeature }: any) => {
+const SelectedFeatureCard = ({
+  selectedFeature,
+  setSelectedFeature,
+  setGeoJSONFeatures,
+}: any) => {
+  const DescriptionTextfield = () => {
+    const [editDescription, setEditDescription] = useState(false);
+
+    const { description } = selectedFeature.properties.landplot;
+    const [newDescription, setNewDescription] = useState<string>(
+      description || ""
+    );
+
+    const handleChangeDescription = () => {
+      setGeoJSONFeatures((prevFeatures: any[]) =>
+        prevFeatures.map((feature) => {
+          if (
+            feature.properties.landplot.id ===
+            selectedFeature.properties.landplot.id
+          ) {
+            let status = "added";
+            if (typeof feature.properties.landplot.id === "number") {
+              // branch for pre-existing features only
+              status = "modified";
+            }
+
+            const ModifiedFeature = {
+              ...feature,
+              properties: {
+                ...feature.properties,
+                landplot: {
+                  ...feature.properties.landplot,
+                  description: newDescription,
+                },
+                status,
+              },
+            };
+            setSelectedFeature(ModifiedFeature);
+            return ModifiedFeature;
+          }
+          return feature;
+        })
+      );
+    };
+
+    return (
+      <Fragment>
+        {editDescription === false ? (
+          selectedFeature.properties.landplot.description ? (
+            <Typography>
+              Descripción: {selectedFeature.properties.landplot.description}
+              <IconButton size="small" onClick={() => setEditDescription(true)}>
+                <BorderColorIcon fontSize="small" />
+              </IconButton>
+            </Typography>
+          ) : (
+            <Typography
+              sx={{ textDecoration: "underline", cursor: "pointer" }}
+              onClick={() => setEditDescription(true)}
+            >
+              Agregar descripción
+            </Typography>
+          )
+        ) : (
+          <Fragment>
+            <TextField
+              inputProps={{ maxLength: 500 }}
+              id="description"
+              name="description"
+              label="Descripción"
+              multiline
+              fullWidth
+              variant="standard"
+              value={newDescription}
+              onChange={(e) => {
+                setNewDescription(e.target.value);
+              }}
+            />
+            <Box
+              paddingTop={1}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+              }}
+            >
+              <Button
+                variant={"outlined"}
+                color="primary"
+                style={{ marginLeft: ".5rem" }}
+                size="small"
+                onClick={() => setEditDescription(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant={"contained"}
+                color="primary"
+                style={{ marginLeft: ".5rem" }}
+                size="small"
+                disabled={newDescription === description}
+                onClick={() => handleChangeDescription()}
+              >
+                Guardar
+              </Button>
+            </Box>
+          </Fragment>
+        )}
+      </Fragment>
+    );
+  };
+
   return (
     <Paper
       variant="outlined"
@@ -668,13 +808,11 @@ const SelectedFeatureCard = ({ selectedFeature }: any) => {
       </Typography>
       {selectedFeature ? (
         <Box>
-          <Typography>ID: {selectedFeature.properties.landplot.id}</Typography>
-          <Typography>
-            Tipo:{" "}
-            {selectedFeature.geometry.type === "Polygon"
-              ? "Poligonal"
-              : "Circular"}
-          </Typography>
+          {selectedFeature.properties.status !== "added" ? (
+            <Typography>
+              Parcela N°. {selectedFeature.properties.landplot.id}
+            </Typography>
+          ) : null}
           <Typography>
             Estado:{" "}
             {selectedFeature.properties.status === "added"
@@ -688,15 +826,81 @@ const SelectedFeatureCard = ({ selectedFeature }: any) => {
               : "Libre"}
           </Typography>
           <Typography>
-            Descripción: {selectedFeature.properties.landplot.description}
+            Tipo:{" "}
+            {selectedFeature.geometry.type === "Polygon"
+              ? "Poligonal"
+              : "Circular"}
           </Typography>
           {selectedFeature.properties.landplot.radius && (
             <Typography>
               Radio: {selectedFeature.properties.landplot.radius}
             </Typography>
           )}{" "}
+          {selectedFeature.properties.crop?.finish_date === null ? (
+            selectedFeature.properties.landplot.description ? (
+              <Typography>
+                Descripción: {selectedFeature.properties.landplot.description}
+              </Typography>
+            ) : null
+          ) : (
+            <DescriptionTextfield />
+          )}
         </Box>
       ) : null}
     </Paper>
   );
 };
+
+const FormSubmitButtons = ({
+  GeoJSONFeatures,
+  tenantId,
+}: {
+  GeoJSONFeatures: Feature[];
+  tenantId: number;
+}) => {
+  // Form Submit handling
+
+  const handleSubmit: () => Promise<number> = async () => {
+    try {
+      const featureArray = GeoJSONFeatures?.filter(
+        (f: any) => f.properties.status !== undefined
+      );
+
+      const FeatureCollection: FeatureCollection = {
+        type: "FeatureCollection",
+        features: featureArray,
+      };
+
+      const msg = {
+        tenantId: tenantId,
+        FeatureCollection,
+      };
+
+      const res = await putFeatures(msg);
+      return res;
+    } catch (error) {
+      console.log(error);
+      return 400;
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}
+    >
+      <CancelButton navigateDir={"/landplots"} />
+      <ConfirmButton
+        msg={"Se registrarán todos los cambios realizados."}
+        onConfirm={handleSubmit}
+        navigateDir={"/landplots"}
+        disabled={false}
+      />
+    </Box>
+  );
+};
+
+export default LandplotManagementLoader;

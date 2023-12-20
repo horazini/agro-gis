@@ -39,7 +39,9 @@ const DashboardLoader = () => {
   PageTitle("Inicio");
   const navigate = useNavigate();
 
-  const { tenantId } = useSelector((state: RootState) => state.auth);
+  const { tenantId, userTypeId } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   const [nextHarvest, setNextHarvest] = useState();
   const [areasSum, setAreasSum] = useState();
@@ -47,16 +49,37 @@ const DashboardLoader = () => {
   const [pendingTasksNumber, setPendingTasksNumber] = useState();
   const [weatherReport, setWeatherReport] = useState();
 
-  const loadMainData = async (id: number) => {
+  const loadNextHarvestData = async (id: number) => {
     try {
       const nextHarvestData = await getNextHarvest(id);
       setNextHarvest(nextHarvestData);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const loadAreasData = async (id: number) => {
+    try {
       const areasData = await getAvailableAndOccupiedTenantAreasSum(id);
       setAreasSum(areasData);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const loadAreasBySpecieData = async (id: number) => {
+    try {
       const cultivatedAreaBySpeciesData = await getTenantSpeciesCropsAreasSum(
         id
       );
       setCultivatedAreaBySpecies(cultivatedAreaBySpeciesData);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const loadPendingTasksData = async (id: number) => {
+    try {
       const pendingTasksNumberRes = await getTenantPendingTasksNumber(id);
       setPendingTasksNumber(pendingTasksNumberRes);
     } catch (error) {
@@ -66,7 +89,10 @@ const DashboardLoader = () => {
 
   useEffect(() => {
     if (tenantId) {
-      loadMainData(tenantId);
+      loadAreasData(tenantId);
+      loadNextHarvestData(tenantId);
+      loadAreasBySpecieData(tenantId);
+      loadPendingTasksData(tenantId);
     }
   }, [tenantId]);
 
@@ -139,10 +165,18 @@ const DashboardLoader = () => {
     pendingTasksNumber,
     weatherReport,
   };
-  return <Fragment>{data && Dashboard(data, navigate)}</Fragment>;
+  return (
+    <Fragment>
+      {data
+        ? userTypeId !== 1
+          ? TenantsDashboard(data, navigate)
+          : ServiceAdminDashboard(data, navigate)
+        : null}
+    </Fragment>
+  );
 };
 
-const Dashboard = (data: any, navigate: any) => {
+const TenantsDashboard = (data: any, navigate: any) => {
   const {
     nextHarvest,
     areasSum,
@@ -165,28 +199,83 @@ const Dashboard = (data: any, navigate: any) => {
               height: 290,
             }}
           >
-            {pendingTasksNumber ? (
-              <Fragment>
-                {PendingTasksPanel(pendingTasksNumber, navigate)}
-              </Fragment>
-            ) : null}
+            <Fragment>
+              <p>Tareas pendientes</p>
+
+              <Box
+                style={{
+                  paddingLeft: 10,
+                  cursor: "pointer",
+                  display: "flex",
+                  flexFlow: "column",
+                  height: "100%",
+                }}
+                sx={{
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? theme.palette.grey[200]
+                      : "#121212",
+                }}
+              >
+                {pendingTasksNumber ? (
+                  <Fragment>
+                    {PendingTasksPanel(pendingTasksNumber, navigate)}
+                  </Fragment>
+                ) : (
+                  <p>No existen tareas pendientes.</p>
+                )}
+              </Box>
+            </Fragment>
           </Paper>
         </Grid>
         <Grid item xs={12} lg={3}>
-          <Paper
-            sx={{
-              p: 2,
-              display: "flex",
-              flexDirection: "column",
-              alignContent: "center",
-              alignItems: "center",
-              height: 290,
-            }}
-          >
-            {areasSum ? (
-              <Fragment>{LandplotAreasPanel(areasSum, navigate)}</Fragment>
-            ) : null}
-          </Paper>
+          {areasSum &&
+          areasSum.availableAreasSum > 0 &&
+          areasSum.occupiedAreasSum > 0 ? (
+            <Paper
+              sx={{
+                p: 2,
+                display: "flex",
+                flexDirection: "column",
+                alignContent: "center",
+                alignItems: "center",
+                height: 290,
+              }}
+            >
+              {LandplotAreasPanel(areasSum, navigate)}
+            </Paper>
+          ) : (
+            <Paper
+              sx={{
+                pt: 1,
+                pl: 2,
+                pr: 2,
+                pb: 2,
+                display: "flex",
+                flexDirection: "column",
+                height: 290,
+              }}
+            >
+              <p>Resumen de parcelas</p>
+              <Box
+                style={{
+                  paddingLeft: 10,
+                  cursor: "pointer",
+                  display: "flex",
+                  flexFlow: "column",
+                  height: "100%",
+                }}
+                sx={{
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? theme.palette.grey[200]
+                      : "#121212",
+                }}
+              >
+                <p>No hay parcelas cargadas en el sistema.</p>
+              </Box>
+            </Paper>
+          )}
         </Grid>
         <Grid item xs={12} lg={4}>
           <Paper
@@ -200,45 +289,131 @@ const Dashboard = (data: any, navigate: any) => {
               height: 290,
             }}
           >
-            {nextHarvest ? (
-              <Fragment>{NextHarvestPanel(nextHarvest, navigate)}</Fragment>
-            ) : null}
+            <Fragment>
+              <p>Próxima cosecha</p>
+              <Box
+                style={{
+                  paddingLeft: 10,
+                  cursor: "pointer",
+                  display: "flex",
+                  flexFlow: "column",
+                  height: "100%",
+                }}
+                sx={{
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? theme.palette.grey[200]
+                      : "#121212",
+                }}
+              >
+                {nextHarvest ? (
+                  <Fragment>{NextHarvestPanel(nextHarvest, navigate)}</Fragment>
+                ) : (
+                  <p>Acutalmente no hay cultivos en curso.</p>
+                )}
+              </Box>
+            </Fragment>
           </Paper>
         </Grid>
         <Grid item xs={12} lg={6}>
-          <Paper
-            sx={{
-              pt: 1,
-              pl: 2,
-              pr: 2,
-              pb: 2,
-              display: "flex",
-              flexDirection: "column",
-              height: 290,
-            }}
-          >
-            {weatherReport ? (
-              <Fragment>{WeatherReportPanel(weatherReport)}</Fragment>
-            ) : null}
-          </Paper>
+          {weatherReport ? (
+            <Paper
+              sx={{
+                pt: 1,
+                pl: 2,
+                pr: 2,
+                pb: 2,
+                display: "flex",
+                flexDirection: "column",
+                height: 290,
+              }}
+            >
+              {WeatherReportPanel(weatherReport)}
+            </Paper>
+          ) : (
+            <Paper
+              sx={{
+                pt: 1,
+                pl: 2,
+                pr: 2,
+                pb: 2,
+                display: "flex",
+                flexDirection: "column",
+                height: 290,
+              }}
+            >
+              <p>Clima</p>
+              <Box
+                style={{
+                  paddingLeft: 10,
+                  cursor: "pointer",
+                  display: "flex",
+                  flexFlow: "column",
+                  height: "100%",
+                }}
+                sx={{
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? theme.palette.grey[200]
+                      : "#121212",
+                }}
+              >
+                <p>
+                  No se pudo acceder al servicio meteorológico. Inténtelo más
+                  tarde. <br />
+                  Si el problema persiste contáctese con su proveedor de
+                  servicio.
+                </p>
+              </Box>
+            </Paper>
+          )}
         </Grid>
         <Grid item xs={12} lg={6}>
-          <Paper
-            sx={{
-              p: 2,
-              display: "flex",
-              flexDirection: "column",
-              alignContent: "center",
-              alignItems: "center",
-              height: 290,
-            }}
-          >
-            {cultivatedAreaBySpecies ? (
-              <Fragment>
-                {CropsBySpeciePanel(cultivatedAreaBySpecies, navigate)}
-              </Fragment>
-            ) : null}
-          </Paper>
+          {cultivatedAreaBySpecies && cultivatedAreaBySpecies.length > 0 ? (
+            <Paper
+              sx={{
+                p: 2,
+                display: "flex",
+                flexDirection: "column",
+                alignContent: "center",
+                alignItems: "center",
+                height: 290,
+              }}
+            >
+              {CropsBySpeciePanel(cultivatedAreaBySpecies)}
+            </Paper>
+          ) : (
+            <Paper
+              sx={{
+                pt: 1,
+                pl: 2,
+                pr: 2,
+                pb: 2,
+                display: "flex",
+                flexDirection: "column",
+                height: 290,
+              }}
+            >
+              <p>Resumen de cultivos</p>
+              <Box
+                style={{
+                  paddingLeft: 10,
+                  cursor: "pointer",
+                  display: "flex",
+                  flexFlow: "column",
+                  height: "100%",
+                }}
+                sx={{
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? theme.palette.grey[200]
+                      : "#121212",
+                }}
+              >
+                <p>Actualmente no hay cultivos en curso.</p>
+              </Box>
+            </Paper>
+          )}
         </Grid>
       </Grid>
     </Container>
@@ -278,7 +453,7 @@ const LandplotAreasPanel = (areasSum: any, navigate: any) => {
           },
           title: {
             display: true,
-            text: "Porcentaje de tierras ocupadas",
+            text: "Tierras ocupadas",
           },
           tooltip: {
             callbacks: {
@@ -298,27 +473,9 @@ const LandplotAreasPanel = (areasSum: any, navigate: any) => {
 
 const PendingTasksPanel = (pendingTasksNumber: any, navigate: any) => {
   return (
-    <Fragment>
-      <p>Tareas pendientes</p>
-      <Box
-        style={{
-          paddingLeft: 10,
-          cursor: "pointer",
-          display: "flex",
-          flexFlow: "column",
-          height: "100%",
-        }}
-        sx={{
-          backgroundColor: (theme) =>
-            theme.palette.mode === "light"
-              ? theme.palette.grey[200]
-              : "#121212",
-        }}
-        onClick={() => navigate(`/calendar`)}
-      >
-        <p>Actualmente hay {pendingTasksNumber} tareas pendientes.</p>
-      </Box>
-    </Fragment>
+    <Box onClick={() => navigate(`/calendar`)}>
+      <p>Actualmente hay {pendingTasksNumber} tareas pendientes.</p>
+    </Box>
   );
 };
 
@@ -327,35 +484,17 @@ const NextHarvestPanel = (nextHarvest: any, navigate: any) => {
     nextHarvest;
 
   return (
-    <Fragment>
-      <p>Próxima cosecha</p>
-      <Box
-        style={{
-          paddingLeft: 10,
-          cursor: "pointer",
-          display: "flex",
-          flexFlow: "column",
-          height: "100%",
-        }}
-        sx={{
-          backgroundColor: (theme) =>
-            theme.palette.mode === "light"
-              ? theme.palette.grey[200]
-              : "#121212",
-        }}
-        onClick={() => navigate(`/crops/${id}`)}
-      >
-        <p>
-          Parcela N°. {landplot_id} - {species_name}
-        </p>
+    <Box onClick={() => navigate(`/crops/${id}`)}>
+      <p>
+        Parcela N°. {landplot_id} - {species_name}
+      </p>
 
-        <p>Fecha estimada: {formatedDate(estimatedCropFinishDate)}</p>
-      </Box>
-    </Fragment>
+      <p>Fecha estimada: {formatedDate(estimatedCropFinishDate)}</p>
+    </Box>
   );
 };
 
-const CropsBySpeciePanel = (cultivatedAreaBySpecies: any, navigate: any) => {
+const CropsBySpeciePanel = (cultivatedAreaBySpecies: any) => {
   ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -500,6 +639,67 @@ const WeatherReportPanel = (weatherReport: any) => {
         </Typography>
       </Box>
     </Fragment>
+  );
+};
+
+const ServiceAdminDashboard = (data: any, navigate: any) => {
+  const { weatherReport } = data;
+  return (
+    <Container maxWidth="xl" sx={{ paddingBottom: 3 }}>
+      <Grid container spacing={3}>
+        <Grid item xs={12} lg={6}>
+          {weatherReport ? (
+            <Paper
+              sx={{
+                pt: 1,
+                pl: 2,
+                pr: 2,
+                pb: 2,
+                display: "flex",
+                flexDirection: "column",
+                height: 290,
+              }}
+            >
+              {WeatherReportPanel(weatherReport)}
+            </Paper>
+          ) : (
+            <Paper
+              sx={{
+                pt: 1,
+                pl: 2,
+                pr: 2,
+                pb: 2,
+                display: "flex",
+                flexDirection: "column",
+                height: 290,
+              }}
+            >
+              <p>Clima</p>
+              <Box
+                style={{
+                  paddingLeft: 10,
+                  cursor: "pointer",
+                  display: "flex",
+                  flexFlow: "column",
+                  height: "100%",
+                }}
+                sx={{
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === "light"
+                      ? theme.palette.grey[200]
+                      : "#121212",
+                }}
+              >
+                <p>
+                  No se pudo acceder al servicio meteorológico. Inténtelo más
+                  tarde.
+                </p>
+              </Box>
+            </Paper>
+          )}
+        </Grid>
+      </Grid>
+    </Container>
   );
 };
 

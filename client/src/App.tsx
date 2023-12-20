@@ -25,7 +25,6 @@ import Footer from "./components/footer";
 
 // Routes
 import Login from "./layouts/app/login";
-import Login2 from "./layouts/app/login2";
 import Home from "./layouts/app/home";
 import MainLayoutRoutes from "./routes/MainLayoutRoutes";
 
@@ -38,7 +37,6 @@ function RouteAuthLogic(): JSX.Element {
         component="main"
         sx={{
           flexGrow: 1,
-          paddingTop: 3,
           display: "flex",
           flexDirection: "column",
           minHeight: "100vh",
@@ -52,7 +50,6 @@ function RouteAuthLogic(): JSX.Element {
       >
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/login2" element={<Login2 />} />; {/* Prueba */}
           <Route path="*" element={<Navigate to="/login" />} />;
         </Routes>
       </Box>

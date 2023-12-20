@@ -103,7 +103,7 @@ export const login =
   async (dispatch) => {
     try {
       const headers: HeadersInit = {};
-      const authToken = localStorage.getItem("authToken"); //getAuthToken();
+      const authToken = localStorage.getItem("authToken");
       if (authToken) {
         headers["Authorization"] = `Bearer ${authToken}`;
       }

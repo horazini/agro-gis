@@ -43,7 +43,6 @@ const formatUniqueAndPeriodicEvents = (events: any) => {
     }
   }
 
-  console.log(formattedEvents);
   return Object.values(formattedEvents);
 };
 

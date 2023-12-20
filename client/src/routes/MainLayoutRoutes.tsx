@@ -28,8 +28,6 @@ import SpeciesList from "../layouts/species/specieslist";
 import SpeciesDetails from "../layouts/species/speciesdetails";
 import SpeciesForm from "../layouts/species/speciesform";
 
-import MapView from "../layouts/maps/map";
-import MapView2 from "../layouts/maps/map2";
 import LandplotManagementMap from "../layouts/maps/landplotmanagementmap";
 import LandplotDetails from "../layouts/maps/landplotdetails";
 
@@ -146,16 +144,6 @@ const routeList = [
     path: "/crops/:id/snapshots",
     element: <CropLoader />,
     allowed: [2, 3, 4, 5, 6],
-  },
-  {
-    path: "/map",
-    element: <MapView />,
-    allowed: [2, 3, 4, 6],
-  },
-  {
-    path: "/map2",
-    element: <MapView2 />,
-    allowed: [3, 4],
   },
   {
     path: "/calendar",

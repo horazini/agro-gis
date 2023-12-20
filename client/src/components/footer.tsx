@@ -31,7 +31,12 @@ export default function StickyFooter() {
       }}
     >
       <Container maxWidth="sm">
-        <Typography variant="body1">Texto de footer.</Typography>
+        <Typography variant="body1">
+          <Link color="inherit" href="/">
+            AgroSense
+          </Link>{" "}
+          remote crop monitoring.
+        </Typography>
         <Copyright />
       </Container>
     </Box>

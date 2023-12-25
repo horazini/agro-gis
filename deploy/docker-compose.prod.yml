@@ -2,6 +2,35 @@
 version: '3'
 
 services:
+  nginx-proxy:
+    container_name: nginx-proxy
+    image: jwilder/nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - certs:/etc/nginx/certs:ro
+      - vhostd:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - acme:/etc/acme.sh
+    labels:
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
+
+  letsencrypt:
+    container_name: letsencrypt
+    image: nginxproxy/acme-companion
+    restart: always
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - vhostd:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
   postgres:
     container_name: postgres-db
     image: postgis/postgis:14-3.4-alpine
@@ -14,8 +43,6 @@ services:
     volumes:
       - ../database/volume:/var/lib/postgresql/data
       - ../database/pgseed.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
-
-
 
   express-server:
     container_name: express-server
@@ -35,28 +62,22 @@ services:
       - express-server
 
   nginx:
-    container_name: nginx-reverse-proxy 
-    image: nginx:1.21-alpine
-    restart: unless-stopped
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    ports:
-      - '80:80'
-      - '443:443'
-    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; 
-              nginx -s reload; done & nginx -g "daemon off;"''' 
+    container_name: nginx-reverse-proxy
+    restart: always
+    build: ./nginx
+    expose:
+      - '80'
     depends_on:
       - express-server
       - client
+      - nginx-proxy
+      - letsencrypt
+    environment:
+      - VIRTUAL_HOST=agrosense.tech,www.agrosense.tech
+      - LETSENCRYPT_HOST=agrosense.tech,www.agrosense.tech
 
-  certbot:
-    image: certbot/certbot
-    restart: unless-stopped
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :;
-                 do certbot renew; sleep 12h & wait $${!}; done;'"
-                 
+volumes:
+  certs:
+  html:
+  vhostd:
+  acme:

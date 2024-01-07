@@ -727,7 +727,7 @@ ALTER TABLE ONLY public.usertype ALTER COLUMN id SET DEFAULT nextval('public.use
 -- Data for Name: tenant; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.tenant VALUES (1, 'service admin', false, 'Juan', 'Perez', 'Corrientes', 'default@mail.com', '3794000000', '2023-11-02 16:42:26.248455');
+INSERT INTO public.tenant VALUES (1, 'service admin', false, 'Juan', 'Perez', 'Corrientes', 'contact@agrosense.tech', '3794000000', '2023-11-02 16:42:26.248455');
 
 
 --
@@ -760,7 +760,7 @@ INSERT INTO public.tenant VALUES (1, 'service admin', false, 'Juan', 'Perez', 'C
 -- Data for Name: user_account; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.user_account VALUES (1, 1, 1, 'default@gmail.com', 'admin', 'Juan Pedro', 'Perez', '$2a$10$IKfb8LgJfzoMZEdLlGgqP.wEuTpFNLbDXPsigdfEiZwC2PLwWQldW', false);
+INSERT INTO public.user_account VALUES (1, 1, 1, 'admin@agrosense.tech', 'admin', 'Juan Pedro', 'Perez', '$2a$10$IKfb8LgJfzoMZEdLlGgqP.wEuTpFNLbDXPsigdfEiZwC2PLwWQldW', false);
 
 
 --

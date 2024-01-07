@@ -176,7 +176,6 @@ const Profile = ({ userData }: any) => {
           {surname}, {names}
         </h2>
         <h2>nombre de usuario: {username}</h2>
-        <h2>Correo: {mail_address}</h2>
         <h2>Rol: {UsertypeIDToString(usertype_id)}</h2>
         <h2>Correo electrónico: {mail_address}</h2>
         <Box
@@ -259,7 +258,7 @@ const PasswordTextfield = ({
 
   return (
     <FormControl sx={{ m: 1, width: "25ch" }} variant="outlined" error={error}>
-      <InputLabel>Contraseña actual</InputLabel>
+      <InputLabel>{label}</InputLabel>
       <OutlinedInput
         label={label}
         name={name}

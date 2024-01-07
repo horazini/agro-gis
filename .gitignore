@@ -3,7 +3,7 @@ node_modules/
 
 # Environment variable files
 .env*
-!.env.*example
+!.env*.example
 
 # Docker container local DB volume
 database/volume/*

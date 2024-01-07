@@ -200,7 +200,7 @@ const TenantsDashboard = (data: any, navigate: any) => {
             }}
           >
             <Fragment>
-              <p>Tareas pendientes</p>
+              <p>Tareas atrasadas</p>
 
               <Box
                 style={{
@@ -222,7 +222,7 @@ const TenantsDashboard = (data: any, navigate: any) => {
                     {PendingTasksPanel(pendingTasksNumber, navigate)}
                   </Fragment>
                 ) : (
-                  <p>No existen tareas pendientes.</p>
+                  <p>No existen tareas atrasadas.</p>
                 )}
               </Box>
             </Fragment>
@@ -230,8 +230,7 @@ const TenantsDashboard = (data: any, navigate: any) => {
         </Grid>
         <Grid item xs={12} lg={3}>
           {areasSum &&
-          areasSum.availableAreasSum > 0 &&
-          areasSum.occupiedAreasSum > 0 ? (
+          (areasSum.availableAreasSum > 0 || areasSum.occupiedAreasSum > 0) ? (
             <Paper
               sx={{
                 p: 2,
@@ -474,7 +473,7 @@ const LandplotAreasPanel = (areasSum: any, navigate: any) => {
 const PendingTasksPanel = (pendingTasksNumber: any, navigate: any) => {
   return (
     <Box onClick={() => navigate(`/calendar`)}>
-      <p>Actualmente hay {pendingTasksNumber} tareas pendientes.</p>
+      <p>Actualmente hay {pendingTasksNumber} tareas atrasadas.</p>
     </Box>
   );
 };
@@ -512,7 +511,7 @@ const CropsBySpeciePanel = (cultivatedAreaBySpecies: any) => {
       },
       title: {
         display: true,
-        text: "Área cultivada por especie",
+        text: "Área en cultivo por especie",
       },
       tooltip: {
         callbacks: {

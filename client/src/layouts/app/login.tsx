@@ -172,9 +172,9 @@ export default function SignIn() {
               alignItems="center"
               paddingTop={3}
             >
-              <Button fullWidth variant="text" sx={{ mt: 3, mb: 2 }}>
+              {/* <Button fullWidth variant="text" sx={{ mt: 3, mb: 2 }}>
                 Olvidé mi contraseña
-              </Button>
+              </Button> */}
               <Button
                 type="submit"
                 fullWidth

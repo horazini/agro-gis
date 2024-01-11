@@ -4,19 +4,12 @@ import {
   Card,
   CardContent,
   Chip,
-  Collapse,
-  IconButton,
   Typography,
 } from "@mui/material";
 import { Fragment, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import {
-  FormatListBulleted,
-  KeyboardArrowDown,
-  KeyboardArrowUp,
-  AddBusiness,
-} from "@mui/icons-material/";
+import { FormatListBulleted, AddBusiness } from "@mui/icons-material/";
 
 import { tenantMainData, getTenants } from "../../utils/services";
 import { PageTitle } from "../../components/customComponents";
@@ -37,7 +30,6 @@ function TenantsList() {
 
   const navigate = useNavigate();
 
-  const [open, setOpen] = useState(-1);
   return (
     <Fragment>
       <Box
@@ -78,37 +70,16 @@ function TenantsList() {
                 ) : null}
               </Box>
 
-              <Box>
-                <Button
-                  variant="contained"
-                  color="warning"
-                  onClick={() => navigate(`/tenants/${tenant.id}`)}
-                  style={{ marginLeft: ".5rem" }}
-                  startIcon={<FormatListBulleted />}
-                >
-                  Ver detalles
-                </Button>
-
-                <IconButton
-                  aria-label="expand row"
-                  size="small"
-                  onClick={() => setOpen(open === tenant.id ? -1 : tenant.id)}
-                  style={{ marginLeft: ".5rem" }}
-                >
-                  {open === tenant.id ? (
-                    <KeyboardArrowUp />
-                  ) : (
-                    <KeyboardArrowDown />
-                  )}
-                </IconButton>
-              </Box>
+              <Button
+                variant="contained"
+                color="warning"
+                onClick={() => navigate(`/tenants/${tenant.id}`)}
+                style={{ marginLeft: ".5rem" }}
+                startIcon={<FormatListBulleted />}
+              >
+                Ver detalles
+              </Button>
             </CardContent>
-
-            <Collapse in={open === tenant.id} timeout="auto" unmountOnExit>
-              <CardContent>
-                <Typography>Info</Typography>
-              </CardContent>
-            </Collapse>
           </Card>
         ))}
     </Fragment>

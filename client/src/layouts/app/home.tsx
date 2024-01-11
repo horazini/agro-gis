@@ -527,7 +527,7 @@ const CropsBySpeciePanel = (cultivatedAreaBySpecies: any) => {
   };
 
   const barData = {
-    labels: ["Especies"],
+    labels: ["Especie"],
     datasets: cultivatedAreaBySpecies,
   };
 

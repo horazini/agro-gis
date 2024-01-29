@@ -1,5 +1,6 @@
 import {
   Box,
+  BoxProps,
   Card,
   CardMedia,
   Container,
@@ -34,6 +35,44 @@ import { useNavigate } from "react-router-dom";
 import { formatedDate } from "../../utils/functions";
 import { FormattedArea } from "../../components/mapcomponents";
 import { WMOcodesInterpretation } from "../../utils/wmo_weather_condition_codes_interpretation";
+
+const textPanelStyle = {
+  p: 2,
+  pt: 1,
+  display: "flex",
+  flexDirection: "column",
+  height: 290,
+};
+
+const chartPanelStyle = {
+  p: 2,
+  display: "flex",
+  flexDirection: "column",
+  alignContent: "center",
+  alignItems: "center",
+  height: 290,
+};
+
+export const CustomBox: React.FC<BoxProps> = ({ children, ...props }) => {
+  return (
+    <Box
+      style={{
+        paddingLeft: 10,
+        cursor: "pointer",
+        display: "flex",
+        flexFlow: "column",
+        height: "100%",
+      }}
+      sx={{
+        backgroundColor: (theme) =>
+          theme.palette.mode === "light" ? theme.palette.grey[200] : "#121212",
+      }}
+      {...props}
+    >
+      {children}
+    </Box>
+  );
+};
 
 const DashboardLoader = () => {
   PageTitle("Inicio");
@@ -170,7 +209,7 @@ const DashboardLoader = () => {
       {data
         ? userTypeId !== 1
           ? TenantsDashboard(data, navigate)
-          : ServiceAdminDashboard(data, navigate)
+          : ServiceAdminDashboard(data)
         : null}
     </Fragment>
   );
@@ -188,35 +227,11 @@ const TenantsDashboard = (data: any, navigate: any) => {
     <Container maxWidth="xl" sx={{ paddingBottom: 3 }}>
       <Grid container spacing={3}>
         <Grid item xs={12} lg={5}>
-          <Paper
-            sx={{
-              pt: 1,
-              pl: 2,
-              pr: 2,
-              pb: 2,
-              display: "flex",
-              flexDirection: "column",
-              height: 290,
-            }}
-          >
+          <Paper sx={textPanelStyle}>
             <Fragment>
               <p>Tareas atrasadas</p>
 
-              <Box
-                style={{
-                  paddingLeft: 10,
-                  cursor: "pointer",
-                  display: "flex",
-                  flexFlow: "column",
-                  height: "100%",
-                }}
-                sx={{
-                  backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? theme.palette.grey[200]
-                      : "#121212",
-                }}
-              >
+              <CustomBox>
                 {pendingTasksNumber ? (
                   <Fragment>
                     {PendingTasksPanel(pendingTasksNumber, navigate)}
@@ -224,193 +239,69 @@ const TenantsDashboard = (data: any, navigate: any) => {
                 ) : (
                   <p>No existen tareas atrasadas.</p>
                 )}
-              </Box>
+              </CustomBox>
             </Fragment>
           </Paper>
         </Grid>
         <Grid item xs={12} lg={3}>
           {areasSum &&
           (areasSum.availableAreasSum > 0 || areasSum.occupiedAreasSum > 0) ? (
-            <Paper
-              sx={{
-                p: 2,
-                display: "flex",
-                flexDirection: "column",
-                alignContent: "center",
-                alignItems: "center",
-                height: 290,
-              }}
-            >
+            <Paper sx={chartPanelStyle}>
               {LandplotAreasPanel(areasSum, navigate)}
             </Paper>
           ) : (
-            <Paper
-              sx={{
-                pt: 1,
-                pl: 2,
-                pr: 2,
-                pb: 2,
-                display: "flex",
-                flexDirection: "column",
-                height: 290,
-              }}
-            >
+            <Paper sx={textPanelStyle}>
               <p>Resumen de parcelas</p>
-              <Box
-                style={{
-                  paddingLeft: 10,
-                  cursor: "pointer",
-                  display: "flex",
-                  flexFlow: "column",
-                  height: "100%",
-                }}
-                sx={{
-                  backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? theme.palette.grey[200]
-                      : "#121212",
-                }}
-              >
+              <CustomBox>
                 <p>No hay parcelas cargadas en el sistema.</p>
-              </Box>
+              </CustomBox>
             </Paper>
           )}
         </Grid>
         <Grid item xs={12} lg={4}>
-          <Paper
-            sx={{
-              pt: 1,
-              pl: 2,
-              pr: 2,
-              pb: 2,
-              display: "flex",
-              flexDirection: "column",
-              height: 290,
-            }}
-          >
+          <Paper sx={textPanelStyle}>
             <Fragment>
               <p>Próxima cosecha</p>
-              <Box
-                style={{
-                  paddingLeft: 10,
-                  cursor: "pointer",
-                  display: "flex",
-                  flexFlow: "column",
-                  height: "100%",
-                }}
-                sx={{
-                  backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? theme.palette.grey[200]
-                      : "#121212",
-                }}
-              >
+              <CustomBox>
                 {nextHarvest ? (
                   <Fragment>{NextHarvestPanel(nextHarvest, navigate)}</Fragment>
                 ) : (
                   <p>Acutalmente no hay cultivos en curso.</p>
                 )}
-              </Box>
+              </CustomBox>
             </Fragment>
           </Paper>
         </Grid>
         <Grid item xs={12} lg={6}>
           {weatherReport ? (
-            <Paper
-              sx={{
-                pt: 1,
-                pl: 2,
-                pr: 2,
-                pb: 2,
-                display: "flex",
-                flexDirection: "column",
-                height: 290,
-              }}
-            >
+            <Paper sx={textPanelStyle}>
               {WeatherReportPanel(weatherReport)}
             </Paper>
           ) : (
-            <Paper
-              sx={{
-                pt: 1,
-                pl: 2,
-                pr: 2,
-                pb: 2,
-                display: "flex",
-                flexDirection: "column",
-                height: 290,
-              }}
-            >
+            <Paper sx={textPanelStyle}>
               <p>Clima</p>
-              <Box
-                style={{
-                  paddingLeft: 10,
-                  cursor: "pointer",
-                  display: "flex",
-                  flexFlow: "column",
-                  height: "100%",
-                }}
-                sx={{
-                  backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? theme.palette.grey[200]
-                      : "#121212",
-                }}
-              >
+              <CustomBox>
                 <p>
                   No se pudo acceder al servicio meteorológico. Inténtelo más
                   tarde. <br />
                   Si el problema persiste contáctese con su proveedor de
                   servicio.
                 </p>
-              </Box>
+              </CustomBox>
             </Paper>
           )}
         </Grid>
         <Grid item xs={12} lg={6}>
           {cultivatedAreaBySpecies && cultivatedAreaBySpecies.length > 0 ? (
-            <Paper
-              sx={{
-                p: 2,
-                display: "flex",
-                flexDirection: "column",
-                alignContent: "center",
-                alignItems: "center",
-                height: 290,
-              }}
-            >
+            <Paper sx={chartPanelStyle}>
               {CropsBySpeciePanel(cultivatedAreaBySpecies)}
             </Paper>
           ) : (
-            <Paper
-              sx={{
-                pt: 1,
-                pl: 2,
-                pr: 2,
-                pb: 2,
-                display: "flex",
-                flexDirection: "column",
-                height: 290,
-              }}
-            >
+            <Paper sx={textPanelStyle}>
               <p>Resumen de cultivos</p>
-              <Box
-                style={{
-                  paddingLeft: 10,
-                  cursor: "pointer",
-                  display: "flex",
-                  flexFlow: "column",
-                  height: "100%",
-                }}
-                sx={{
-                  backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? theme.palette.grey[200]
-                      : "#121212",
-                }}
-              >
+              <CustomBox>
                 <p>Actualmente no hay cultivos en curso.</p>
-              </Box>
+              </CustomBox>
             </Paper>
           )}
         </Grid>
@@ -472,7 +363,7 @@ const LandplotAreasPanel = (areasSum: any, navigate: any) => {
 
 const PendingTasksPanel = (pendingTasksNumber: any, navigate: any) => {
   return (
-    <Box onClick={() => navigate(`/calendar`)}>
+    <Box sx={{ height: "100%" }} onClick={() => navigate(`/calendar`)}>
       <p>Actualmente hay {pendingTasksNumber} tareas atrasadas.</p>
     </Box>
   );
@@ -483,7 +374,7 @@ const NextHarvestPanel = (nextHarvest: any, navigate: any) => {
     nextHarvest;
 
   return (
-    <Box onClick={() => navigate(`/crops/${id}`)}>
+    <Box sx={{ height: "100%" }} onClick={() => navigate(`/crops/${id}`)}>
       <p>
         Parcela N°. {landplot_id} - {species_name}
       </p>
@@ -565,17 +456,13 @@ const WeatherReportPanel = (weatherReport: any) => {
     description: string;
     image: string;
   } => {
-    const asd = WMOcodesInterpretation[weather_code];
-
-    let conditionData;
+    const weatherInterpretation = WMOcodesInterpretation[weather_code];
 
     if (is_day === 1) {
-      conditionData = asd.day;
+      return weatherInterpretation.day;
     } else {
-      conditionData = asd.night;
+      return weatherInterpretation.night;
     }
-
-    return conditionData;
   };
 
   return (
@@ -602,20 +489,7 @@ const WeatherReportPanel = (weatherReport: any) => {
         </Box>
       </Box>
 
-      <Box
-        style={{
-          paddingLeft: 10,
-          cursor: "pointer",
-          display: "flex",
-          flexFlow: "column",
-          height: "100%",
-        }}
-        sx={{
-          backgroundColor: (theme) =>
-            theme.palette.mode === "light"
-              ? theme.palette.grey[200]
-              : "#121212",
-        }}
+      <CustomBox
         onClick={() => {
           window.location.href = "https://openweathermap.org/";
         }}
@@ -636,64 +510,30 @@ const WeatherReportPanel = (weatherReport: any) => {
           Viento: {formatWeatherParameter("wind_speed_10m")}{" "}
           {formatWindDirectionDegrees(wind_direction_10m)}
         </Typography>
-      </Box>
+      </CustomBox>
     </Fragment>
   );
 };
 
-const ServiceAdminDashboard = (data: any, navigate: any) => {
+const ServiceAdminDashboard = (data: any) => {
   const { weatherReport } = data;
   return (
     <Container maxWidth="xl" sx={{ paddingBottom: 3 }}>
       <Grid container spacing={3}>
         <Grid item xs={12} lg={6}>
           {weatherReport ? (
-            <Paper
-              sx={{
-                pt: 1,
-                pl: 2,
-                pr: 2,
-                pb: 2,
-                display: "flex",
-                flexDirection: "column",
-                height: 290,
-              }}
-            >
+            <Paper sx={textPanelStyle}>
               {WeatherReportPanel(weatherReport)}
             </Paper>
           ) : (
-            <Paper
-              sx={{
-                pt: 1,
-                pl: 2,
-                pr: 2,
-                pb: 2,
-                display: "flex",
-                flexDirection: "column",
-                height: 290,
-              }}
-            >
+            <Paper sx={textPanelStyle}>
               <p>Clima</p>
-              <Box
-                style={{
-                  paddingLeft: 10,
-                  cursor: "pointer",
-                  display: "flex",
-                  flexFlow: "column",
-                  height: "100%",
-                }}
-                sx={{
-                  backgroundColor: (theme) =>
-                    theme.palette.mode === "light"
-                      ? theme.palette.grey[200]
-                      : "#121212",
-                }}
-              >
+              <CustomBox>
                 <p>
                   No se pudo acceder al servicio meteorológico. Inténtelo más
                   tarde.
                 </p>
-              </Box>
+              </CustomBox>
             </Paper>
           )}
         </Grid>

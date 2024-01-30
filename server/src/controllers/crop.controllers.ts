@@ -268,6 +268,10 @@ export const getCropDataById = async (
   try {
     const id = parseInt(req.params.id);
 
+    if (!id) {
+      return res.status(400);
+    }
+
     const cropQuery = `
       SELECT 
       id,
@@ -284,6 +288,10 @@ export const getCropDataById = async (
       FROM crop WHERE id = $1
     `;
     const cropResponse = (await pool.query(cropQuery, [id])).rows[0];
+
+    if (!cropResponse) {
+      return res.status(404).send("Not Found");
+    }
 
     const landplot = {
       id: cropResponse.landplot_id,

@@ -59,6 +59,7 @@ import {
   StandardDatePicker,
   mySnackBars,
 } from "../../components/customComponents";
+import { ResourceNotFound } from "../app/nomatch";
 
 import { format } from "date-fns";
 import {
@@ -87,9 +88,10 @@ function sortedEvents(
   return sortedEvents;
 }
 
-const CropDetails = () => {
+const CropLoader = () => {
   PageTitle("Cultivo");
   const params = useParams();
+  const [loadError, setLoadError] = useState<boolean>(false);
 
   const [cropFeature, setCropFeature] = useState<Feature>();
 
@@ -100,9 +102,9 @@ const CropDetails = () => {
     setDataReloadCounter((prevCounter: number) => prevCounter + 1);
   };
 
-  const loadCrop = async (id: string) => {
+  const loadCrop = async (cropId: number) => {
     try {
-      const data = await getCropById(id);
+      const data = await getCropById(cropId);
       setCropFeature(data);
     } catch (error) {
       console.log(error);
@@ -110,11 +112,28 @@ const CropDetails = () => {
   };
 
   useEffect(() => {
-    if (params.id) {
-      loadCrop(params.id);
+    const cropId = Number(params.id);
+    if (!isNaN(cropId)) {
+      loadCrop(cropId);
+    } else {
+      setLoadError(true);
     }
   }, [params.id, dataReloadCounter]);
 
+  return cropFeature ? (
+    <CropDetails cropFeature={cropFeature} refreshPage={refreshPage} />
+  ) : loadError ? (
+    <ResourceNotFound />
+  ) : null;
+};
+
+const CropDetails = ({
+  cropFeature,
+  refreshPage,
+}: {
+  cropFeature: Feature;
+  refreshPage: () => void;
+}) => {
   return (
     <Box
       style={{
@@ -1001,4 +1020,4 @@ const FinalHarvestReport = ({ cropId, minDate, HandlePutData }: any) => {
     </Box>
   );
 };
-export default CropDetails;
+export default CropLoader;

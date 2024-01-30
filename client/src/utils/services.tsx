@@ -352,7 +352,7 @@ export const postCrop = async (crop: any) => {
   return res;
 };
 
-export const getCropById = async (id: string) => {
+export const getCropById = async (id: number) => {
   const res = await fetch(`${API}/cropdata/${id}`);
   const data = await res.json();
   return data;

@@ -1,46 +1,46 @@
-import { Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/customComponents";
 
-export default function NoMatch() {
-  PageTitle("404");
-
+const NoMatchSkeleton = ({ message }: { message: string }) => {
   return (
-    <div
+    <Box
       style={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        padding: "10vh",
+        padding: "20vh",
       }}
     >
       <Typography
+        variant="h4"
         component={"span"}
-        style={{
-          textAlign: "center",
-        }}
+        sx={{ fontWeight: "bold", textAlign: "center" }}
       >
-        <h1>
-          Error 404
-          <br />
-        </h1>
-        <h1>
-          Página no encontrada 🤔
-          <br />
-          <br />
-        </h1>
-        <h1>
-          <Link
-            to="/"
-            style={{
-              textDecoration: "none",
-              color: "inherit",
-            }}
-          >
-            Ir a inicio
-          </Link>
-        </h1>
+        Error 404
+        <br />
+        {message}
+        <br />
+        <br />
+        <Link
+          to="/"
+          style={{
+            textDecoration: "none",
+            color: "inherit",
+          }}
+        >
+          Ir a inicio
+        </Link>
       </Typography>
-    </div>
+    </Box>
   );
+};
+
+export default function NoMatch() {
+  PageTitle("404");
+  return <NoMatchSkeleton message={"Página no encontrada 🤔"} />;
+}
+
+export function ResourceNotFound() {
+  return <NoMatchSkeleton message={"Recurso no encontrado 🤔"} />;
 }

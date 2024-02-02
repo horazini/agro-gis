@@ -279,7 +279,7 @@ export const postSpeciesData = async (speciesData: speciesDataType) => {
 };
 
 export const putSpeciesData = async (
-  updateData: any,
+  updateData: object,
   speciesId: string | undefined
 ) => {
   const res = await fetch(`${API}/species/${speciesId}`, {
@@ -326,7 +326,7 @@ export const getTenantGeoData = async (tenantId: number) => {
   return data;
 };
 
-export const putFeatures = async (features: any) => {
+export const putFeatures = async (features: object) => {
   const res = await fetch(`${API}/features`, {
     method: "PUT",
     body: JSON.stringify(features),
@@ -343,7 +343,7 @@ export const getLandplotData = async (tenantId: number) => {
 
 // Crops
 
-export const postCrop = async (crop: any) => {
+export const postCrop = async (crop: object) => {
   const res = await fetch(`${API}/crop`, {
     method: "POST",
     body: JSON.stringify(crop),
@@ -365,7 +365,7 @@ export const getTenantCrops = async (tenantId: number) => {
 };
 
 export const setDoneCropEvent = async (
-  updateData: any,
+  updateData: object,
   cropEventId: number
 ) => {
   const res = await fetch(`${API}/donecropevent/${cropEventId}`, {
@@ -376,7 +376,7 @@ export const setDoneCropEvent = async (
   return res.status;
 };
 
-export const addCropEvent = async (eventData: any) => {
+export const addCropEvent = async (eventData: object) => {
   const res = await fetch(`${API}/cropevent`, {
     method: "POST",
     body: JSON.stringify(eventData),
@@ -386,7 +386,7 @@ export const addCropEvent = async (eventData: any) => {
 };
 
 export const setFinishedCropStage = async (
-  updateData: any,
+  updateData: object,
   cropStageId: number
 ) => {
   const res = await fetch(`${API}/donecropstage/${cropStageId}`, {
@@ -397,7 +397,7 @@ export const setFinishedCropStage = async (
   return res.status;
 };
 
-export const setFinishedCrop = async (cropData: any, cropId: number) => {
+export const setFinishedCrop = async (cropData: object, cropId: number) => {
   const res = await fetch(`${API}/donecrop/${cropId}`, {
     method: "PUT",
     body: JSON.stringify(cropData),
@@ -407,7 +407,7 @@ export const setFinishedCrop = async (cropData: any, cropId: number) => {
 };
 
 export const setCropStageComment = async (
-  comment: any,
+  comment: object,
   cropStageId: number
 ) => {
   const res = await fetch(`${API}/cropstagecomment/${cropStageId}`, {
@@ -418,7 +418,7 @@ export const setCropStageComment = async (
   return res.status;
 };
 
-export const setCropComment = async (comment: any, cropId: number) => {
+export const setCropComment = async (comment: object, cropId: number) => {
   const res = await fetch(`${API}/cropcomment/${cropId}`, {
     method: "PUT",
     body: JSON.stringify(comment),
@@ -460,7 +460,7 @@ export const getFulfilledCropsCalendarTenantTasks = async (
 
 // Snapshots
 
-export const postLandplotSnapshot = async (snapshotData: any) => {
+export const postLandplotSnapshot = async (snapshotData: object) => {
   const res = await fetch(`${API}/snapshot`, {
     method: "POST",
     body: JSON.stringify(snapshotData),
@@ -491,7 +491,7 @@ export const deleteSnapshot = async (snapshotId: number) => {
 
 // Reports
 
-export const getSpeciesReport = async (speciesReportData: any) => {
+export const getSpeciesReport = async (speciesReportData: object) => {
   const res = await fetch(`${API}/speciesreport`, {
     method: "PUT",
     body: JSON.stringify(speciesReportData),
@@ -500,7 +500,7 @@ export const getSpeciesReport = async (speciesReportData: any) => {
   return res;
 };
 
-export const getLandplotReport = async (landplotReportData: any) => {
+export const getLandplotReport = async (landplotReportData: object) => {
   const res = await fetch(`${API}/landplotreport`, {
     method: "PUT",
     body: JSON.stringify(landplotReportData),

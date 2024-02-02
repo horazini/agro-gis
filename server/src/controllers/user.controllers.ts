@@ -6,7 +6,28 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
 
-// Métodos de operaciones CRUD de usuarios
+// test controller
+
+export const getTime = async (req: Request, res: Response) => {
+  const result = await pool.query("SELECT NOW()");
+  res.json(result.rows[0].now);
+};
+
+export const serviceAdminAuth = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { id, usertype_id, tenant_id } = req.body.authuser;
+  if (usertype_id !== 1) {
+    return res
+      .status(401)
+      .json({ error: "Not a service admin, authorization denied." });
+  }
+  next();
+};
+
+// CRUD methods for users
 
 export const getUsers = async (
   req: Request,

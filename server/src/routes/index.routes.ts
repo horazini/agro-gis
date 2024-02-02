@@ -1,37 +1,20 @@
 import { Router } from "express";
 const router = Router();
 
-// Tenant, user and auth logic
+// Test endpoint
 
-// Tenants
-
-import {
-  getTime,
-  getTenants,
-  updateTenant,
-  getTenantById,
-  createTenantWithUsers,
-  getEnabledTenantUsers,
-  getTenantData,
-  tenantNameAlreadyExists,
-  renameTenantNameAlreadyExists,
-  disableTenant,
-  enableTenant,
-} from "../controllers/tenant.controllers";
+import { getTime } from "../controllers/user.controllers";
 
 router.get("/", getTime);
 
-router.get("/tenants", getTenants);
-router.get("/tenant/:id", getTenantById);
+// Tenant, user and auth logic
 
-router.post("/tenantdata", createTenantWithUsers);
-router.put("/tenantdata", updateTenant);
-router.get("/tenantusers/:id", getEnabledTenantUsers);
-router.get("/tenantdata/:id", getTenantData);
-router.post("/tenantnameexists", tenantNameAlreadyExists);
-router.post("/renametenantnameexists", renameTenantNameAlreadyExists);
-router.put("/disabletenant/:id", disableTenant);
-router.put("/enabletenant/:id", enableTenant);
+// auth
+
+import { verifyCredentials, login } from "../controllers/user.controllers";
+
+router.post("/verifycredentials", verifyCredentials);
+router.post("/login", login);
 
 // Users
 
@@ -61,12 +44,31 @@ router.put("/disableuser/:id", disableUser);
 router.put("/enableuser/:id", enableUser);
 router.put("/userpassword", resetUserPassword);
 
-// auth
+// Tenants
 
-import { verifyCredentials, login } from "../controllers/user.controllers";
+import {
+  getTenants,
+  updateTenant,
+  getTenantById,
+  createTenantWithUsers,
+  getEnabledTenantUsers,
+  getTenantData,
+  tenantNameAlreadyExists,
+  renameTenantNameAlreadyExists,
+  disableTenant,
+  enableTenant,
+} from "../controllers/tenant.controllers";
 
-router.post("/verifycredentials", verifyCredentials);
-router.post("/login", login);
+router.get("/tenants", getTenants);
+router.get("/tenant/:id", getTenantById);
+router.post("/tenantdata", createTenantWithUsers);
+router.put("/tenantdata", updateTenant);
+router.get("/tenantusers/:id", getEnabledTenantUsers);
+router.get("/tenantdata/:id", getTenantData);
+router.post("/tenantnameexists", tenantNameAlreadyExists);
+router.post("/renametenantnameexists", renameTenantNameAlreadyExists);
+router.put("/disabletenant/:id", disableTenant);
+router.put("/enabletenant/:id", enableTenant);
 
 // Data tables
 

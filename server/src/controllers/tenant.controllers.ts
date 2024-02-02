@@ -2,15 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { QueryResult } from "pg";
 import pool from "../database";
 
-// test controller
-
-export const getTime = async (req: Request, res: Response) => {
-  const result = await pool.query("SELECT NOW()");
-  res.json(result.rows[0].now);
-};
-
-// real tenant controllers
-
 export const getTenants = async (
   req: Request,
   res: Response,

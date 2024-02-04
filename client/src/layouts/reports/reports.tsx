@@ -116,7 +116,7 @@ const StatisticalReports = () => {
       }
 
       if (res?.status === 200) {
-        const reportResponse = await res.json();
+        const reportResponse = res.data;
         setReportResponse(reportResponse);
       } else {
         setSnackBar(errorSnackBar);

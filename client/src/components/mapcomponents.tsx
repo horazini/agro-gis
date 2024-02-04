@@ -710,6 +710,9 @@ export const SentinelSnapshoter = ({ landplot }: any) => {
   const handleConfirmSaveSnapshot = async () => {
     setLoading(true);
     try {
+      if (JSONSnapshotData === null) {
+        throw new Error("Null snapshot data!");
+      }
       let res = await postLandplotSnapshot(JSONSnapshotData);
 
       if (res === 200) {

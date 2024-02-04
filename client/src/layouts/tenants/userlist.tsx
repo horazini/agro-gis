@@ -31,18 +31,12 @@ const UserListLoad = () => {
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
-  const [tenantData, setTenantData] = useState<{
-    tenantName: string;
-    users: never[];
-  }>({
-    tenantName: "",
-    users: [],
-  });
+  const [tenantUsers, setTenantUsers] = useState<user[]>([]);
 
   const loadTenant = async (id: number) => {
     try {
       const data = await getTenantUsers(id);
-      setTenantData(data);
+      setTenantUsers(data);
     } catch (error) {
       console.log(error);
     }
@@ -54,7 +48,7 @@ const UserListLoad = () => {
     }
   }, [tenantId]);
 
-  return <Fragment>{UserList(tenantData.users)}</Fragment>;
+  return <Fragment>{UserList(tenantUsers)}</Fragment>;
 };
 
 const UserList = (users: user[]) => {

@@ -111,14 +111,14 @@ const UserDetails = ({ userData }: any) => {
                 color={deleted ? "success" : "error"}
                 sx={{ mr: 2 }}
               >
-                {deleted ? "Habilitar" : "Eliminar"}
+                {deleted ? "Habilitar" : "Inhabilitar"}
               </Button>
             }
             disabled={id === userId}
             msg={
               deleted
                 ? "Se habilitará al usuario, devolviendo el acceso al servicio."
-                : "Se eliminará al usuario, impidiendo su acceso al servicio."
+                : "Se inhabilitará al usuario, impidiendo su acceso al servicio."
             }
             navigateDir={"/users"}
             onConfirm={deleted ? handleEnableUser : handleDisableUser}

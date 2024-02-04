@@ -121,7 +121,7 @@ const UserForm = ({ userData, isEditingForm, setUserData }: any) => {
       length: "El nombre de usuario debe tener al menos 6 caracteres.",
       regex:
         "El nombre de usuario sólo puede contener minúsculas (a-z), números (0-9), puntos (.) y guiones bajos (_).",
-      duplicate: "El nombre de usuario ya existe.",
+      duplicate: "El nombre de usuario ya está en uso.",
     };
 
     if (!isUsernameLengthValid) {

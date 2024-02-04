@@ -147,7 +147,7 @@ const UserList = (users: user[]) => {
       {users.length > 0 ? (
         <Fragment>
           {users.map((user) => (
-            <UserCard user={user} />
+            <UserCard user={user} key={user.id} />
           ))}
         </Fragment>
       ) : (

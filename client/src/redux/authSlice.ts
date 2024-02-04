@@ -5,6 +5,7 @@ import { RootState } from "./store";
 import { API } from "../config";
 
 interface AuthState {
+  authToken: string | null;
   isAuthenticated: boolean;
   userId: number | null;
   tenantId: number | null;
@@ -17,6 +18,7 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
+  authToken: null,
   isAuthenticated: false,
   userId: null,
   tenantId: null,
@@ -37,6 +39,7 @@ export const authSlice = createSlice({
     loginSuccess: (
       state,
       action: PayloadAction<{
+        token: string;
         tenantId: number;
         tenantName: string;
         userTypeId: number;
@@ -47,6 +50,7 @@ export const authSlice = createSlice({
         surname: string;
       }>
     ) => {
+      state.authToken = action.payload.token;
       state.isAuthenticated = true;
       state.tenantId = action.payload.tenantId;
       state.tenantName = action.payload.tenantName;
@@ -57,6 +61,7 @@ export const authSlice = createSlice({
       state.names = action.payload.names;
       state.surname = action.payload.surname;
 
+      localStorage.setItem("authToken", action.payload.token);
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("tenantId", String(action.payload.tenantId));
       localStorage.setItem("tenantName", String(action.payload.tenantName));
@@ -71,6 +76,7 @@ export const authSlice = createSlice({
       state.isAuthenticated = false;
     },
     logoutSuccess: (state) => {
+      state.authToken = null;
       state.isAuthenticated = false;
       state.tenantId = null;
       state.tenantName = null;
@@ -80,6 +86,7 @@ export const authSlice = createSlice({
       state.username = null;
       state.names = null;
       state.surname = null;
+      localStorage.removeItem("authToken");
       localStorage.removeItem("isAuthenticated");
       localStorage.removeItem("tenantId");
       localStorage.removeItem("tenantName");
@@ -94,6 +101,8 @@ export const authSlice = createSlice({
 });
 
 export const { loginSuccess, loginFailure, logoutSuccess } = authSlice.actions;
+
+// ------------------------------------ //
 
 export const login =
   (formData: {
@@ -130,10 +139,9 @@ export const login =
         surname,
       } = res;
 
-      localStorage.setItem("authToken", token); // setAuthToken(token: string);
-
       dispatch(
         loginSuccess({
+          token,
           tenantId,
           userTypeId,
           tenantName,
@@ -155,11 +163,7 @@ export const login =
 export const logout =
   (): ThunkAction<Promise<void>, RootState, unknown, any> =>
   async (dispatch) => {
-    localStorage.removeItem("authToken"); //removeAuthToken();
     dispatch(logoutSuccess());
   };
-
-export const selectIsAuthenticated = (state: RootState) =>
-  state.auth.isAuthenticated;
 
 export default authSlice.reducer;

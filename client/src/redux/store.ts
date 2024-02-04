@@ -4,6 +4,7 @@ import authReducer from "./authSlice";
 
 const initialState = {
   auth: {
+    authToken: localStorage.getItem("authToken"),
     isAuthenticated: localStorage.getItem("isAuthenticated") === "true", // Establece al campo 'isAuthenticated' del estado de Redux, el mismo valor que el de 'isAuthenticated' en el objeto localStorage.
     tenantId: Number(localStorage.getItem("tenantId")),
     tenantName: localStorage.getItem("tenantName"),

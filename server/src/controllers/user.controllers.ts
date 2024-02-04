@@ -205,8 +205,8 @@ export const login = async (
   if (isUserEnabled !== "OK") {
     return res.status(401).json({ error: isUserEnabled });
   }
-  const isValidCredentials = await verifyUserCredentials(username, password);
-  if (!isValidCredentials) {
+  const areCredentialsValid = await verifyUserCredentials(username, password);
+  if (!areCredentialsValid) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
@@ -223,7 +223,7 @@ export const login = async (
       user_account.username = $1;
     `;
   const result = await pool.query(query, [username]);
-  console.log(result.rows[0]);
+
   const {
     tenant_id: tenantId,
     tenant_name: tenantName,
@@ -234,7 +234,13 @@ export const login = async (
     surname: surname,
   } = result.rows[0];
 
-  const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "1h" });
+  const token = jwt.sign(
+    { id: userId, usertype_id: userTypeId, tenant_id: tenantId },
+    JWT_SECRET,
+    {
+      expiresIn: "6h",
+    }
+  );
 
   res.json({
     token,

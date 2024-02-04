@@ -1,5 +1,24 @@
 import { API } from "../config";
+import axios from "axios";
 import bcrypt from "bcryptjs";
+
+const api = axios.create({
+  baseURL: API,
+});
+
+// Interceptor to add auth token to all requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Project hash function
 
@@ -43,9 +62,14 @@ export type tenantDataType = {
 };
 
 export const getTenants = async () => {
-  const response = await fetch(`${API}/tenants`);
-  const data: tenantMainData[] = await response.json();
-  return data;
+  try {
+    const response = await api.get("/tenants");
+    const data: tenantMainData[] = response.data;
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 };
 
 export const tenantNameAlreadyExists = async (
@@ -53,71 +77,71 @@ export const tenantNameAlreadyExists = async (
   currentTenantId?: number
 ) => {
   if (currentTenantId) {
-    const res = await fetch(`${API}/renametenantnameexists`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ tenantName, currentTenantId }),
-    });
-    const bool = await res.json();
+    const res = await api.post(
+      "/renametenantnameexists",
+      { tenantName, currentTenantId },
+      {
+        headers: { "Content-type": "application/json" },
+      }
+    );
+    const bool = res.data;
     return bool;
   } else {
-    const res = await fetch(`${API}/tenantnameexists`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ tenantName }),
-    });
-    const bool = await res.json();
+    const res = await api.post(
+      "/tenantnameexists",
+      { tenantName },
+      {
+        headers: { "Content-type": "application/json" },
+      }
+    );
+    const bool = res.data;
     return bool;
   }
 };
 
 export const getTenantUsers = async (id: number) => {
-  const res = await fetch(`${API}/tenantusers/${id}`);
-  const data = await res.json();
+  const res = await api.get(`/tenantusers/${id}`);
+  const data = res.data;
   return data;
 };
 
 export const getTenantData = async (id: string) => {
-  const res = await fetch(`${API}/tenantdata/${id}`);
-  const data = await res.json();
-  return data;
+  try {
+    const res = await api.get(`/tenantdata/${id}`);
+    const data = res.data;
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 };
 
 export const postTenantData = async (tenantData: tenantDataType) => {
-  const res = await fetch(`${API}/tenantdata`, {
-    method: "POST",
-    body: JSON.stringify(tenantData),
-    headers: { "Content-type": "application/json" },
-  });
-  return res.status;
+  try {
+    const res = await api.post(`/tenantdata`, tenantData, {
+      headers: { "Content-type": "application/json" },
+    });
+    return res.status;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 };
 
 export const putTenantData = async (tenantPutData: tenantDetailedData) => {
-  const res = await fetch(`${API}/tenantdata`, {
-    method: "PUT",
-    body: JSON.stringify(tenantPutData),
+  const res = await api.put(`/tenantdata`, tenantPutData, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
 };
 
 export const disableTenant = async (tenantId: number) => {
-  const res = await fetch(`${API}/disabletenant/${tenantId}`, {
-    method: "PUT",
-    headers: { "Content-type": "application/json" },
-  });
+  const res = await api.put(`/disabletenant/${tenantId}`);
   return res.status;
 };
 
 export const enableTenant = async (tenantId: number) => {
-  const res = await fetch(`${API}/enabletenant/${tenantId}`, {
-    method: "PUT",
-    headers: { "Content-type": "application/json" },
-  });
+  const res = await api.put(`/enabletenant/${tenantId}`);
   return res.status;
 };
 
@@ -133,37 +157,37 @@ export const usernameAlreadyExists = async (
   currentUsernameId?: number
 ) => {
   if (currentUsernameId) {
-    const res = await fetch(`${API}/renameusernameexists`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, currentUsernameId }),
-    });
-    const bool = await res.json();
+    const res = await api.post(
+      `/renameusernameexists`,
+      { username, currentUsernameId },
+      {
+        headers: { "Content-type": "application/json" },
+      }
+    );
+    const bool = res.data;
     return bool;
   } else {
-    const res = await fetch(`${API}/usernameexists`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username }),
-    });
-    const bool = await res.json();
+    const res = await api.post(
+      `/usernameexists`,
+      { username },
+      {
+        headers: { "Content-type": "application/json" },
+      }
+    );
+    const bool = res.data;
     return bool;
   }
 };
 
 export const verifyCredentials = async (username: string, password: string) => {
-  const res = await fetch(`${API}/verifycredentials`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ username, password }),
-  });
-  const bool = await res.json();
+  const res = await api.post(
+    `/verifycredentials`,
+    { username, password },
+    {
+      headers: { "Content-type": "application/json" },
+    }
+  );
+  const bool = res.data;
   return bool;
 };
 
@@ -173,51 +197,43 @@ export const resetUserPassword = async (
   prevPassword: string,
   newPasswordHash: string
 ) => {
-  const res = await fetch(`${API}/userpassword`, {
-    method: "PUT",
-    headers: { "Content-type": "application/json" },
-    body: JSON.stringify({ userId, username, prevPassword, newPasswordHash }),
-  });
+  const res = await api.put(
+    `/userpassword`,
+    { userId, username, prevPassword, newPasswordHash },
+    {
+      headers: { "Content-type": "application/json" },
+    }
+  );
   return res.status;
 };
 
 export const getUserData = async (id: string) => {
-  const res = await fetch(`${API}/userdata/${id}`);
-  const data = await res.json();
+  const res = await api.get(`/userdata/${id}`);
+  const data = res.data;
   return data;
 };
 
 export const postUser = async (userData: userDataType) => {
-  const res = await fetch(`${API}/user`, {
-    method: "POST",
-    body: JSON.stringify(userData),
+  const res = await api.post(`/user`, userData, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
 };
 
 export const putUser = async (userData: userDataType) => {
-  const res = await fetch(`${API}/user`, {
-    method: "PUT",
-    body: JSON.stringify(userData),
+  const res = await api.put(`/user`, userData, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
 };
 
 export const disableUser = async (userId: number) => {
-  const res = await fetch(`${API}/disableuser/${userId}`, {
-    method: "PUT",
-    headers: { "Content-type": "application/json" },
-  });
+  const res = await api.put(`/disableuser/${userId}`);
   return res.status;
 };
 
 export const enableUser = async (userId: number) => {
-  const res = await fetch(`${API}/enableuser/${userId}`, {
-    method: "PUT",
-    headers: { "Content-type": "application/json" },
-  });
+  const res = await api.put(`/enableuser/${userId}`);
   return res.status;
 };
 
@@ -252,27 +268,25 @@ export type speciesDataType = {
 };
 
 export const getSpeciesData = async (id: string) => {
-  const res = await fetch(`${API}/speciesdata/${id}`);
-  const data = await res.json();
+  const res = await api.get(`/speciesdata/${id}`);
+  const data = res.data;
   return data;
 };
 
 export const getDetailedSpeciesData = async (id: string) => {
-  const res = await fetch(`${API}/detailedspeciesdata/${id}`);
-  const data = await res.json();
+  const res = await api.get(`/detailedspeciesdata/${id}`);
+  const data = res.data;
   return data;
 };
 
 export const getTenantSpecies = async (tenantId: number) => {
-  const response = await fetch(`${API}/tenantspecies/${tenantId}`);
-  const data = await response.json();
+  const res = await api.get(`/tenantspecies/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
 export const postSpeciesData = async (speciesData: speciesDataType) => {
-  const res = await fetch(`${API}/speciesdata`, {
-    method: "POST",
-    body: JSON.stringify(speciesData),
+  const res = await api.post("/speciesdata", speciesData, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
@@ -282,85 +296,73 @@ export const putSpeciesData = async (
   updateData: object,
   speciesId: string | undefined
 ) => {
-  const res = await fetch(`${API}/species/${speciesId}`, {
-    method: "PUT",
-    body: JSON.stringify(updateData),
+  const res = await api.put(`/species/${speciesId}`, updateData, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
 };
 
 export const disableSpecies = async (speciesId: number) => {
-  const res = await fetch(`${API}/disablespecies/${speciesId}`, {
-    method: "PUT",
-    headers: { "Content-type": "application/json" },
-  });
+  const res = await api.put(`/disablespecies/${speciesId}`);
   return res.status;
 };
 
 export const enableSpecies = async (speciesId: number) => {
-  const res = await fetch(`${API}/enablespecies/${speciesId}`, {
-    method: "PUT",
-    headers: { "Content-type": "application/json" },
-  });
+  const res = await api.put(`/enablespecies/${speciesId}`);
   return res.status;
 };
 
 // Landplots
 
 export const getTenantGeo = async (tenantId: number) => {
-  const response = await fetch(`${API}/tenantGeo/${tenantId}`);
-  const data = await response.json();
+  const res = await api.get(`/tenantGeo/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
 export const getAvailableAndOccupiedTenantGeo = async (tenantId: number) => {
-  const response = await fetch(`${API}/availabletenantGeo/${tenantId}`);
-  const data = await response.json();
+  const res = await api.get(`/availabletenantGeo/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
 export const getTenantGeoData = async (tenantId: number) => {
-  const response = await fetch(`${API}/tenantgeocurrentdata/${tenantId}`);
-  const data = await response.json();
+  const res = await api.get(`/tenantgeocurrentdata/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
 export const putFeatures = async (features: object) => {
-  const res = await fetch(`${API}/features`, {
-    method: "PUT",
-    body: JSON.stringify(features),
+  const res = await api.put(`/features`, features, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
 };
 
 export const getLandplotData = async (tenantId: number) => {
-  const response = await fetch(`${API}/landplotdata/${tenantId}`);
-  const data = await response.json();
+  const res = await api.get(`/landplotdata/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
 // Crops
 
 export const postCrop = async (crop: object) => {
-  const res = await fetch(`${API}/crop`, {
-    method: "POST",
-    body: JSON.stringify(crop),
+  const res = await api.post(`/crop`, crop, {
     headers: { "Content-type": "application/json" },
   });
   return res;
 };
 
 export const getCropById = async (id: number) => {
-  const res = await fetch(`${API}/cropdata/${id}`);
-  const data = await res.json();
+  const res = await api.get(`/cropdata/${id}`);
+  const data = res.data;
   return data;
 };
 
 export const getTenantCrops = async (tenantId: number) => {
-  const response = await fetch(`${API}/tenantcropdata/${tenantId}`);
-  const data = await response.json();
+  const res = await api.get(`/tenantcropdata/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
@@ -368,18 +370,14 @@ export const setDoneCropEvent = async (
   updateData: object,
   cropEventId: number
 ) => {
-  const res = await fetch(`${API}/donecropevent/${cropEventId}`, {
-    method: "PUT",
-    body: JSON.stringify(updateData),
+  const res = await api.put(`/donecropevent/${cropEventId}`, updateData, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
 };
 
 export const addCropEvent = async (eventData: object) => {
-  const res = await fetch(`${API}/cropevent`, {
-    method: "POST",
-    body: JSON.stringify(eventData),
+  const res = await api.post(`/cropevent`, eventData, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
@@ -389,18 +387,14 @@ export const setFinishedCropStage = async (
   updateData: object,
   cropStageId: number
 ) => {
-  const res = await fetch(`${API}/donecropstage/${cropStageId}`, {
-    method: "PUT",
-    body: JSON.stringify(updateData),
+  const res = await api.put(`/donecropstage/${cropStageId}`, updateData, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
 };
 
 export const setFinishedCrop = async (cropData: object, cropId: number) => {
-  const res = await fetch(`${API}/donecrop/${cropId}`, {
-    method: "PUT",
-    body: JSON.stringify(cropData),
+  const res = await api.put(`/donecrop/${cropId}`, cropData, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
@@ -410,100 +404,88 @@ export const setCropStageComment = async (
   comment: object,
   cropStageId: number
 ) => {
-  const res = await fetch(`${API}/cropstagecomment/${cropStageId}`, {
-    method: "PUT",
-    body: JSON.stringify(comment),
+  const res = await api.put(`/cropstagecomment/${cropStageId}`, comment, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
 };
 
 export const setCropComment = async (comment: object, cropId: number) => {
-  const res = await fetch(`${API}/cropcomment/${cropId}`, {
-    method: "PUT",
-    body: JSON.stringify(comment),
+  const res = await api.put(`/cropcomment/${cropId}`, comment, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
 };
 
 export const getCropTasks = async (id: number) => {
-  const response = await fetch(`${API}/croptasks/${id}`);
-  const data = await response.json();
+  const res = await api.get(`/croptasks/${id}`);
+  const data = res.data;
   return data;
 };
 
 export const getAllTenantTasks = async (tenantId: number) => {
-  const response = await fetch(`${API}/alltenanttasks/${tenantId}`);
-  const data = await response.json();
+  const res = await api.get(`/alltenanttasks/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
 export const getAllCalendarTenantTasks = async (tenantId: number) => {
-  const response = await fetch(`${API}/allcalendartenanttasks/${tenantId}`);
-  const data = await response.json();
+  const res = await api.get(`/allcalendartenanttasks/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
 export const getOngoingCropsCalendarTenantTasks = async (tenantId: number) => {
-  const response = await fetch(`${API}/ongoingcalendartasks/${tenantId}`);
-  const data = await response.json();
+  const res = await api.get(`/ongoingcalendartasks/${tenantId}`);
+  const data = res.data;
   return data;
 };
+
 export const getFulfilledCropsCalendarTenantTasks = async (
   tenantId: number
 ) => {
-  const response = await fetch(`${API}/fulfilledcalendartasks/${tenantId}`);
-  const data = await response.json();
+  const res = await api.get(`/fulfilledcalendartasks/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
 // Snapshots
 
 export const postLandplotSnapshot = async (snapshotData: object) => {
-  const res = await fetch(`${API}/snapshot`, {
-    method: "POST",
-    body: JSON.stringify(snapshotData),
+  const res = await api.post(`/snapshot`, snapshotData, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
 };
 
 export const getLandplotSnapshots = async (id: string) => {
-  const res = await fetch(`${API}/landplotsnapshots/${id}`);
-  const data = await res.json();
+  const res = await api.get(`/landplotsnapshots/${id}`);
+  const data = res.data;
   return data;
 };
 
 export const getCropSnapshots = async (id: string) => {
-  const res = await fetch(`${API}/cropsnapshots/${id}`);
-  const data = await res.json();
+  const res = await api.get(`/cropsnapshots/${id}`);
+  const data = res.data;
   return data;
 };
 
 export const deleteSnapshot = async (snapshotId: number) => {
-  const res = await fetch(`${API}/snapshot/${snapshotId}`, {
-    method: "DELETE",
-    headers: { "Content-type": "application/json" },
-  });
+  const res = await api.delete(`/snapshot/${snapshotId}`);
   return res.status;
 };
 
 // Reports
 
 export const getSpeciesReport = async (speciesReportData: object) => {
-  const res = await fetch(`${API}/speciesreport`, {
-    method: "PUT",
-    body: JSON.stringify(speciesReportData),
+  const res = await api.put(`/speciesreport`, speciesReportData, {
     headers: { "Content-type": "application/json" },
   });
   return res;
 };
 
 export const getLandplotReport = async (landplotReportData: object) => {
-  const res = await fetch(`${API}/landplotreport`, {
-    method: "PUT",
-    body: JSON.stringify(landplotReportData),
+  const res = await api.put(`/landplotreport`, landplotReportData, {
     headers: { "Content-type": "application/json" },
   });
   return res;
@@ -512,28 +494,28 @@ export const getLandplotReport = async (landplotReportData: object) => {
 // Homepage Dashboard
 
 export const getNextHarvest = async (tenantId: number) => {
-  const res = await fetch(`${API}/nextharvest/${tenantId}`);
-  const data = await res.json();
+  const res = await api.get(`/nextharvest/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
 export const getAvailableAndOccupiedTenantAreasSum = async (
   tenantId: number
 ) => {
-  const res = await fetch(`${API}/availabletenantareas/${tenantId}`);
-  const data = await res.json();
+  const res = await api.get(`/availabletenantareas/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
 export const getTenantSpeciesCropsAreasSum = async (tenantId: number) => {
-  const res = await fetch(`${API}/tenantspeciescropsareassum/${tenantId}`);
-  const data = await res.json();
+  const res = await api.get(`/tenantspeciescropsareassum/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
 export const getTenantPendingTasksNumber = async (tenantId: number) => {
-  const res = await fetch(`${API}/pendingtasksnumber/${tenantId}`);
-  const data = await res.json();
+  const res = await api.get(`/pendingtasksnumber/${tenantId}`);
+  const data = res.data;
   return data;
 };
 
@@ -543,15 +525,15 @@ export const getWeather = async (coords: number[]) => {
   let lat = coords[0];
   let lon = coords[1];
 
-  const weatherResponse = await fetch(`
-  https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&current=is_day,temperature_2m,wind_speed_10m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,precipitation_probability,precipitation,wind_speed_10m,weather_code
+  const weatherResponse = await axios.get(`
+https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&current=is_day,temperature_2m,wind_speed_10m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,precipitation_probability,precipitation,wind_speed_10m,weather_code
 `);
-  const weatherData = await weatherResponse.json();
+  const weatherData = weatherResponse.data;
 
-  const locationResponse = await fetch(`
+  const locationResponse = await axios.get(`
   https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es
   `);
-  const locationData = await locationResponse.json();
+  const locationData = await locationResponse.data;
 
   const { city, principalSubdivision, countryCode, countryName } = locationData;
   const formatedLocationName =

@@ -46,19 +46,6 @@ const formatUniqueAndPeriodicEvents = (events: any) => {
   return Object.values(formattedEvents);
 };
 
-export const getCrops = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const response: QueryResult = await pool.query("SELECT * FROM crop");
-    return res.status(200).json(response.rows);
-  } catch (e) {
-    next(e);
-  }
-};
-
 /**
  * Gets the date from a date after a certain interval.
  * @param {Date} referenceDate

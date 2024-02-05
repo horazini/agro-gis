@@ -17,23 +17,6 @@ export const getTenants = async (
   }
 };
 
-export const getTenantById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const id = parseInt(req.params.id);
-    const response: QueryResult = await pool.query(
-      "SELECT * FROM tenant WHERE id = $1",
-      [id]
-    );
-    return res.json(response.rows);
-  } catch (e) {
-    next(e);
-  }
-};
-
 export const disableTenant = async (
   req: Request,
   res: Response,
@@ -57,47 +40,6 @@ export const enableTenant = async (
     const id = parseInt(req.params.id);
     await pool.query("UPDATE tenant SET deleted = false WHERE id = $1", [id]);
     return res.status(200).send(`Tenant ${id} enabled succesfully`);
-  } catch (e) {
-    next(e);
-  }
-};
-
-export const getEnabledTenantUsers = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const id = parseInt(req.params.id);
-    const tenantQuery: QueryResult = await pool.query(
-      `
-      SELECT 
-      name FROM tenant WHERE id = $1
-      `,
-      [id]
-    );
-
-    const tenantName = tenantQuery.rows[0].name;
-
-    const usersQuery: QueryResult = await pool.query(
-      `
-      SELECT 
-      id, usertype_id, mail_address, username, names, surname
-      FROM user_account 
-      WHERE tenant_id = $1 AND deleted IS false
-      `,
-      [id]
-    );
-
-    let users: any[] = [];
-
-    if (usersQuery.rows[0]) {
-      users = usersQuery.rows;
-    }
-
-    const result = { tenantName, users };
-
-    return res.status(200).json(result);
   } catch (e) {
     next(e);
   }

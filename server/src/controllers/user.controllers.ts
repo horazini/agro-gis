@@ -13,36 +13,7 @@ export const getTime = async (req: Request, res: Response) => {
   res.json(result.rows[0].now);
 };
 
-export const serviceAdminAuth = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { id, usertype_id, tenant_id } = req.body.authuser;
-  if (usertype_id !== 1) {
-    return res
-      .status(401)
-      .json({ error: "Not a service admin, authorization denied." });
-  }
-  next();
-};
-
 // CRUD methods for users
-
-export const getUsers = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const response: QueryResult = await pool.query(
-      "SELECT id, tenant_id, usertype_id, mail_address, username, names, surname FROM user_account"
-    );
-    return res.status(200).json(response.rows);
-  } catch (e) {
-    next(e);
-  }
-};
 
 export const getUsersByTenant = async (
   req: Request,
@@ -52,7 +23,7 @@ export const getUsersByTenant = async (
   try {
     const id = parseInt(req.params.id);
     const response: QueryResult = await pool.query(
-      "SELECT id, usertype_id, mail_address, username, names, surname FROM user_account WHERE tenant_id = $1",
+      "SELECT id, usertype_id, mail_address, username, names, surname, deleted FROM user_account WHERE tenant_id = $1",
       [id]
     );
     return res.status(200).json(response.rows);
@@ -286,23 +257,6 @@ export const resetUserPassword = async (
     } else {
       return res.status(400).send(`Something went wrong.`);
     }
-  } catch (e) {
-    next(e);
-  }
-};
-
-// Obtener tipos de usuario
-
-export const getUserTypes = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const response: QueryResult = await pool.query(
-      "SELECT id, name FROM usertype"
-    );
-    return res.status(200).json(response.rows);
   } catch (e) {
     next(e);
   }

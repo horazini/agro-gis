@@ -19,10 +19,8 @@ router.post("/login", login);
 // Users
 
 import {
-  getUsers,
   createUser,
   updateUser,
-  getUserTypes,
   getUsersByTenant,
   usernameAlreadyExists,
   renameUsernameAlreadyExists,
@@ -32,10 +30,8 @@ import {
   resetUserPassword,
 } from "../controllers/user.controllers";
 
-router.get("/users", getUsers);
 router.post("/user", createUser);
 router.put("/user", updateUser);
-router.get("/usertypes", getUserTypes);
 router.get("/tenantusers/:id", getUsersByTenant);
 router.post("/usernameexists", usernameAlreadyExists);
 router.post("/renameusernameexists", renameUsernameAlreadyExists);
@@ -49,9 +45,7 @@ router.put("/userpassword", resetUserPassword);
 import {
   getTenants,
   updateTenant,
-  getTenantById,
   createTenantWithUsers,
-  getEnabledTenantUsers,
   getTenantData,
   tenantNameAlreadyExists,
   renameTenantNameAlreadyExists,
@@ -60,10 +54,8 @@ import {
 } from "../controllers/tenant.controllers";
 
 router.get("/tenants", getTenants);
-router.get("/tenant/:id", getTenantById);
 router.post("/tenantdata", createTenantWithUsers);
 router.put("/tenantdata", updateTenant);
-router.get("/tenantusers/:id", getEnabledTenantUsers);
 router.get("/tenantdata/:id", getTenantData);
 router.post("/tenantnameexists", tenantNameAlreadyExists);
 router.post("/renametenantnameexists", renameTenantNameAlreadyExists);
@@ -75,28 +67,24 @@ router.put("/enabletenant/:id", enableTenant);
 // Species
 
 import {
-  getSpecies,
   getSpeciesByTenant,
   getSpeciesDataById,
   getDetailedSpeciesDataById,
-  createSpecies,
-  //deleteSpecies,
   updateSpecies,
   createSpeciesWithStagesAndEvents,
   disableSpecies,
   enableSpecies,
+  //deleteSpecies,
 } from "../controllers/species.controllers";
 
-router.get("/species", getSpecies);
 router.get("/speciesdata/:id", getSpeciesDataById);
 router.get("/detailedspeciesdata/:id", getDetailedSpeciesDataById);
 router.get("/tenantspecies/:id", getSpeciesByTenant);
-router.post("/species", createSpecies);
 router.post("/speciesdata", createSpeciesWithStagesAndEvents);
 router.put("/species/:id", updateSpecies);
-//router.delete("/species/:id", deleteSpecies);
 router.put("/disablespecies/:id", disableSpecies);
 router.put("/enablespecies/:id", enableSpecies);
+//router.delete("/species/:id", deleteSpecies);
 
 // Geo
 
@@ -115,7 +103,7 @@ import {
 } from "../controllers/landplot.controllers";
 
 router.get("/landplotdata/:id", getLandplotWithCrops);
-router.get("/tenantgeo/:tenantId", getTenantLandplots); // used only on development components
+router.get("/tenantgeo/:tenantId", getTenantLandplots);
 router.get("/tenantgeocurrentdata/:tenantId", getTenantGeoWithCurrentCrops);
 router.get("/availabletenantGeo/:tenantId", getAvailableAndOccupiedTenantGeo);
 router.put("/features", updateFeatures);
@@ -136,7 +124,6 @@ router.delete("/snapshot/:id", deleteSnapshot);
 // Crops
 
 import {
-  getCrops,
   createCrop,
   getCropDataById,
   setDoneCropEvent,
@@ -156,7 +143,6 @@ import {
   getTenantPendingTasksNumber,
 } from "../controllers/crop.controllers";
 
-router.get("/crop", getCrops);
 router.post("/crop", createCrop);
 router.get("/cropdata/:id", getCropDataById);
 router.put("/donecropevent/:id", setDoneCropEvent);

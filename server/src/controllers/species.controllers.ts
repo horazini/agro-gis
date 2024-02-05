@@ -2,19 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { QueryResult } from "pg";
 import pool from "../database";
 
-export const getSpecies = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const response: QueryResult = await pool.query("SELECT * FROM species");
-    return res.status(200).json(response.rows);
-  } catch (e) {
-    next(e);
-  }
-};
-
 export const getSpeciesByTenant = async (
   req: Request,
   res: Response,
@@ -193,32 +180,6 @@ export const getDetailedSpeciesDataById = async (
     };
 
     return res.status(200).json(detailedSpeciesData);
-  } catch (e) {
-    next(e);
-  }
-};
-
-export const createSpecies = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { name, description, tenant_id } = req.body;
-    await pool.query(
-      "INSERT INTO species (name, description, tenant_id) VALUES ($1, $2, $3)",
-      [name, description, tenant_id]
-    );
-    return res.json({
-      message: "Species created succesfully",
-      body: {
-        user: {
-          name,
-          description,
-          tenant_id,
-        },
-      },
-    });
   } catch (e) {
     next(e);
   }

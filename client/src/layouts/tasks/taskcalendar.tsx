@@ -171,34 +171,18 @@ const getMonthRows = (selectedDate: any, cropTasks: any) => {
   return rows;
 };
 
-function Taskcalendar() {
+const TaskCalendarLoader = () => {
   PageTitle("Calendario");
   const { tenantId } = useSelector((state: RootState) => state.auth);
-
-  const today = new Date();
-
-  const [options] = useState({
-    minWidth: 540,
-    maxWidth: 540,
-    minHeight: 540,
-    maxHeight: 540,
-  });
-
-  // Tasks load
 
   const [dataReloadCounter, setDataReloadCounter] = useState(0);
 
   const [cropTasks, setCropTasks] = useState<TaskType[]>([]);
 
-  const [filteredCropTasks, setFilteredCropTasks] = useState<TaskType[]>([]);
-
-  const [rows, setRows] = useState<any>();
-
   const loadTasks = async (id: number) => {
     try {
       const tasks = await getOngoingCropsCalendarTenantTasks(id);
       setCropTasks(tasks);
-      setFilteredCropTasks(tasks);
     } catch (error) {
       console.log(error);
     }
@@ -209,6 +193,39 @@ function Taskcalendar() {
       loadTasks(tenantId);
     }
   }, [tenantId, dataReloadCounter]);
+
+  return (
+    <TaskCalendar
+      cropTasks={cropTasks}
+      setDataReloadCounter={setDataReloadCounter}
+    />
+  );
+};
+
+const TaskCalendar = ({
+  cropTasks,
+  setDataReloadCounter,
+}: {
+  cropTasks: TaskType[];
+  setDataReloadCounter: React.Dispatch<React.SetStateAction<number>>;
+}) => {
+  const today = new Date();
+
+  const [options] = useState({
+    minWidth: 540,
+    maxWidth: 540,
+    minHeight: 540,
+    maxHeight: 540,
+  });
+
+  const [filteredCropTasks, setFilteredCropTasks] =
+    useState<TaskType[]>(cropTasks);
+
+  useEffect(() => {
+    setFilteredCropTasks(cropTasks);
+  }, [cropTasks]);
+
+  const [rows, setRows] = useState<any>();
 
   // searchResult handle
 
@@ -364,7 +381,7 @@ function Taskcalendar() {
       </Paper>
     </Fragment>
   );
-}
+};
 
 const EventDialogs = ({
   eventDialogItem,
@@ -627,4 +644,4 @@ const EventDialogs = ({
   );
 };
 
-export default Taskcalendar;
+export default TaskCalendarLoader;

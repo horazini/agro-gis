@@ -1,3 +1,6 @@
+import { Fragment, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   Box,
   Button,
@@ -6,15 +9,12 @@ import {
   Chip,
   Typography,
 } from "@mui/material";
-import { Fragment, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-
 import { FormatListBulleted, AddBusiness } from "@mui/icons-material/";
 
 import { tenantMainData, getTenants } from "../../utils/services";
 import { PageTitle } from "../../components/customComponents";
 
-function TenantsList() {
+const TenantsListLoader = () => {
   PageTitle("Clientes");
 
   const [tenants, setTenants] = useState<tenantMainData[]>([]);
@@ -28,6 +28,10 @@ function TenantsList() {
     loadTenants();
   }, []);
 
+  return <TenantsList tenants={tenants} />;
+};
+
+const TenantsList = ({ tenants }: { tenants: tenantMainData[] }) => {
   const navigate = useNavigate();
 
   return (
@@ -84,6 +88,6 @@ function TenantsList() {
         ))}
     </Fragment>
   );
-}
+};
 
-export default TenantsList;
+export default TenantsListLoader;

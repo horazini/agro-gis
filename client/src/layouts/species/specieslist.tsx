@@ -9,7 +9,7 @@ import { Add as AddIcon, FormatListBulleted } from "@mui/icons-material";
 import { speciesMainData, getTenantSpecies } from "../../utils/services";
 import { PageTitle } from "../../components/customComponents";
 
-function SpeciesList() {
+const SpeciesListLoader = () => {
   PageTitle("Especies");
 
   const [species, setSpecies] = useState<speciesMainData[]>([]);
@@ -27,6 +27,10 @@ function SpeciesList() {
     loadSpecies();
   }, []);
 
+  return <SpeciesList species={species} />;
+};
+
+const SpeciesList = ({ species }: { species: speciesMainData[] }) => {
   const navigate = useNavigate();
 
   return (
@@ -76,6 +80,6 @@ function SpeciesList() {
       )}
     </Fragment>
   );
-}
+};
 
-export default SpeciesList;
+export default SpeciesListLoader;

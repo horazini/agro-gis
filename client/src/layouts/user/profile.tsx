@@ -55,7 +55,7 @@ const UserLoader = () => {
     }
   }, [userId]);
 
-  return <Fragment>{userData && <Profile userData={userData} />} </Fragment>;
+  return userData ? <Profile userData={userData} /> : <Fragment />;
 };
 
 const Profile = ({ userData }: any) => {

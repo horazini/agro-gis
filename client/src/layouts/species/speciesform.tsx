@@ -87,24 +87,32 @@ const nullGrowthEventData = {
   timePeriodUnit: "",
 };
 
-function SpeciesForm(): JSX.Element {
+const timeUnits = [
+  { key: "days", label: "Día/s" },
+  { key: "weeks", label: "Semana/s" },
+  { key: "months", label: "Mes/es" },
+  { key: "years", label: "Año/s" },
+];
+
+const SpeciesFormLoader = () => {
   const { tenantId } = useSelector((state: RootState) => state.auth);
-
-  const timeUnits = [
-    { key: "days", label: "Día/s" },
-    { key: "weeks", label: "Semana/s" },
-    { key: "months", label: "Mes/es" },
-    { key: "years", label: "Año/s" },
-  ];
-
-  // Cargar especie existente (caso de edicion)
 
   const params = useParams();
 
   const [isEditingForm, setIsEditingForm] = useState(false);
 
-  const [deletedStages, setDeletedStages] = useState<number[]>([]);
-  const [deletedEvents, setDeletedEvents] = useState<number[]>([]);
+  // Init species data
+
+  const [species, setSpecies] = useState<ISpeciesData>({
+    id: null,
+    name: "",
+    description: "",
+    tenant_id: tenantId || 1,
+  });
+
+  const [stagesList, setStagesList] = useState<IStageData[]>([]);
+
+  // Load existing species (edit case)
 
   const loadSpecies = async (id: string) => {
     try {
@@ -125,14 +133,38 @@ function SpeciesForm(): JSX.Element {
 
   PageTitle(isEditingForm ? "Editar especie" : "Agregar especie");
 
+  return (
+    <SpeciesForm
+      speciesInit={species}
+      stageListInit={stagesList}
+      isEditingForm={isEditingForm}
+      editingSpeciesId={params.id}
+    />
+  );
+};
+
+const SpeciesForm = ({
+  speciesInit,
+  stageListInit,
+  isEditingForm,
+  editingSpeciesId,
+}: {
+  speciesInit: ISpeciesData;
+  stageListInit: IStageData[];
+  isEditingForm: boolean;
+  editingSpeciesId: string | undefined;
+}): JSX.Element => {
+  const [deletedStages, setDeletedStages] = useState<number[]>([]);
+  const [deletedEvents, setDeletedEvents] = useState<number[]>([]);
+
+  useEffect(() => {
+    setSpecies(speciesInit);
+    setStagesList(stageListInit);
+  }, [speciesInit, stageListInit]);
+
   // Datos principales de especie
 
-  const [species, setSpecies] = useState<ISpeciesData>({
-    id: null,
-    name: "",
-    description: "",
-    tenant_id: tenantId || 1,
-  });
+  const [species, setSpecies] = useState<ISpeciesData>(speciesInit);
 
   const handleSpeciesChange = (e: {
     target: { name: string; value: string };
@@ -194,7 +226,7 @@ function SpeciesForm(): JSX.Element {
     );
   };
 
-  const [stagesList, setStagesList] = useState<IStageData[]>([]);
+  const [stagesList, setStagesList] = useState<IStageData[]>(stageListInit);
 
   const [editingStageRowId, setEditingStageRowId] = useState<number | null>(
     null
@@ -444,7 +476,7 @@ function SpeciesForm(): JSX.Element {
           deletedStages,
           speciesData,
         };
-        const res = await putSpeciesData(updateData, params.id);
+        const res = await putSpeciesData(updateData, editingSpeciesId);
         return res;
       } else {
         const res = await postSpeciesData(speciesData);
@@ -1005,6 +1037,6 @@ function SpeciesForm(): JSX.Element {
       </Paper>
     </Container>
   );
-}
+};
 
-export default SpeciesForm;
+export default SpeciesFormLoader;

@@ -229,7 +229,7 @@ const CropInfo = ({ cropData, refreshPage }: any) => {
           <Button
             variant={"contained"}
             color="primary"
-            onClick={() => navigate(`/landplots/${landplot.id}/snapshots`)}
+            onClick={() => navigate(`/crops/${crop.id}/snapshots`)}
             style={{ marginLeft: ".5rem" }}
             startIcon={<PhotoSizeSelectActual />}
           >

@@ -54,7 +54,7 @@ import { formatedDate } from "../../utils/functions";
 
 const { errorSnackBar } = mySnackBars;
 
-const StatisticalReports = () => {
+const ReportsLoader = () => {
   PageTitle("Reportes estadísticos");
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
@@ -81,6 +81,16 @@ const StatisticalReports = () => {
     loadSpecies();
   }, []);
 
+  return <StatisticalReports species={species} landplots={landplots} />;
+};
+
+const StatisticalReports = ({
+  species,
+  landplots,
+}: {
+  species: any[];
+  landplots: any[];
+}) => {
   const [reportRequest, setReportRequest] = useState<{
     class: null | string;
     objectId: number;
@@ -846,4 +856,4 @@ const ChartModeSelector = ({ variable, setVariable }: any) => {
   );
 };
 
-export default StatisticalReports;
+export default ReportsLoader;

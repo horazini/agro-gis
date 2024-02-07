@@ -21,7 +21,7 @@ import {
 import { PageTitle } from "../../components/customComponents";
 import { formatedDate } from "../../utils/functions";
 
-const CropDetails = () => {
+const CropDetailsLoader = () => {
   const params = useParams();
   PageTitle(`Parcela N.° ${params.id}`);
 
@@ -42,6 +42,14 @@ const CropDetails = () => {
     }
   }, [params.id]);
 
+  return landplotData ? <CropDetails landplotData={landplotData} /> : <div />;
+};
+
+const CropDetails = ({ landplotData }: { landplotData: Feature }) => {
+  const navigate = useNavigate();
+
+  const landplot = landplotData.properties?.landplot;
+
   return (
     <Box
       style={{
@@ -49,47 +57,33 @@ const CropDetails = () => {
         alignItems: "center",
       }}
     >
-      {landplotData && (
-        <h1>Parcela N.° {landplotData.properties?.landplot.id}</h1>
-      )}
+      <h1>Parcela N.° {landplotData.properties?.landplot.id}</h1>
       <SentinelSnapshoter landplot={landplotData} />
-
-      {landplotData && (
-        <LandplotData landplot={landplotData.properties?.landplot} />
-      )}
-
-      {landplotData && <CropsDataGrid crops={landplotData.properties?.crops} />}
-    </Box>
-  );
-};
-
-const LandplotData = ({ landplot }: any) => {
-  const navigate = useNavigate();
-
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
-      <Box paddingTop={2} ml={2} mb={2} mr={2}>
-        <p>Parcela N.° {landplot.id}</p>
-        {landplot.description && <p>Descripción: {landplot.description}</p>}
-        {landplot.area && <p>Área: {FormattedArea(landplot.area)} </p>}
-        {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
-      </Box>
-
-      <Button
-        variant={"contained"}
-        color="primary"
-        onClick={() => navigate(`/landplots/${landplot.id}/snapshots`)}
-        style={{ marginLeft: ".5rem" }}
-        startIcon={<PhotoSizeSelectActual />}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
       >
-        Ver snapshots
-      </Button>
+        <Box paddingTop={2} ml={2} mb={2} mr={2}>
+          <p>Parcela N.° {landplot.id}</p>
+          {landplot.description && <p>Descripción: {landplot.description}</p>}
+          {landplot.area && <p>Área: {FormattedArea(landplot.area)} </p>}
+          {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
+        </Box>
+
+        <Button
+          variant={"contained"}
+          color="primary"
+          onClick={() => navigate(`/landplots/${landplot.id}/snapshots`)}
+          style={{ marginLeft: ".5rem" }}
+          startIcon={<PhotoSizeSelectActual />}
+        >
+          Ver snapshots
+        </Button>
+      </Box>
+      <CropsDataGrid crops={landplotData.properties?.crops} />
     </Box>
   );
 };
@@ -197,4 +191,4 @@ const CropsDataGrid = ({ crops }: any) => {
   );
 };
 
-export default CropDetails;
+export default CropDetailsLoader;

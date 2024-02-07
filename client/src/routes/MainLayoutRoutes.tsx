@@ -35,7 +35,10 @@ import CropLandplotsMap from "../layouts/maps/croplandplotsmap";
 import CropDetails from "../layouts/crops/cropdetails";
 import CropsList from "../layouts/crops/cropslist";
 
-import { CropLoader, LandplotLoader } from "../layouts/maps/snapshotsgallery";
+import {
+  CropSnapshotGallery,
+  LandplotSnapshotGallery,
+} from "../layouts/maps/snapshotsgallery";
 
 import Calendar from "../layouts/tasks/taskcalendar";
 
@@ -127,7 +130,7 @@ const routeList = [
   },
   {
     path: "/landplots/:id/snapshots",
-    element: <LandplotLoader />,
+    element: <LandplotSnapshotGallery />,
     allowed: [2, 3, 4, 5, 6],
   },
   {
@@ -142,7 +145,7 @@ const routeList = [
   },
   {
     path: "/crops/:id/snapshots",
-    element: <CropLoader />,
+    element: <CropSnapshotGallery />,
     allowed: [2, 3, 4, 5, 6],
   },
   {

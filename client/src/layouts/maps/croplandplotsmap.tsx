@@ -28,7 +28,7 @@ interface ICrop {
   date: string;
 }
 
-const LandplotsAndCrops = () => {
+const LandplotsAndCropsLoader = () => {
   PageTitle("Parcelas y cultivos");
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
@@ -54,12 +54,30 @@ const LandplotsAndCrops = () => {
     loadSpecies();
   }, []);
 
+  return tenantId !== null ? (
+    <LandplotsAndCrops
+      geoData={geoData}
+      species={species}
+      tenantId={tenantId}
+    />
+  ) : null;
+};
+
+const LandplotsAndCrops = ({
+  geoData,
+  species,
+  tenantId,
+}: {
+  geoData: any;
+  species: speciesMainData[];
+  tenantId: number;
+}) => {
   // Manejo de alta de cultivo: parcela, especie y fecha inicial
 
   const [crop, setCrop] = useState<ICrop>({
     landplot: 0,
     species: 0,
-    tenant_id: tenantId || 1,
+    tenant_id: tenantId,
     date: "",
   });
 
@@ -261,4 +279,4 @@ const LandplotsAndCrops = () => {
   );
 };
 
-export default LandplotsAndCrops;
+export default LandplotsAndCropsLoader;

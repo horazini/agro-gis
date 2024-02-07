@@ -41,7 +41,7 @@ import { formatedDate } from "../../utils/functions";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 
-export const LandplotLoader = () => {
+export const LandplotSnapshotGallery = () => {
   const params = useParams();
 
   const [snapshotData, setSnapshotData] = useState<any>();
@@ -64,21 +64,19 @@ export const LandplotLoader = () => {
     }
   }, [params.id, dataReloadCounter]);
 
-  return (
-    <Fragment>
-      {snapshotData && (
-        <SnapshotGallery
-          objectId={params.id}
-          snapshotData={snapshotData}
-          isCropForm={false}
-          setDataReloadCounter={setDataReloadCounter}
-        />
-      )}
-    </Fragment>
+  return snapshotData ? (
+    <SnapshotGallery
+      objectId={params.id}
+      snapshotData={snapshotData}
+      isCropForm={false}
+      setDataReloadCounter={setDataReloadCounter}
+    />
+  ) : (
+    <Fragment />
   );
 };
 
-export const CropLoader = () => {
+export const CropSnapshotGallery = () => {
   const params = useParams();
 
   const [snapshotData, setSnapshotData] = useState<any>();
@@ -101,17 +99,15 @@ export const CropLoader = () => {
     }
   }, [params.id, dataReloadCounter]);
 
-  return (
-    <Fragment>
-      {snapshotData && (
-        <SnapshotGallery
-          objectId={params.id}
-          snapshotData={snapshotData}
-          isCropForm={true}
-          setDataReloadCounter={setDataReloadCounter}
-        />
-      )}
-    </Fragment>
+  return snapshotData ? (
+    <SnapshotGallery
+      objectId={params.id}
+      snapshotData={snapshotData}
+      isCropForm={true}
+      setDataReloadCounter={setDataReloadCounter}
+    />
+  ) : (
+    <Fragment />
   );
 };
 

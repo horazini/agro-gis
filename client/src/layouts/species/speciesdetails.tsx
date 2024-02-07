@@ -67,19 +67,28 @@ interface IGrowthEventData {
   timePeriodUnit: string;
 }
 
-function SpeciesForm(): JSX.Element {
+const SpeciesDetailsLoader = () => {
+  PageTitle("Especie");
+
   const { tenantId } = useSelector((state: RootState) => state.auth);
-
-  const timeUnits = [
-    { key: "days", label: "Día/s" },
-    { key: "weeks", label: "Semana/s" },
-    { key: "months", label: "Mes/es" },
-    { key: "years", label: "Año/s" },
-  ];
-
-  // Cargar especie existente (caso de edicion)
-
   const params = useParams();
+
+  const [species, setSpecies] = useState<ISpeciesData>({
+    id: 0,
+    name: "",
+    description: "",
+    tenant_id: tenantId || 1,
+    deleted: false,
+  });
+
+  const [stagesList, setStagesList] = useState<IStageData[]>([]);
+
+  const [speciesDetails, setSpeciesDetails] = useState<any>({
+    ongoingCropsNumber: 0,
+    finishedCropsNumber: 0,
+    finishedCropsAreaSum: 0,
+    finishedCropsWeightSum: 0,
+  });
 
   const loadSpecies = async (id: string) => {
     try {
@@ -98,24 +107,30 @@ function SpeciesForm(): JSX.Element {
     }
   }, [params.id]);
 
-  PageTitle("Especie");
+  return (
+    <SpeciesDetails
+      species={species}
+      stagesList={stagesList}
+      speciesDetails={speciesDetails}
+    />
+  );
+};
 
-  // Datos principales de especie
-
-  const [species, setSpecies] = useState<ISpeciesData>({
-    id: 0,
-    name: "",
-    description: "",
-    tenant_id: tenantId || 1,
-    deleted: false,
-  });
-
-  const [speciesDetails, setSpeciesDetails] = useState<any>({
-    ongoingCropsNumber: 0,
-    finishedCropsNumber: 0,
-    finishedCropsAreaSum: 0,
-    finishedCropsWeightSum: 0,
-  });
+const SpeciesDetails = ({
+  species,
+  stagesList,
+  speciesDetails,
+}: {
+  species: ISpeciesData;
+  stagesList: IStageData[];
+  speciesDetails: any;
+}): JSX.Element => {
+  const timeUnits = [
+    { key: "days", label: "Día/s" },
+    { key: "weeks", label: "Semana/s" },
+    { key: "months", label: "Mes/es" },
+    { key: "years", label: "Año/s" },
+  ];
 
   // Enable/disable functions
 
@@ -138,8 +153,6 @@ function SpeciesForm(): JSX.Element {
   };
 
   // Etapas
-
-  const [stagesList, setStagesList] = useState<IStageData[]>([]);
 
   const { id, name, description, deleted } = species;
 
@@ -379,11 +392,9 @@ function SpeciesForm(): JSX.Element {
             </TableContainer>
           </Grid>
         </Grid>
-
-        <br />
       </Paper>
     </Container>
   );
-}
+};
 
-export default SpeciesForm;
+export default SpeciesDetailsLoader;

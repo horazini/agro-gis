@@ -30,11 +30,62 @@ import { FormattedArea } from "../../components/mapcomponents";
 import { formatedDate } from "../../utils/functions";
 import { PageTitle } from "../../components/customComponents";
 
-const CropsList = (
-  crops: any[],
-  landplots: { features: any[]; type: string },
-  species: speciesMainData[]
-) => {
+const CropsLoader = () => {
+  PageTitle("Cultivos");
+
+  const { tenantId } = useSelector((state: RootState) => state.auth);
+
+  const [crops, setCrops] = useState<[]>([]);
+  const [landplots, setLandplots] = useState<any>();
+  const [species, setSpecies] = useState<speciesMainData[]>([]);
+
+  const loadCrops = async (id: number) => {
+    try {
+      const data = await getTenantCrops(id);
+      setCrops(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const loadLandplots = async (id: number) => {
+    try {
+      const data = await getTenantGeo(id);
+      setLandplots(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const loadSpecies = async (id: number) => {
+    try {
+      const data = await getTenantSpecies(id);
+      setSpecies(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    if (tenantId) {
+      loadCrops(tenantId);
+      loadLandplots(tenantId);
+      loadSpecies(tenantId);
+    }
+  }, [tenantId]);
+
+  return <CropsList crops={crops} landplots={landplots} species={species} />;
+};
+
+const CropsList = ({
+  crops,
+  landplots,
+  species,
+}: {
+  crops: any[];
+  landplots: { features: any[]; type: string };
+  species: speciesMainData[];
+}) => {
   const navigate = useNavigate();
 
   const columns: GridColDef[] = [
@@ -291,53 +342,6 @@ const CropsList = (
       )}
     </Fragment>
   );
-};
-
-const CropsLoader = () => {
-  PageTitle("Cultivos");
-
-  const { tenantId } = useSelector((state: RootState) => state.auth);
-
-  const [crops, setCrops] = useState<[]>([]);
-  const [landplots, setLandplots] = useState<any>();
-  const [species, setSpecies] = useState<speciesMainData[]>([]);
-
-  const loadCrops = async (id: number) => {
-    try {
-      const data = await getTenantCrops(id);
-      setCrops(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const loadLandplots = async (id: number) => {
-    try {
-      const data = await getTenantGeo(id);
-      setLandplots(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const loadSpecies = async (id: number) => {
-    try {
-      const data = await getTenantSpecies(id);
-      setSpecies(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    if (tenantId) {
-      loadCrops(tenantId);
-      loadLandplots(tenantId);
-      loadSpecies(tenantId);
-    }
-  }, [tenantId]);
-
-  return <Fragment>{CropsList(crops, landplots, species)}</Fragment>;
 };
 
 export default CropsLoader;

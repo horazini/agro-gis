@@ -276,7 +276,7 @@ const UserForm = ({ userData, isEditingForm, setUserData }: any) => {
                 }
                 handleValidation={handleValidation}
                 onConfirm={handleSubmitForm}
-                navigateDir={"/users"}
+                navigateDir={tenantId === 1 ? "/tenants" : "/users"}
                 disabled={
                   !(usertype_id && surname && names && mail_address && username)
                 }

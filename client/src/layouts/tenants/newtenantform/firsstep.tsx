@@ -12,6 +12,8 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+import { OrgData } from "./tenantform";
 import { isValidEmail } from "../../../utils/functions";
 import {
   CancelButton,
@@ -20,15 +22,8 @@ import {
 import { tenantNameAlreadyExists } from "../../../utils/services";
 
 export type FirstStepProps = {
-  orgData: {
-    name: string;
-    representatives_surname: string;
-    representatives_names: string;
-    email: string;
-    locality: string;
-    phone: string;
-  };
-  handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  orgData: OrgData;
+  setOrgData: React.Dispatch<React.SetStateAction<OrgData>>;
   onNext: () => void;
   isEditingForm: boolean;
   onConfirm: () => Promise<number>;
@@ -37,13 +32,19 @@ export type FirstStepProps = {
 
 const FirstStep = ({
   orgData,
-  handleInputChange,
+  setOrgData,
   onNext,
   isEditingForm,
   onConfirm,
   tenantId,
 }: FirstStepProps) => {
   const navigate = useNavigate();
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setOrgData((prevState) => ({ ...prevState, [name]: value }));
+  };
+
   const [open, setOpen] = useState(false);
 
   const handleClickOpen = () => {
@@ -225,7 +226,7 @@ const FirstStep = ({
             msg={"Se modificarán los datos del cliente"}
             onConfirm={onConfirm}
             navigateDir={"/tenants"}
-            disabled={false}
+            disabled={!Object.values(orgData).every((value) => !!value)}
           />
         ) : (
           <Button

@@ -17,39 +17,30 @@ import {
   FormControl,
   IconButton,
 } from "@mui/material";
-
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import React, { useState } from "react";
+
+import { UserData } from "./tenantform";
+
 import { usernameAlreadyExists } from "../../../utils/services";
 import { isValidEmail } from "../../../utils/functions";
 import { tenantUserTypes } from "../../../utils/functions";
 import { DialogComponent } from "../../../components/customComponents";
 
-export interface RowData {
-  id: number;
-  usertype_id: number;
-  username: string;
-  mail_address: string;
-  surname: string;
-  names: string;
-}
-
 export type SecondStepProps = {
-  userList: RowData[];
-  handleSubmitUser: (usersData: RowData, editingRowId: number | null) => void;
-  handleDeleteUser: (id: number) => void;
+  userList: UserData[];
+  setUserList: React.Dispatch<React.SetStateAction<UserData[]>>;
   onBack: () => void;
   onNext: () => void;
 };
 
 const SecondStep = ({
   userList,
-  handleSubmitUser,
-  handleDeleteUser,
+  setUserList,
   onBack,
   onNext,
 }: SecondStepProps) => {
-  const [userData, setUserData] = useState<RowData>({
+  const [userData, setUserData] = useState<UserData>({
     id: 0,
     username: "",
     usertype_id: 0,
@@ -65,7 +56,7 @@ const SecondStep = ({
 
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
 
-  const handleEditRow = (row: RowData) => {
+  const handleEditRow = (row: UserData) => {
     setUserData(row);
     setEditingRowId(row.id);
   };
@@ -82,13 +73,28 @@ const SecondStep = ({
     setEditingRowId(null);
   };
 
-  const handleSubmitForm = () => {
-    handleSubmitUser(userData, editingRowId);
+  const handleSubmitUser = () => {
+    if (editingRowId !== null) {
+      setUserList((prevRows) =>
+        prevRows.map((row) => (row.id === editingRowId ? userData : row))
+      );
+    } else {
+      setUserList((prevRows) => [
+        ...prevRows,
+        {
+          ...userData,
+          id:
+            prevRows.length === 0
+              ? 1
+              : Math.max(...prevRows.map((row) => row.id)) + 1,
+        },
+      ]);
+    }
     clearAllFields();
   };
 
-  const userDelete = (rowId: number) => {
-    handleDeleteUser(rowId);
+  const handleDeleteUser = (rowId: number) => {
+    setUserList((prevRows) => prevRows.filter((row) => row.id !== rowId));
     clearAllFields();
   };
 
@@ -141,7 +147,7 @@ const SecondStep = ({
     } else {
       setErrorMessage("");
       if (isMailValid) {
-        handleSubmitForm();
+        handleSubmitUser();
       }
     }
   };
@@ -198,7 +204,7 @@ const SecondStep = ({
                           dialogSubtitle={
                             "Se eliminará al usuario y sus datos de la lista."
                           }
-                          onConfirm={() => userDelete(row.id)}
+                          onConfirm={() => handleDeleteUser(row.id)}
                         />
                       </TableCell>
                     </TableRow>

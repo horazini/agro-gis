@@ -6,14 +6,12 @@ import {
   Stepper,
   Typography,
 } from "@mui/material";
-import React, { Fragment, useEffect } from "react";
+import { Fragment, useEffect } from "react";
 import { useState } from "react";
 
 import FirstStep from "./firsstep";
 import SecondStep from "./secondstep";
 import ThirdStep from "./thirdstep";
-
-import { RowData } from "./secondstep";
 
 import {
   getTenantData,
@@ -26,21 +24,26 @@ import { PageTitle } from "../../../components/customComponents";
 import { tenantUserTypes } from "../../../utils/functions";
 import { useParams } from "react-router-dom";
 
-const MyForm = () => {
-  // Pasos del formulario
+export type OrgData = {
+  name: string;
+  representatives_surname: string;
+  representatives_names: string;
+  email: string;
+  locality: string;
+  phone: string;
+};
 
-  const [activeStep, setActiveStep] = useState(0);
+export type UserData = {
+  id: number;
+  usertype_id: number;
+  username: string;
+  mail_address: string;
+  surname: string;
+  names: string;
+};
 
-  const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
-  const handleNext = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
-  };
-
-  // Datos de la organizacion
-
-  const [orgData, setOrgData] = useState({
+const TenantFormLoader = () => {
+  const [orgData, setOrgData] = useState<OrgData>({
     name: "",
     representatives_surname: "",
     representatives_names: "",
@@ -49,62 +52,13 @@ const MyForm = () => {
     phone: "",
   });
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setOrgData((prevState) => ({ ...prevState, [name]: value }));
-  };
+  const [userList, setUserList] = useState<UserData[]>([]);
 
-  // Usuarios de la organizacion
-
-  const [userList, setUserList] = useState<RowData[]>([]);
-
-  const handleSubmitUser = (
-    usersData: RowData,
-    editingRowId: number | null
-  ) => {
-    if (editingRowId !== null) {
-      setUserList((prevRows) =>
-        prevRows.map((row) => (row.id === editingRowId ? usersData : row))
-      );
-    } else {
-      setUserList((prevRows) => [
-        ...prevRows,
-        {
-          ...usersData,
-          id:
-            prevRows.length === 0
-              ? 1
-              : Math.max(...prevRows.map((row) => row.id)) + 1,
-        },
-      ]);
-    }
-  };
-
-  const handleDeleteUser = (id: number) => {
-    setUserList((prevRows) => prevRows.filter((row) => row.id !== id));
-  };
-
-  /*   const usertypeslist = Object.values(tenantUserTypes).map(
-    (item: any) => item.name
-  ); */
-
-  const usersSummary: {
-    usertypename: string;
-    total: number;
-  }[] = tenantUserTypes.map((usertype) => {
-    const total = userList.filter(
-      (user) => user.usertype_id === usertype.id
-    ).length;
-    const usertypename = usertype.name;
-    return { usertypename, total };
-  });
-  usersSummary.push({ usertypename: "Total", total: userList.length });
+  const [isEditingForm, setIsEditingForm] = useState(false);
 
   // Load existing tenant (edit case)
 
   const params = useParams();
-
-  const [isEditingForm, setIsEditingForm] = useState(false);
 
   const loadTenant = async (id: string) => {
     try {
@@ -133,13 +87,47 @@ const MyForm = () => {
 
   PageTitle(isEditingForm ? "Editar cliente" : "Nuevo cliente");
 
-  // Confirmar formulario
+  return (
+    <TenantForm
+      orgDataInit={orgData}
+      userListInit={userList}
+      isEditingForm={isEditingForm}
+      editingTenantId={Number(params.id)}
+    />
+  );
+};
+
+const TenantForm = ({
+  orgDataInit,
+  userListInit,
+  isEditingForm,
+  editingTenantId,
+}: {
+  orgDataInit: OrgData;
+  userListInit: UserData[];
+  isEditingForm: boolean;
+  editingTenantId: number;
+}) => {
+  useEffect(() => {
+    setOrgData(orgDataInit);
+    setUserList(userListInit);
+  }, [orgDataInit, userListInit]);
+
+  // Tenant org data
+
+  const [orgData, setOrgData] = useState(orgDataInit);
+
+  // Tenant users
+
+  const [userList, setUserList] = useState<UserData[]>(userListInit);
+
+  // Form confirm
 
   const handleConfirm = async () => {
     try {
       if (isEditingForm) {
         const tenantPutData = {
-          id: Number(params.id),
+          id: editingTenantId,
           name: orgData.name,
           representatives_names: orgData.representatives_names,
           representatives_surname: orgData.representatives_surname,
@@ -187,7 +175,16 @@ const MyForm = () => {
     }
   };
 
-  // Pasos
+  // Form Steps handling
+
+  const [activeStep, setActiveStep] = useState(0);
+
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
+  const handleNext = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
 
   const renderStepContent = (step: number) => {
     switch (step) {
@@ -195,7 +192,7 @@ const MyForm = () => {
         return (
           <FirstStep
             orgData={orgData}
-            handleInputChange={handleInputChange}
+            setOrgData={setOrgData}
             onNext={handleNext}
             isEditingForm={isEditingForm}
             onConfirm={handleConfirm}
@@ -205,8 +202,7 @@ const MyForm = () => {
         return (
           <SecondStep
             userList={userList}
-            handleSubmitUser={handleSubmitUser}
-            handleDeleteUser={handleDeleteUser}
+            setUserList={setUserList}
             onBack={handleBack}
             onNext={handleNext}
           />
@@ -215,7 +211,7 @@ const MyForm = () => {
         return (
           <ThirdStep
             formData={orgData}
-            usersSummary={usersSummary}
+            userList={userList}
             onBack={handleBack}
             onConfirm={handleConfirm}
           />
@@ -237,11 +233,11 @@ const MyForm = () => {
         {isEditingForm ? (
           <FirstStep
             orgData={orgData}
-            handleInputChange={handleInputChange}
+            setOrgData={setOrgData}
             onNext={handleNext}
             isEditingForm={isEditingForm}
             onConfirm={handleConfirm}
-            tenantId={Number(params.id)}
+            tenantId={editingTenantId}
           />
         ) : (
           <Fragment>
@@ -264,4 +260,4 @@ const MyForm = () => {
   );
 };
 
-export default MyForm;
+export default TenantFormLoader;

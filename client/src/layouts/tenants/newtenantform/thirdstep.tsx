@@ -1,6 +1,7 @@
-import { Box, Button, Typography } from "@mui/material";
 import React from "react";
-
+import { Box, Button, Typography } from "@mui/material";
+import { UserData } from "./tenantform";
+import { tenantUserTypes } from "../../../utils/functions";
 import { ConfirmButton } from "../../../components/customComponents";
 
 export type ThirdStepProps = {
@@ -12,20 +13,29 @@ export type ThirdStepProps = {
     email: string;
     phone: string | number;
   };
-  usersSummary: {
-    usertypename: string;
-    total: number;
-  }[];
+  userList: UserData[];
   onBack: () => void;
   onConfirm: () => Promise<number>;
 };
 
 const ThirdStep = ({
   formData,
-  usersSummary,
+  userList,
   onBack,
   onConfirm,
 }: ThirdStepProps) => {
+  const usersSummary: {
+    usertypename: string;
+    total: number;
+  }[] = tenantUserTypes.map((usertype) => {
+    const total = userList.filter(
+      (user) => user.usertype_id === usertype.id
+    ).length;
+    const usertypename = usertype.name;
+    return { usertypename, total };
+  });
+  usersSummary.push({ usertypename: "Total", total: userList.length });
+
   const msg: string =
     "Se darán de alta al cliente y todos los usuarios cargados.";
 

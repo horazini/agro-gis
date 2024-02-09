@@ -67,7 +67,6 @@ const ThirdStep = ({
           msg={msg}
           onConfirm={onConfirm}
           navigateDir={"/tenants"}
-          disabled={false}
         />
       </Box>
     </React.Fragment>

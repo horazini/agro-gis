@@ -256,7 +256,7 @@ export const getCropDataById = async (
     const id = parseInt(req.params.id);
 
     if (!id) {
-      return res.status(400);
+      return res.status(400).send("Bad Request");
     }
 
     const cropQuery = `
@@ -892,7 +892,6 @@ function calendarStructuredTasks(cropsTasks: any[]): any[] {
                 // If an array of periodic tasks exist,
                 // assigns the done date of the previous item as the min done date of the last one
                 min_date = formattedDate(array[index - 1].done_date);
-              } else {
               }
 
               const restructuredEvent = {

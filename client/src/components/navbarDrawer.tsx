@@ -243,7 +243,7 @@ const SettingsMenu = () => {
 
 const UserMenu = () => {
   const dispatch = useDispatch();
-  const { username, surname, names, tenantName, usertypeName } = useSelector(
+  const { username, surname, names, tenantName } = useSelector(
     (state: RootState) => state.auth
   );
 

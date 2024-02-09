@@ -562,9 +562,9 @@ const FeaturesTable = ({ GeoJSONFeatures, setSelectedFeature }: any) => {
     >
       <Table>
         <TableBody>
-          {arrangedFeatures &&
-            Object.keys(arrangedFeatures).map((featureArrange: any) => (
-              <>
+          {Object.keys(arrangedFeatures).map(
+            (featureArrange: any, index: number) => (
+              <Fragment key={index}>
                 <TableRow sx={{ backgroundColor: "rgba(211,211,211,.2)" }}>
                   <TableCell></TableCell>
                   <TableCell>
@@ -674,8 +674,9 @@ const FeaturesTable = ({ GeoJSONFeatures, setSelectedFeature }: any) => {
                     </Collapse>
                   </TableCell>
                 </TableRow>
-              </>
-            ))}
+              </Fragment>
+            )
+          )}
         </TableBody>
       </Table>
     </TableContainer>

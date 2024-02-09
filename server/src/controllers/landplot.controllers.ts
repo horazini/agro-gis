@@ -317,7 +317,7 @@ export const getTenantGeoWithCurrentCrops = async (
 
 const insertLandplot = async (feature: any, tenantId: number) => {
   const { geometry, properties } = feature;
-  const { landplot, ...rest } = properties;
+  const { landplot } = properties;
   const { description, radius, subType } = landplot;
 
   if (geometry.type === "Polygon") {
@@ -341,7 +341,7 @@ const insertLandplot = async (feature: any, tenantId: number) => {
 
 const updateLandplot = async (feature: any) => {
   const { geometry, properties } = feature;
-  const { landplot, ...rest } = properties;
+  const { landplot } = properties;
   const { id, description, radius, subType } = landplot;
 
   if (geometry.type === "Polygon") {

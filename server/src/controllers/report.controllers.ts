@@ -168,8 +168,7 @@ export const getLandplotReport = async (
     let weightInTons = 0;
 
     response.rows.forEach((row: any) => {
-      const { species_id, species_name, numberofcrops, totalweightintons } =
-        row;
+      const { numberofcrops, totalweightintons } = row;
 
       totalNumberOfCrops += Number(numberofcrops);
       cultivatedAreas += parseFloat(landplotProperties.area);

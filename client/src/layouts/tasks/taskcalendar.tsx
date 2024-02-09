@@ -468,7 +468,6 @@ const EventDialogs = ({
   //#endregion
 
   const {
-    id,
     name,
     crop_id,
     landplot,

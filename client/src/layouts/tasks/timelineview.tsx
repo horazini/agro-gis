@@ -16,12 +16,6 @@ import {
 
 import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
-import {
-  ReactElement,
-  JSXElementConstructor,
-  ReactFragment,
-  ReactPortal,
-} from "react";
 
 function TimeLineModeView({
   rows,

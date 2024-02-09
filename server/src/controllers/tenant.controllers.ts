@@ -261,10 +261,8 @@ export const updateTenant = async (
       phone,
       id,
     ];
-    const tenantUpdateResponse: QueryResult = await pool.query(
-      tenantUpdateQuery,
-      tenantUpdateValues
-    );
+
+    await pool.query(tenantUpdateQuery, tenantUpdateValues);
 
     return res.status(204).send(`Tenant ${id} updated succesfully`);
   } catch (e) {

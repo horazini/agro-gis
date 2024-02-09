@@ -1,7 +1,7 @@
 import "leaflet/dist/leaflet.css";
 
 import { getLandplotData } from "../../utils/services";
-import { Feature } from "geojson";
+import { Feature, Geometry } from "geojson";
 
 import {
   FormattedArea,
@@ -20,7 +20,7 @@ import {
 import { DataFetcher, PageTitle } from "../../components/customComponents";
 import { formatedDate } from "../../utils/functions";
 
-const CropDetailsLoader = () => {
+const LandplotDetailsLoader = () => {
   const params = useParams();
   PageTitle(`Parcela N.° ${params.id}`);
 
@@ -31,22 +31,31 @@ const CropDetailsLoader = () => {
 
   return (
     <DataFetcher getResourceFunctions={[getLandplots]}>
-      {(params) => <CropDetails {...params} />}
+      {(params) => <LandplotDetails {...params} />}
     </DataFetcher>
   );
 };
 
-const CropDetails = ({ landplotData }: { landplotData: Feature }) => {
-  const navigate = useNavigate();
-
-  const landplot: {
+interface LandplotProperties {
+  landplot: {
     id: number;
     description: string;
     area: number;
     radius: number;
-  } = landplotData.properties?.landplot;
+  };
+  crops: any;
+}
 
-  const { id, description, area, radius } = landplot;
+const LandplotDetails = ({
+  landplotData,
+}: {
+  landplotData: Feature<Geometry | null, LandplotProperties>;
+}) => {
+  const navigate = useNavigate();
+
+  const properties: LandplotProperties = landplotData.properties;
+
+  const { id, description, area, radius } = properties.landplot;
 
   return (
     <Box
@@ -189,4 +198,4 @@ const CropsDataGrid = ({ crops }: any) => {
   );
 };
 
-export default CropDetailsLoader;
+export default LandplotDetailsLoader;

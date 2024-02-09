@@ -10,7 +10,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   getUserData,
@@ -22,6 +22,7 @@ import {
 import {
   CancelButton,
   ConfirmButton,
+  DataFetcher,
   PageTitle,
 } from "../../components/customComponents";
 import { useSelector } from "react-redux";
@@ -38,54 +39,30 @@ interface user {
   deleted: boolean;
 }
 
-const UserLoader = () => {
-  const params = useParams();
-
-  const [isEditingForm, setIsEditingForm] = useState(false);
-
-  const [userData, setUserData] = useState<user>({
-    id: 0,
-    usertype_id: 0,
-    mail_address: "",
-    username: "",
-    names: "",
-    surname: "",
-    deleted: false,
-  });
-
-  const loadUser = async (id: string) => {
-    try {
-      const data = await getUserData(id);
-      setUserData(data);
-      setIsEditingForm(true);
-    } catch (error) {
-      console.log(error);
-    }
+const UserFormLoader = ({ userId }: { userId: number }) => {
+  const userGetter = async () => {
+    const data = await getUserData(userId);
+    return ["userInitData", data];
   };
 
-  useEffect(() => {
-    if (params.id) {
-      loadUser(params.id);
-    }
-  }, [params.id]);
-
-  PageTitle(isEditingForm ? "Editar usuario" : "Agregar usuario");
-
   return (
-    <Fragment>
-      {userData && (
-        <UserForm
-          userData={userData}
-          isEditingForm={isEditingForm}
-          setUserData={setUserData}
-        />
-      )}{" "}
-    </Fragment>
+    <DataFetcher getResourceFunctions={[userGetter]}>
+      {(params) => <UserForm {...params} isEditingForm />}
+    </DataFetcher>
   );
 };
 
-const UserForm = ({ userData, isEditingForm, setUserData }: any) => {
+const UserForm = ({
+  userInitData,
+  isEditingForm = false,
+}: {
+  userInitData: any;
+  isEditingForm?: boolean;
+}) => {
   const { tenantId } = useSelector((state: RootState) => state.auth);
+
+  const [userData, setUserData] = useState(userInitData);
+
   const { id, usertype_id, mail_address, username, names, surname, deleted } =
     userData;
 
@@ -289,4 +266,28 @@ const UserForm = ({ userData, isEditingForm, setUserData }: any) => {
   );
 };
 
-export default UserLoader;
+const UserFormMain = () => {
+  const params = useParams();
+
+  const userId = Number(params.id);
+
+  PageTitle(params.id ? "Editar usuario" : "Agregar usuario");
+
+  const userInitData = {
+    id: 0,
+    usertype_id: 0,
+    mail_address: "",
+    username: "",
+    names: "",
+    surname: "",
+    deleted: false,
+  };
+
+  return params.id ? (
+    <UserFormLoader userId={userId} />
+  ) : (
+    <UserForm userInitData={userInitData} />
+  );
+};
+
+export default UserFormMain;

@@ -17,7 +17,11 @@ import {
 } from "../../components/mapcomponents";
 import { FormControl, Card, Box, Autocomplete, TextField } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
-import { ConfirmButton, PageTitle } from "../../components/customComponents";
+import {
+  ConfirmButton,
+  DataFetcher,
+  PageTitle,
+} from "../../components/customComponents";
 import { useNavigate } from "react-router";
 import dayjs from "dayjs";
 
@@ -32,35 +36,21 @@ const LandplotsAndCropsLoader = () => {
   PageTitle("Parcelas y cultivos");
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
-  const [geoData, setGeoData] = useState<any>();
-  const [species, setSpecies] = useState<speciesMainData[]>([]);
-
-  const loadData = async () => {
-    if (tenantId) {
-      const data = await getTenantGeoData(tenantId);
-      setGeoData(data);
-    }
+  const getLandplots = async () => {
+    const data = await getTenantGeoData(Number(tenantId));
+    return ["geoData", data];
   };
 
-  const loadSpecies = async () => {
-    if (tenantId) {
-      const data = await getTenantSpecies(tenantId);
-      setSpecies(data);
-    }
+  const getSpecies = async () => {
+    const data = await getTenantSpecies(Number(tenantId));
+    return ["species", data];
   };
 
-  useEffect(() => {
-    loadData();
-    loadSpecies();
-  }, []);
-
-  return tenantId !== null ? (
-    <LandplotsAndCrops
-      geoData={geoData}
-      species={species}
-      tenantId={tenantId}
-    />
-  ) : null;
+  return (
+    <DataFetcher getResourceFunctions={[getLandplots, getSpecies]}>
+      {(params) => <LandplotsAndCrops {...params} tenantId={tenantId} />}
+    </DataFetcher>
+  );
 };
 
 const LandplotsAndCrops = ({

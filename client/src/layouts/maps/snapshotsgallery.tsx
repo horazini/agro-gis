@@ -15,7 +15,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import {
@@ -32,6 +32,7 @@ import {
 } from "../../utils/services";
 import {
   CircularProgressBackdrop,
+  DataFetcher,
   DialogComponent,
   MySnackBarProps,
   PageTitle,
@@ -42,81 +43,71 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 
 export const LandplotSnapshotGallery = () => {
-  const params = useParams();
-
-  const [snapshotData, setSnapshotData] = useState<any>();
-
-  const loadSnapshots = async (id: string) => {
-    try {
-      const data = await getLandplotSnapshots(id);
-      setSnapshotData(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  // Data refresh trigger
-  const [dataReloadCounter, setDataReloadCounter] = useState(0);
-
-  useEffect(() => {
-    if (params.id) {
-      loadSnapshots(params.id);
-    }
-  }, [params.id, dataReloadCounter]);
-
-  return snapshotData ? (
-    <SnapshotGallery
-      objectId={params.id}
-      snapshotData={snapshotData}
-      isCropForm={false}
-      setDataReloadCounter={setDataReloadCounter}
+  return (
+    <CommonSnapshotGalleryLoader
+      fetchFunction={(id: number) => getLandplotSnapshots(id)}
     />
-  ) : (
-    <Fragment />
   );
 };
 
 export const CropSnapshotGallery = () => {
+  return (
+    <CommonSnapshotGalleryLoader
+      isCropForm
+      fetchFunction={(id: number) => getCropSnapshots(id)}
+    />
+  );
+};
+
+const CommonSnapshotGalleryLoader = ({
+  isCropForm = false,
+  fetchFunction,
+}: {
+  isCropForm?: boolean;
+  fetchFunction: (id: number) => Promise<any>;
+}) => {
   const params = useParams();
 
-  const [snapshotData, setSnapshotData] = useState<any>();
-
-  const loadSnapshots = async (id: string) => {
-    try {
-      const data = await getCropSnapshots(id);
-      setSnapshotData(data);
-    } catch (error) {
-      console.log(error);
-    }
+  const getSnapshots = async () => {
+    const data = await fetchFunction(Number(params.id));
+    return ["snapshotData", data];
   };
 
   // Data refresh trigger
   const [dataReloadCounter, setDataReloadCounter] = useState(0);
 
-  useEffect(() => {
-    if (params.id) {
-      loadSnapshots(params.id);
-    }
-  }, [params.id, dataReloadCounter]);
+  const refreshTrigger = () => {
+    setDataReloadCounter((prevCounter: number) => prevCounter + 1);
+  };
 
-  return snapshotData ? (
-    <SnapshotGallery
-      objectId={params.id}
-      snapshotData={snapshotData}
-      isCropForm={true}
-      setDataReloadCounter={setDataReloadCounter}
-    />
-  ) : (
-    <Fragment />
+  return (
+    <DataFetcher
+      getResourceFunctions={[getSnapshots]}
+      dataReloadCounter={dataReloadCounter}
+    >
+      {(fetchParams) => (
+        <SnapshotGallery
+          {...fetchParams}
+          objectId={params.id}
+          isCropForm={isCropForm}
+          refreshPage={refreshTrigger}
+        />
+      )}
+    </DataFetcher>
   );
 };
 
 const SnapshotGallery = ({
   objectId,
-  snapshotData,
+  snapshotData = [],
   isCropForm,
-  setDataReloadCounter,
-}: any) => {
+  refreshPage,
+}: {
+  objectId: string;
+  snapshotData: any[];
+  isCropForm: boolean;
+  refreshPage: () => void;
+}) => {
   PageTitle("Galería de snapshots");
   const { userTypeId } = useSelector((state: RootState) => state.auth);
 
@@ -154,7 +145,7 @@ const SnapshotGallery = ({
       let res = await deleteSnapshot(selectedSnapshot.id);
 
       if (res === 200) {
-        setDataReloadCounter((prevCounter: number) => prevCounter + 1);
+        refreshPage();
         setSnackBar(eventSuccessSnackBar);
       } else {
         setSnackBar(errorSnackBar);

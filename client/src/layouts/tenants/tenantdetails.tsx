@@ -1,5 +1,5 @@
 import { Box, Button, Divider } from "@mui/material";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -16,6 +16,7 @@ import {
 import { FormattedArea } from "../../components/mapcomponents";
 import {
   ConfirmFetchAndRedirect,
+  DataFetcher,
   PageTitle,
 } from "../../components/customComponents";
 import { formatedDate } from "../../utils/functions";
@@ -218,33 +219,7 @@ const CropsInfo = (cropsInfo: any) => {
   );
 };
 
-const TenantDetails = () => {
-  PageTitle("Cliente");
-
-  const params = useParams();
-
-  const [tenantData, setTenantData] = useState<tenantData>({
-    tenant: { id: 0, name: "" },
-    users: [],
-    land: { landplots_number: 0, areas_sum: 0 },
-    species: { species_number: 0 },
-  });
-
-  const loadTenant = async (id: string) => {
-    try {
-      const data = await getTenantData(id);
-      setTenantData(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    if (params.id) {
-      loadTenant(params.id);
-    }
-  }, [params.id]);
-
+const TenantDetails = ({ tenantData }: { tenantData: any }) => {
   return (
     <Fragment>
       {TenantHeader(tenantData.tenant)}
@@ -255,4 +230,23 @@ const TenantDetails = () => {
   );
 };
 
-export default TenantDetails;
+const TenantDetailsLoader = () => {
+  const params = useParams();
+
+  PageTitle("Cliente");
+
+  const tenantId = Number(params.id);
+
+  const tenantGetter = async () => {
+    const data = await getTenantData(tenantId);
+    return ["tenantData", data];
+  };
+
+  return (
+    <DataFetcher getResourceFunctions={[tenantGetter]}>
+      {(params) => <TenantDetails {...params} />}
+    </DataFetcher>
+  );
+};
+
+export default TenantDetailsLoader;

@@ -11,7 +11,7 @@ import {
   InputAdornment,
   FormHelperText,
 } from "@mui/material";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 
 import { Key as KeyIcon, Visibility, VisibilityOff } from "@mui/icons-material";
 
@@ -23,6 +23,7 @@ import {
 } from "../../utils/services";
 import {
   CircularProgressBackdrop,
+  DataFetcher,
   DialogComponent,
   MySnackBarProps,
   PageTitle,
@@ -38,24 +39,16 @@ const UserLoader = () => {
 
   const { userId } = useSelector((state: RootState) => state.auth);
 
-  const [userData, setUserData] = useState<user>();
-
-  const loadUser = async (id: number) => {
-    try {
-      const data = await getUserData(String(id));
-      setUserData(data);
-    } catch (error) {
-      console.log(error);
-    }
+  const userGetter = async () => {
+    const data = await getUserData(Number(userId));
+    return ["userData", data];
   };
 
-  useEffect(() => {
-    if (userId) {
-      loadUser(userId);
-    }
-  }, [userId]);
-
-  return userData ? <Profile userData={userData} /> : <Fragment />;
+  return (
+    <DataFetcher getResourceFunctions={[userGetter]}>
+      {(params) => <Profile {...params} />}
+    </DataFetcher>
+  );
 };
 
 const Profile = ({ userData }: any) => {

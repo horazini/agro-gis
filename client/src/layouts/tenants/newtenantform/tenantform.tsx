@@ -6,7 +6,7 @@ import {
   Stepper,
   Typography,
 } from "@mui/material";
-import { Fragment, useEffect } from "react";
+import { Fragment } from "react";
 import { useState } from "react";
 
 import FirstStep from "./firsstep";
@@ -20,7 +20,7 @@ import {
   putTenantData,
   tenantDataType,
 } from "../../../utils/services";
-import { PageTitle } from "../../../components/customComponents";
+import { DataFetcher, PageTitle } from "../../../components/customComponents";
 import { tenantUserTypes } from "../../../utils/functions";
 import { useParams } from "react-router-dom";
 
@@ -42,76 +42,38 @@ export type UserData = {
   names: string;
 };
 
-const TenantFormLoader = () => {
-  const [orgData, setOrgData] = useState<OrgData>({
-    name: "",
-    representatives_surname: "",
-    representatives_names: "",
-    email: "",
-    locality: "",
-    phone: "",
-  });
-
-  const [userList, setUserList] = useState<UserData[]>([]);
-
-  const [isEditingForm, setIsEditingForm] = useState(false);
-
-  // Load existing tenant (edit case)
-
-  const params = useParams();
-
-  const loadTenant = async (id: string) => {
-    try {
-      const data = await getTenantData(id);
-      const orgDataLoad = {
-        email: data.tenant.email,
-        locality: data.tenant.locality,
-        name: data.tenant.name,
-        phone: data.tenant.phone,
-        representatives_names: data.tenant.representatives_names,
-        representatives_surname: data.tenant.representatives_surname,
-      };
-      setOrgData(orgDataLoad);
-      setUserList(data.users);
-      setIsEditingForm(true);
-    } catch (error) {
-      console.log(error);
-    }
+const TenantFormLoader = ({ tenantId }: { tenantId: number }) => {
+  const tenantGetter = async () => {
+    const data = await getTenantData(tenantId);
+    return ["tenantData", data];
   };
 
-  useEffect(() => {
-    if (params.id) {
-      loadTenant(params.id);
-    }
-  }, [params.id]);
-
-  PageTitle(isEditingForm ? "Editar cliente" : "Nuevo cliente");
-
   return (
-    <TenantForm
-      orgDataInit={orgData}
-      userListInit={userList}
-      isEditingForm={isEditingForm}
-      editingTenantId={Number(params.id)}
-    />
+    <DataFetcher getResourceFunctions={[tenantGetter]}>
+      {(params) => <TenantForm {...params} editingTenantId={tenantId} />}
+    </DataFetcher>
   );
 };
 
 const TenantForm = ({
-  orgDataInit,
-  userListInit,
-  isEditingForm,
+  tenantData,
   editingTenantId,
 }: {
-  orgDataInit: OrgData;
-  userListInit: UserData[];
-  isEditingForm: boolean;
-  editingTenantId: number;
+  tenantData: any;
+  editingTenantId?: number;
 }) => {
-  useEffect(() => {
-    setOrgData(orgDataInit);
-    setUserList(userListInit);
-  }, [orgDataInit, userListInit]);
+  const isEditingForm: boolean = editingTenantId !== undefined;
+
+  const orgDataInit = {
+    email: tenantData.tenant.email,
+    locality: tenantData.tenant.locality,
+    name: tenantData.tenant.name,
+    phone: tenantData.tenant.phone,
+    representatives_names: tenantData.tenant.representatives_names,
+    representatives_surname: tenantData.tenant.representatives_surname,
+  };
+
+  const userListInit = tenantData.users;
 
   // Tenant org data
 
@@ -260,4 +222,30 @@ const TenantForm = ({
   );
 };
 
-export default TenantFormLoader;
+const TenantFormMain = () => {
+  const params = useParams();
+
+  const tenantId = Number(params.id);
+
+  PageTitle(params.id ? "Editar cliente" : "Nuevo cliente");
+
+  const tenantInitData = {
+    tenant: {
+      name: "",
+      representatives_names: "",
+      representatives_surname: "",
+      locality: "",
+      email: "",
+      phone: "",
+    },
+    users: [],
+  };
+
+  return params.id ? (
+    <TenantFormLoader tenantId={tenantId} />
+  ) : (
+    <TenantForm tenantData={tenantInitData} />
+  );
+};
+
+export default TenantFormMain;

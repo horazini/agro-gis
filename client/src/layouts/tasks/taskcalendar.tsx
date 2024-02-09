@@ -39,6 +39,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import {
   CircularProgressBackdrop,
+  DataFetcher,
   DialogComponent,
   MySnackBarProps,
   PageTitle,
@@ -175,39 +176,33 @@ const TaskCalendarLoader = () => {
   PageTitle("Calendario");
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
-  const [dataReloadCounter, setDataReloadCounter] = useState(0);
-
-  const [cropTasks, setCropTasks] = useState<TaskType[]>([]);
-
-  const loadTasks = async (id: number) => {
-    try {
-      const tasks = await getOngoingCropsCalendarTenantTasks(id);
-      setCropTasks(tasks);
-    } catch (error) {
-      console.log(error);
-    }
+  const getTasks = async () => {
+    const data = await getOngoingCropsCalendarTenantTasks(Number(tenantId));
+    return ["cropTasks", data];
   };
 
-  useEffect(() => {
-    if (tenantId) {
-      loadTasks(tenantId);
-    }
-  }, [tenantId, dataReloadCounter]);
+  const [dataReloadCounter, setDataReloadCounter] = useState(0);
+
+  const refreshTrigger = () => {
+    setDataReloadCounter((prevCounter: number) => prevCounter + 1);
+  };
 
   return (
-    <TaskCalendar
-      cropTasks={cropTasks}
-      setDataReloadCounter={setDataReloadCounter}
-    />
+    <DataFetcher
+      getResourceFunctions={[getTasks]}
+      dataReloadCounter={dataReloadCounter}
+    >
+      {(params) => <TaskCalendar {...params} refreshPage={refreshTrigger} />}
+    </DataFetcher>
   );
 };
 
 const TaskCalendar = ({
   cropTasks,
-  setDataReloadCounter,
+  refreshPage,
 }: {
   cropTasks: TaskType[];
-  setDataReloadCounter: React.Dispatch<React.SetStateAction<number>>;
+  refreshPage: () => void;
 }) => {
   const today = new Date();
 
@@ -376,7 +371,7 @@ const TaskCalendar = ({
           eventDialogItem={eventDialogItem}
           eventDialogOpen={eventDialogOpen}
           setEventDialogOpen={setEventDialogOpen}
-          setDataReloadCounter={setDataReloadCounter}
+          refreshPage={refreshPage}
         />
       </Paper>
     </Fragment>
@@ -387,7 +382,7 @@ const EventDialogs = ({
   eventDialogItem,
   eventDialogOpen,
   setEventDialogOpen,
-  setDataReloadCounter,
+  refreshPage,
 }: any) => {
   const navigate = useNavigate();
 
@@ -411,7 +406,7 @@ const EventDialogs = ({
 
       if (res === 200) {
         // Increment the data reload counter to trigger a data refresh
-        setDataReloadCounter((prevCounter: number) => prevCounter + 1);
+        refreshPage();
 
         setSnackBar(eventSuccessSnackBar);
       } else {
@@ -457,7 +452,7 @@ const EventDialogs = ({
       let res = await setFinishedCrop(sentData, eventDialogItem.id);
 
       if (res === 200) {
-        setDataReloadCounter((prevCounter: number) => prevCounter + 1);
+        refreshPage();
         setSnackBar(eventSuccessSnackBar);
       } else {
         setSnackBar(errorSnackBar);

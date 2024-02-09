@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
@@ -38,6 +38,7 @@ import {
 import {
   CancelButton,
   ConfirmButton,
+  DataFetcher,
   DialogComponent,
   PageTitle,
 } from "../../components/customComponents";
@@ -94,73 +95,32 @@ const timeUnits = [
   { key: "years", label: "Año/s" },
 ];
 
-const SpeciesFormLoader = () => {
-  const { tenantId } = useSelector((state: RootState) => state.auth);
-
-  const params = useParams();
-
-  const [isEditingForm, setIsEditingForm] = useState(false);
-
-  // Init species data
-
-  const [species, setSpecies] = useState<ISpeciesData>({
-    id: null,
-    name: "",
-    description: "",
-    tenant_id: tenantId || 1,
-  });
-
-  const [stagesList, setStagesList] = useState<IStageData[]>([]);
-
-  // Load existing species (edit case)
-
-  const loadSpecies = async (id: string) => {
-    try {
-      const data = await getSpeciesData(id);
-      setSpecies(data.species);
-      setStagesList(data.stages);
-      setIsEditingForm(true);
-    } catch (error) {
-      console.log(error);
-    }
+const SpeciesFormLoader = ({ speciesId }: { speciesId: number }) => {
+  const specieGetter = async () => {
+    const data = await getSpeciesData(speciesId);
+    return ["speciesInitData", data];
   };
 
-  useEffect(() => {
-    if (params.id) {
-      loadSpecies(params.id);
-    }
-  }, [params.id]);
-
-  PageTitle(isEditingForm ? "Editar especie" : "Agregar especie");
-
   return (
-    <SpeciesForm
-      speciesInit={species}
-      stageListInit={stagesList}
-      isEditingForm={isEditingForm}
-      editingSpeciesId={params.id}
-    />
+    <DataFetcher getResourceFunctions={[specieGetter]}>
+      {(params) => <SpeciesForm {...params} editingSpeciesId={speciesId} />}
+    </DataFetcher>
   );
 };
 
 const SpeciesForm = ({
-  speciesInit,
-  stageListInit,
-  isEditingForm,
+  speciesInitData,
   editingSpeciesId,
 }: {
-  speciesInit: ISpeciesData;
-  stageListInit: IStageData[];
-  isEditingForm: boolean;
-  editingSpeciesId: string | undefined;
+  speciesInitData: { species: ISpeciesData; stages: IStageData[] };
+  editingSpeciesId?: number;
 }): JSX.Element => {
+  const { species: speciesInit, stages: stageListInit } = speciesInitData;
+
+  const isEditingForm: boolean = editingSpeciesId !== undefined;
+
   const [deletedStages, setDeletedStages] = useState<number[]>([]);
   const [deletedEvents, setDeletedEvents] = useState<number[]>([]);
-
-  useEffect(() => {
-    setSpecies(speciesInit);
-    setStagesList(stageListInit);
-  }, [speciesInit, stageListInit]);
 
   // Datos principales de especie
 
@@ -226,7 +186,9 @@ const SpeciesForm = ({
     );
   };
 
-  const [stagesList, setStagesList] = useState<IStageData[]>(stageListInit);
+  const [stagesList, setStagesList] = useState<IStageData[]>(
+    stageListInit || []
+  );
 
   const [editingStageRowId, setEditingStageRowId] = useState<number | null>(
     null
@@ -476,7 +438,7 @@ const SpeciesForm = ({
           deletedStages,
           speciesData,
         };
-        const res = await putSpeciesData(updateData, editingSpeciesId);
+        const res = await putSpeciesData(updateData, Number(editingSpeciesId));
         return res;
       } else {
         const res = await postSpeciesData(speciesData);
@@ -592,7 +554,7 @@ const SpeciesForm = ({
                         <TableCell align="right" width={50}>
                           <IconButton
                             sx={{ cursor: "move" }}
-                            draggable={true}
+                            draggable
                             onDragStart={(e) => onDragStart(e, index)}
                             onDragEnd={onDragEnd}
                             onDragOver={onDragOver}
@@ -1039,4 +1001,29 @@ const SpeciesForm = ({
   );
 };
 
-export default SpeciesFormLoader;
+const SpeciesFormMain = () => {
+  const params = useParams();
+  const { tenantId } = useSelector((state: RootState) => state.auth);
+
+  const speciesId = Number(params.id);
+
+  const speciesInitData = {
+    species: {
+      id: null,
+      name: "",
+      description: "",
+      tenant_id: Number(tenantId),
+    },
+    stages: [],
+  };
+
+  PageTitle(params.id ? "Editar especie" : "Agregar especie");
+
+  return params.id ? (
+    <SpeciesFormLoader speciesId={speciesId} />
+  ) : (
+    <SpeciesForm speciesInitData={speciesInitData} />
+  );
+};
+
+export default SpeciesFormMain;

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import "leaflet/dist/leaflet.css";
 
 import {
@@ -52,6 +52,7 @@ import {
 import {
   ButtonDatePicker,
   CircularProgressBackdrop,
+  DataFetcher,
   DialogComponent,
   MySnackBarProps,
   PageTitle,
@@ -59,7 +60,6 @@ import {
   StandardDatePicker,
   mySnackBars,
 } from "../../components/customComponents";
-import { ResourceNotFound } from "../app/nomatch";
 
 import { format } from "date-fns";
 import {
@@ -91,40 +91,26 @@ function sortedEvents(
 const CropLoader = () => {
   PageTitle("Cultivo");
   const params = useParams();
-  const [loadError, setLoadError] = useState<boolean>(false);
 
-  const [cropFeature, setCropFeature] = useState<Feature>();
+  const getCrop = async () => {
+    const data = await getCropById(Number(params.id));
+    return ["cropFeature", data];
+  };
 
-  // Data refresh trigger
   const [dataReloadCounter, setDataReloadCounter] = useState(0);
 
-  const refreshPage = () => {
+  const refreshTrigger = () => {
     setDataReloadCounter((prevCounter: number) => prevCounter + 1);
   };
 
-  const loadCrop = async (cropId: number) => {
-    try {
-      const data = await getCropById(cropId);
-      setCropFeature(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    const cropId = Number(params.id);
-    if (!isNaN(cropId)) {
-      loadCrop(cropId);
-    } else {
-      setLoadError(true);
-    }
-  }, [params.id, dataReloadCounter]);
-
-  return cropFeature ? (
-    <CropDetails cropFeature={cropFeature} refreshPage={refreshPage} />
-  ) : loadError ? (
-    <ResourceNotFound />
-  ) : null;
+  return (
+    <DataFetcher
+      getResourceFunctions={[getCrop]}
+      dataReloadCounter={dataReloadCounter}
+    >
+      {(params) => <CropDetails {...params} refreshPage={refreshTrigger} />}
+    </DataFetcher>
+  );
 };
 
 const CropDetails = ({
@@ -1020,4 +1006,5 @@ const FinalHarvestReport = ({ cropId, minDate, HandlePutData }: any) => {
     </Box>
   );
 };
+
 export default CropLoader;

@@ -1,5 +1,5 @@
 import { Box, Button, Divider } from "@mui/material";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -11,6 +11,7 @@ import {
 import { disableUser, enableUser, getUserData } from "../../utils/services";
 import {
   ConfirmFetchAndRedirect,
+  DataFetcher,
   PageTitle,
 } from "../../components/customComponents";
 import { useSelector } from "react-redux";
@@ -31,25 +32,17 @@ const UserLoader = () => {
   const params = useParams();
   PageTitle("Usuario");
 
-  const [userData, setUserData] = useState<user>();
+  const userId = Number(params.id);
 
-  const loadUser = async (id: string) => {
-    try {
-      const data = await getUserData(id);
-      setUserData(data);
-    } catch (error) {
-      console.log(error);
-    }
+  const userGetter = async () => {
+    const data = await getUserData(userId);
+    return ["userData", data];
   };
 
-  useEffect(() => {
-    if (params.id) {
-      loadUser(params.id);
-    }
-  }, [params.id]);
-
   return (
-    <Fragment>{userData && <UserDetails userData={userData} />} </Fragment>
+    <DataFetcher getResourceFunctions={[userGetter]}>
+      {(params) => <UserDetails {...params} />}
+    </DataFetcher>
   );
 };
 

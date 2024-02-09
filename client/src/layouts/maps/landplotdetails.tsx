@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
 
 import { getLandplotData } from "../../utils/services";
@@ -18,37 +17,34 @@ import {
   GridRenderCellParams,
   GridValueFormatterParams,
 } from "@mui/x-data-grid";
-import { PageTitle } from "../../components/customComponents";
+import { DataFetcher, PageTitle } from "../../components/customComponents";
 import { formatedDate } from "../../utils/functions";
 
 const CropDetailsLoader = () => {
   const params = useParams();
   PageTitle(`Parcela N.° ${params.id}`);
 
-  const [landplotData, setLandplotData] = useState<Feature>();
-
-  const loadCrop = async (id: string) => {
-    try {
-      const data = await getLandplotData(Number(id));
-      setLandplotData(data);
-    } catch (error) {
-      console.log(error);
-    }
+  const getLandplots = async () => {
+    const data = await getLandplotData(Number(params.id));
+    return ["landplotData", data];
   };
 
-  useEffect(() => {
-    if (params.id) {
-      loadCrop(params.id);
-    }
-  }, [params.id]);
-
-  return landplotData ? <CropDetails landplotData={landplotData} /> : <div />;
+  return (
+    <DataFetcher getResourceFunctions={[getLandplots]}>
+      {(params) => <CropDetails {...params} />}
+    </DataFetcher>
+  );
 };
 
 const CropDetails = ({ landplotData }: { landplotData: Feature }) => {
   const navigate = useNavigate();
 
-  const landplot = landplotData.properties?.landplot;
+  const landplot: {
+    id: number;
+    description: string;
+    area: number;
+    radius: number;
+  } = landplotData.properties?.landplot;
 
   return (
     <Box
@@ -57,7 +53,7 @@ const CropDetails = ({ landplotData }: { landplotData: Feature }) => {
         alignItems: "center",
       }}
     >
-      <h1>Parcela N.° {landplotData.properties?.landplot.id}</h1>
+      <h1>Parcela N.° {landplot.id}</h1>
       <SentinelSnapshoter landplot={landplotData} />
       <Box
         sx={{

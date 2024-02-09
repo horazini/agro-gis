@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -12,23 +12,21 @@ import {
 import { FormatListBulleted, AddBusiness } from "@mui/icons-material/";
 
 import { tenantMainData, getTenants } from "../../utils/services";
-import { PageTitle } from "../../components/customComponents";
+import { DataFetcher, PageTitle } from "../../components/customComponents";
 
 const TenantsListLoader = () => {
   PageTitle("Clientes");
 
-  const [tenants, setTenants] = useState<tenantMainData[]>([]);
-
-  const loadTenants = async () => {
+  const tenantsGetter = async () => {
     const data = await getTenants();
-    setTenants(data);
+    return ["tenants", data];
   };
 
-  useEffect(() => {
-    loadTenants();
-  }, []);
-
-  return <TenantsList tenants={tenants} />;
+  return (
+    <DataFetcher getResourceFunctions={[tenantsGetter]}>
+      {(params) => <TenantsList {...params} />}
+    </DataFetcher>
+  );
 };
 
 const TenantsList = ({ tenants }: { tenants: tenantMainData[] }) => {

@@ -7,7 +7,7 @@ import {
   Select,
   TextField,
 } from "@mui/material";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { FormatListBulleted } from "@mui/icons-material";
@@ -28,53 +28,33 @@ import {
 } from "@mui/x-data-grid";
 import { FormattedArea } from "../../components/mapcomponents";
 import { formatedDate } from "../../utils/functions";
-import { PageTitle } from "../../components/customComponents";
+import { DataFetcher, PageTitle } from "../../components/customComponents";
 
 const CropsLoader = () => {
   PageTitle("Cultivos");
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
-  const [crops, setCrops] = useState<[]>([]);
-  const [landplots, setLandplots] = useState<any>();
-  const [species, setSpecies] = useState<speciesMainData[]>([]);
-
-  const loadCrops = async (id: number) => {
-    try {
-      const data = await getTenantCrops(id);
-      setCrops(data);
-    } catch (error) {
-      console.log(error);
-    }
+  const getCrops = async () => {
+    const data = await getTenantCrops(Number(tenantId));
+    return ["crops", data];
   };
 
-  const loadLandplots = async (id: number) => {
-    try {
-      const data = await getTenantGeo(id);
-      setLandplots(data);
-    } catch (error) {
-      console.log(error);
-    }
+  const getLandplots = async () => {
+    const data = await getTenantGeo(Number(tenantId));
+    return ["landplots", data];
   };
 
-  const loadSpecies = async (id: number) => {
-    try {
-      const data = await getTenantSpecies(id);
-      setSpecies(data);
-    } catch (error) {
-      console.log(error);
-    }
+  const getSpecies = async () => {
+    const data = await getTenantSpecies(Number(tenantId));
+    return ["species", data];
   };
 
-  useEffect(() => {
-    if (tenantId) {
-      loadCrops(tenantId);
-      loadLandplots(tenantId);
-      loadSpecies(tenantId);
-    }
-  }, [tenantId]);
-
-  return <CropsList crops={crops} landplots={landplots} species={species} />;
+  return (
+    <DataFetcher getResourceFunctions={[getCrops, getLandplots, getSpecies]}>
+      {(params) => <CropsList {...params} />}
+    </DataFetcher>
+  );
 };
 
 const CropsList = ({

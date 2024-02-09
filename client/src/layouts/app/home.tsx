@@ -8,7 +8,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { PageTitle } from "../../components/customComponents";
+import { DataFetcher, PageTitle } from "../../components/customComponents";
 
 import {
   Chart as ChartJS,
@@ -28,7 +28,7 @@ import {
   getTenantSpeciesCropsAreasSum,
   getWeather,
 } from "../../utils/services";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
@@ -82,147 +82,69 @@ const DashboardLoader = () => {
     (state: RootState) => state.auth
   );
 
-  const [nextHarvest, setNextHarvest] = useState();
-  const [areasSum, setAreasSum] = useState();
-  const [cultivatedAreaBySpecies, setCultivatedAreaBySpecies] = useState();
-  const [pendingTasksNumber, setPendingTasksNumber] = useState();
-  const [weatherReport, setWeatherReport] = useState();
-
-  const loadNextHarvestData = async (id: number) => {
-    try {
-      const nextHarvestData = await getNextHarvest(id);
-      setNextHarvest(nextHarvestData);
-    } catch (error) {
-      console.log(error);
-    }
+  const nextHarvestGetter = async () => {
+    const data = await getNextHarvest(Number(tenantId));
+    return ["nextHarvest", data];
   };
 
-  const loadAreasData = async (id: number) => {
-    try {
-      const areasData = await getAvailableAndOccupiedTenantAreasSum(id);
-      setAreasSum(areasData);
-    } catch (error) {
-      console.log(error);
-    }
+  const areasSumGetter = async () => {
+    const data = await getAvailableAndOccupiedTenantAreasSum(Number(tenantId));
+    return ["areasSum", data];
   };
 
-  const loadAreasBySpecieData = async (id: number) => {
-    try {
-      const cultivatedAreaBySpeciesData = await getTenantSpeciesCropsAreasSum(
-        id
-      );
-      setCultivatedAreaBySpecies(cultivatedAreaBySpeciesData);
-    } catch (error) {
-      console.log(error);
-    }
+  const cultivatedAreasGetter = async () => {
+    const data = await getTenantSpeciesCropsAreasSum(Number(tenantId));
+    return ["cultivatedAreaBySpecies", data];
   };
 
-  const loadPendingTasksData = async (id: number) => {
-    try {
-      const pendingTasksNumberRes = await getTenantPendingTasksNumber(id);
-      setPendingTasksNumber(pendingTasksNumberRes);
-    } catch (error) {
-      console.log(error);
-    }
+  const pendingTasksGetter = async () => {
+    const data = await getTenantPendingTasksNumber(Number(tenantId));
+    return ["pendingTasksNumber", data];
   };
 
-  useEffect(() => {
-    if (tenantId) {
-      loadAreasData(tenantId);
-      loadNextHarvestData(tenantId);
-      loadAreasBySpecieData(tenantId);
-      loadPendingTasksData(tenantId);
-    }
-  }, [tenantId]);
-
-  //#region geolocation
-
-  const [coords, setCoords] = useState([-27.469999, -58.830001]);
-
-  const loadWeatherData = async () => {
-    try {
-      const weatherRes = await getWeather(coords);
-      setWeatherReport(weatherRes);
-    } catch (error) {
-      console.log(error);
-    }
+  const weatherReportGetter = async () => {
+    const data = await getWeather();
+    return ["weatherReport", data];
   };
 
-  useEffect(() => {
-    loadWeatherData();
-  }, [coords]);
-
-  var getPositionOptions = {
-    enableHighAccuracy: true,
-    timeout: 5000,
-    maximumAge: 0,
-  };
-  function success(pos: { coords: any }) {
-    var crd = pos.coords;
-    const locatedCoords = [crd.latitude, crd.longitude];
-    setCoords(locatedCoords);
-  }
-
-  function errors(err: { code: any; message: any }) {
-    console.warn(`ERROR(${err.code}): ${err.message}`);
-  }
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.permissions
-        .query({ name: "geolocation" })
-        .then(function (result) {
-          if (result.state === "granted") {
-            navigator.geolocation.getCurrentPosition(
-              success,
-              errors,
-              getPositionOptions
-            );
-          } else if (result.state === "prompt") {
-            navigator.geolocation.getCurrentPosition(
-              success,
-              errors,
-              getPositionOptions
-            );
-          } else if (result.state === "denied") {
-            window.alert(
-              "Habilite la ubicación geográfica para una mejor experiencia."
-            );
-          }
-        });
-    } else {
-      console.log("Geolocation is not supported by this browser.");
-    }
-  }, []);
-
-  //#endregion
-
-  const data = {
-    nextHarvest,
-    areasSum,
-    cultivatedAreaBySpecies,
-    pendingTasksNumber,
-    weatherReport,
-  };
   return (
     <Fragment>
-      {data
-        ? userTypeId !== 1
-          ? TenantsDashboard(data, navigate)
-          : ServiceAdminDashboard(data)
-        : null}
+      {userTypeId !== 1 ? (
+        <DataFetcher
+          getResourceFunctions={[
+            nextHarvestGetter,
+            areasSumGetter,
+            cultivatedAreasGetter,
+            pendingTasksGetter,
+            weatherReportGetter,
+          ]}
+        >
+          {(params) => <TenantsDashboard {...params} navigate={navigate} />}
+        </DataFetcher>
+      ) : (
+        <DataFetcher getResourceFunctions={[weatherReportGetter]}>
+          {(params) => <ServiceAdminDashboard {...params} />}
+        </DataFetcher>
+      )}
     </Fragment>
   );
 };
 
-const TenantsDashboard = (data: any, navigate: any) => {
-  const {
-    nextHarvest,
-    areasSum,
-    cultivatedAreaBySpecies,
-    pendingTasksNumber,
-    weatherReport,
-  } = data;
+const TenantsDashboard = ({
+  nextHarvest,
+  areasSum,
+  cultivatedAreaBySpecies,
+  pendingTasksNumber,
+  weatherReport,
+  navigate,
+}: {
+  nextHarvest: any;
+  areasSum: any;
+  cultivatedAreaBySpecies: any;
+  pendingTasksNumber: any;
+  weatherReport: any;
+  navigate: any;
+}) => {
   return (
     <Container maxWidth="xl" sx={{ paddingBottom: 3 }}>
       <Grid container spacing={3}>
@@ -515,8 +437,7 @@ const WeatherReportPanel = (weatherReport: any) => {
   );
 };
 
-const ServiceAdminDashboard = (data: any) => {
-  const { weatherReport } = data;
+const ServiceAdminDashboard = ({ weatherReport }: { weatherReport: any }) => {
   return (
     <Container maxWidth="xl" sx={{ paddingBottom: 3 }}>
       <Grid container spacing={3}>

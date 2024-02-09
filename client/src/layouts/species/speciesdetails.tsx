@@ -1,6 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
-import { RootState } from "../../redux/store";
-import { useSelector } from "react-redux";
+import { Fragment, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -35,6 +33,7 @@ import {
 } from "../../utils/services";
 import {
   ConfirmFetchAndRedirect,
+  DataFetcher,
   PageTitle,
 } from "../../components/customComponents";
 
@@ -69,62 +68,31 @@ interface IGrowthEventData {
 
 const SpeciesDetailsLoader = () => {
   PageTitle("Especie");
-
-  const { tenantId } = useSelector((state: RootState) => state.auth);
   const params = useParams();
 
-  const [species, setSpecies] = useState<ISpeciesData>({
-    id: 0,
-    name: "",
-    description: "",
-    tenant_id: tenantId || 1,
-    deleted: false,
-  });
-
-  const [stagesList, setStagesList] = useState<IStageData[]>([]);
-
-  const [speciesDetails, setSpeciesDetails] = useState<any>({
-    ongoingCropsNumber: 0,
-    finishedCropsNumber: 0,
-    finishedCropsAreaSum: 0,
-    finishedCropsWeightSum: 0,
-  });
-
-  const loadSpecies = async (id: string) => {
-    try {
-      const data = await getDetailedSpeciesData(id);
-      setSpecies(data.species);
-      setStagesList(data.stages);
-      setSpeciesDetails(data.speciesDetails);
-    } catch (error) {
-      console.log(error);
-    }
+  const speciesDataGetter = async () => {
+    const data = await getDetailedSpeciesData(Number(params.id));
+    return ["detailedSpeciesData", data];
   };
 
-  useEffect(() => {
-    if (params.id) {
-      loadSpecies(params.id);
-    }
-  }, [params.id]);
-
   return (
-    <SpeciesDetails
-      species={species}
-      stagesList={stagesList}
-      speciesDetails={speciesDetails}
-    />
+    <DataFetcher getResourceFunctions={[speciesDataGetter]}>
+      {(params) => <SpeciesDetails {...params} />}
+    </DataFetcher>
   );
 };
 
 const SpeciesDetails = ({
-  species,
-  stagesList,
-  speciesDetails,
+  detailedSpeciesData,
 }: {
-  species: ISpeciesData;
-  stagesList: IStageData[];
-  speciesDetails: any;
+  detailedSpeciesData: {
+    species: ISpeciesData;
+    stages: IStageData[];
+    speciesDetails: any;
+  };
 }): JSX.Element => {
+  const { species, stages, speciesDetails } = detailedSpeciesData;
+
   const timeUnits = [
     { key: "days", label: "Día/s" },
     { key: "weeks", label: "Semana/s" },
@@ -253,7 +221,7 @@ const SpeciesDetails = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {stagesList.map((stage: any, index: number) => {
+                  {stages.map((stage: any, index: number) => {
                     const {
                       id,
                       name,

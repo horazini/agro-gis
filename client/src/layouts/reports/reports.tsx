@@ -8,7 +8,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Fragment, SetStateAction, useEffect, useState } from "react";
+import { Fragment, SetStateAction, useState } from "react";
 
 import {
   Inventory as InventoryIcon,
@@ -27,6 +27,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import {
   CircularProgressBackdrop,
+  DataFetcher,
   MySnackBarProps,
   PageTitle,
   SnackBarAlert,
@@ -59,29 +60,21 @@ const ReportsLoader = () => {
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
-  const [landplots, setLandplots] = useState<any>();
-  const [species, setSpecies] = useState<speciesMainData[]>([]);
-
-  const loadLandplots = async () => {
-    if (tenantId) {
-      const data = await getTenantGeo(tenantId);
-      setLandplots(data);
-    }
+  const geoGetter = async () => {
+    const data = await getTenantGeo(Number(tenantId));
+    return ["landplots", data];
   };
 
-  const loadSpecies = async () => {
-    if (tenantId) {
-      const data = await getTenantSpecies(tenantId);
-      setSpecies(data);
-    }
+  const speciesGetter = async () => {
+    const data = await getTenantSpecies(Number(tenantId));
+    return ["species", data];
   };
 
-  useEffect(() => {
-    loadLandplots();
-    loadSpecies();
-  }, []);
-
-  return <StatisticalReports species={species} landplots={landplots} />;
+  return (
+    <DataFetcher getResourceFunctions={[geoGetter, speciesGetter]}>
+      {(params) => <StatisticalReports {...params} />}
+    </DataFetcher>
+  );
 };
 
 const StatisticalReports = ({

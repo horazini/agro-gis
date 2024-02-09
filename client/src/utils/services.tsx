@@ -11,7 +11,7 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.authorization = token;
     }
     return config;
   },
@@ -63,7 +63,7 @@ export type tenantDataType = {
 
 export const getTenants = async () => {
   try {
-    const response = await api.get("/tenants");
+    const response = await api.get(`/tenants`);
     const data: tenantMainData[] = response.data;
     return data;
   } catch (error) {
@@ -78,7 +78,7 @@ export const tenantNameAlreadyExists = async (
 ) => {
   if (currentTenantId) {
     const res = await api.post(
-      "/renametenantnameexists",
+      `/renametenantnameexists`,
       { tenantName, currentTenantId },
       {
         headers: { "Content-type": "application/json" },
@@ -88,7 +88,7 @@ export const tenantNameAlreadyExists = async (
     return bool;
   } else {
     const res = await api.post(
-      "/tenantnameexists",
+      `/tenantnameexists`,
       { tenantName },
       {
         headers: { "Content-type": "application/json" },
@@ -105,7 +105,7 @@ export const getTenantUsers = async (id: number) => {
   return data;
 };
 
-export const getTenantData = async (id: string) => {
+export const getTenantData = async (id: number) => {
   try {
     const res = await api.get(`/tenantdata/${id}`);
     const data = res.data;
@@ -207,7 +207,7 @@ export const resetUserPassword = async (
   return res.status;
 };
 
-export const getUserData = async (id: string) => {
+export const getUserData = async (id: number) => {
   const res = await api.get(`/userdata/${id}`);
   const data = res.data;
   return data;
@@ -267,13 +267,13 @@ export type speciesDataType = {
   }[];
 };
 
-export const getSpeciesData = async (id: string) => {
+export const getSpeciesData = async (id: number) => {
   const res = await api.get(`/speciesdata/${id}`);
   const data = res.data;
   return data;
 };
 
-export const getDetailedSpeciesData = async (id: string) => {
+export const getDetailedSpeciesData = async (id: number) => {
   const res = await api.get(`/detailedspeciesdata/${id}`);
   const data = res.data;
   return data;
@@ -286,16 +286,13 @@ export const getTenantSpecies = async (tenantId: number) => {
 };
 
 export const postSpeciesData = async (speciesData: speciesDataType) => {
-  const res = await api.post("/speciesdata", speciesData, {
+  const res = await api.post(`/speciesdata`, speciesData, {
     headers: { "Content-type": "application/json" },
   });
   return res.status;
 };
 
-export const putSpeciesData = async (
-  updateData: object,
-  speciesId: string | undefined
-) => {
+export const putSpeciesData = async (updateData: object, speciesId: number) => {
   const res = await api.put(`/species/${speciesId}`, updateData, {
     headers: { "Content-type": "application/json" },
   });
@@ -315,13 +312,13 @@ export const enableSpecies = async (speciesId: number) => {
 // Landplots
 
 export const getTenantGeo = async (tenantId: number) => {
-  const res = await api.get(`/tenantGeo/${tenantId}`);
+  const res = await api.get(`/tenantgeo/${tenantId}`);
   const data = res.data;
   return data;
 };
 
 export const getAvailableAndOccupiedTenantGeo = async (tenantId: number) => {
-  const res = await api.get(`/availabletenantGeo/${tenantId}`);
+  const res = await api.get(`/availabletenantgeo/${tenantId}`);
   const data = res.data;
   return data;
 };
@@ -458,13 +455,13 @@ export const postLandplotSnapshot = async (snapshotData: object) => {
   return res.status;
 };
 
-export const getLandplotSnapshots = async (id: string) => {
+export const getLandplotSnapshots = async (id: number) => {
   const res = await api.get(`/landplotsnapshots/${id}`);
   const data = res.data;
   return data;
 };
 
-export const getCropSnapshots = async (id: string) => {
+export const getCropSnapshots = async (id: number) => {
   const res = await api.get(`/cropsnapshots/${id}`);
   const data = res.data;
   return data;
@@ -521,7 +518,50 @@ export const getTenantPendingTasksNumber = async (tenantId: number) => {
 
 // External services
 
-export const getWeather = async (coords: number[]) => {
+async function getLocation(): Promise<number[]> {
+  const defaultCoords = [-27.469999, -58.830001];
+
+  const getPositionOptions = {
+    enableHighAccuracy: true,
+    timeout: 5000,
+    maximumAge: 0,
+  };
+
+  return new Promise((resolve) => {
+    if (navigator.geolocation) {
+      navigator.permissions
+        .query({ name: "geolocation" })
+        .then(function (result) {
+          if (result.state === "granted" || result.state === "prompt") {
+            navigator.geolocation.getCurrentPosition(
+              (pos: { coords: any }) => {
+                const { latitude, longitude } = pos.coords;
+                resolve([latitude, longitude]);
+              },
+              (err: { code: any; message: any }) => {
+                console.error(`ERROR(${err.code}): ${err.message}`);
+                resolve(defaultCoords);
+              },
+              getPositionOptions
+            );
+          } else if (result.state === "denied") {
+            window.alert(
+              "Habilite la ubicación geográfica para una mejor experiencia."
+            );
+            console.log("Geolocation permission denied.");
+            resolve(defaultCoords);
+          }
+        });
+    } else {
+      console.log("Geolocation is not supported by this browser.");
+      resolve(defaultCoords);
+    }
+  });
+}
+
+export const getWeather = async () => {
+  const coords = await getLocation();
+
   let lat = coords[0];
   let lon = coords[1];
 

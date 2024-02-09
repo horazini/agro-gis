@@ -21,6 +21,7 @@ import { LatLngExpression } from "leaflet";
 import {
   CancelButton,
   ConfirmButton,
+  DataFetcher,
   PageTitle,
 } from "../../components/customComponents";
 
@@ -90,37 +91,32 @@ const LandplotManagementLoader = () => {
   PageTitle("Parcelas");
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
-  const [GeoJSONFeatures, setGeoJSONFeatures] = useState<Feature[]>([]);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    if (tenantId) {
-      const data = await getAvailableAndOccupiedTenantGeo(tenantId);
-      setGeoJSONFeatures(data.features);
-    }
+  const getFeatures = async () => {
+    const data = await getAvailableAndOccupiedTenantGeo(Number(tenantId));
+    const { features } = data;
+    return ["GeoJSONFeaturesInit", features];
   };
 
-  return tenantId !== null ? (
-    <LandplotManagementMap
-      GeoJSONFeatures={GeoJSONFeatures}
-      setGeoJSONFeatures={setGeoJSONFeatures}
-      tenantId={tenantId}
-    />
-  ) : null;
+  return (
+    <DataFetcher getResourceFunctions={[getFeatures]}>
+      {(params) => <LandplotManagementMap {...params} tenantId={tenantId} />}
+    </DataFetcher>
+  );
 };
 
 const LandplotManagementMap = ({
-  GeoJSONFeatures,
-  setGeoJSONFeatures,
+  GeoJSONFeaturesInit,
   tenantId,
 }: {
-  GeoJSONFeatures: Feature[];
-  setGeoJSONFeatures: React.Dispatch<React.SetStateAction<Feature[]>>;
+  GeoJSONFeaturesInit: Feature[];
   tenantId: number;
 }) => {
+  const [GeoJSONFeatures, setGeoJSONFeatures] = useState<Feature[]>([]);
+
+  useEffect(() => {
+    setGeoJSONFeatures(GeoJSONFeaturesInit);
+  }, [GeoJSONFeaturesInit]);
+
   // GeoJSON and Leaflet Layer features synchronization handling
 
   const LeafletFeatures = useRef<L.FeatureGroup>(null);
@@ -897,7 +893,6 @@ const FormSubmitButtons = ({
         msg={"Se registrarán todos los cambios realizados."}
         onConfirm={handleSubmit}
         navigateDir={"/landplots"}
-        disabled={false}
       />
     </Box>
   );

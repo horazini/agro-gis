@@ -7,13 +7,13 @@ import {
   Typography,
 } from "@mui/material";
 import { Add as AddIcon, FormatListBulleted } from "@mui/icons-material";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { getTenantUsers } from "../../utils/services";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { PageTitle } from "../../components/customComponents";
+import { DataFetcher, PageTitle } from "../../components/customComponents";
 import { UsertypeIDToString } from "../../utils/functions";
 
 interface user {
@@ -31,27 +31,19 @@ const UserListLoad = () => {
 
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
-  const [tenantUsers, setTenantUsers] = useState<user[]>([]);
-
-  const loadTenant = async (id: number) => {
-    try {
-      const data = await getTenantUsers(id);
-      setTenantUsers(data);
-    } catch (error) {
-      console.log(error);
-    }
+  const usersGetter = async () => {
+    const data = await getTenantUsers(Number(tenantId));
+    return ["users", data];
   };
 
-  useEffect(() => {
-    if (tenantId) {
-      loadTenant(tenantId);
-    }
-  }, [tenantId]);
-
-  return <Fragment>{UserList(tenantUsers)}</Fragment>;
+  return (
+    <DataFetcher getResourceFunctions={[usersGetter]}>
+      {(params) => <UserList {...params} />}
+    </DataFetcher>
+  );
 };
 
-const UserList = (users: user[]) => {
+const UserList = ({ users }: { users: user[] }) => {
   const navigate = useNavigate();
 
   return (
@@ -124,4 +116,5 @@ export const UserCard = ({ user }: any) => {
     </Card>
   );
 };
+
 export default UserListLoad;

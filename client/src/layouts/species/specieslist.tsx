@@ -1,5 +1,5 @@
 import { Box, Button, Card, CardContent, Typography } from "@mui/material";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
@@ -7,27 +7,23 @@ import { useSelector } from "react-redux";
 import { Add as AddIcon, FormatListBulleted } from "@mui/icons-material";
 
 import { speciesMainData, getTenantSpecies } from "../../utils/services";
-import { PageTitle } from "../../components/customComponents";
+import { DataFetcher, PageTitle } from "../../components/customComponents";
 
 const SpeciesListLoader = () => {
   PageTitle("Especies");
 
-  const [species, setSpecies] = useState<speciesMainData[]>([]);
-
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
-  const loadSpecies = async () => {
-    if (tenantId) {
-      const data = await getTenantSpecies(tenantId);
-      setSpecies(data);
-    }
+  const getSpecies = async () => {
+    const data = await getTenantSpecies(Number(tenantId));
+    return ["species", data];
   };
 
-  useEffect(() => {
-    loadSpecies();
-  }, []);
-
-  return <SpeciesList species={species} />;
+  return (
+    <DataFetcher getResourceFunctions={[getSpecies]}>
+      {(params) => <SpeciesList {...params} />}
+    </DataFetcher>
+  );
 };
 
 const SpeciesList = ({ species }: { species: speciesMainData[] }) => {

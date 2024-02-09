@@ -3,6 +3,7 @@ import {
   AlertColor,
   AlertTitle,
   Backdrop,
+  Box,
   Button,
   CircularProgress,
   Dialog,
@@ -23,6 +24,7 @@ import { DateCalendar } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 
 import { useEffect } from "react";
+import { ResourceNotFound } from "../layouts/app/nomatch";
 
 export const PageTitle = (title: string) => {
   useEffect(() => {
@@ -318,7 +320,7 @@ export type ConfirmButtonProps = {
   msg: string;
   onConfirm: () => Promise<number>;
   navigateDir: string;
-  disabled: boolean;
+  disabled?: boolean;
 };
 
 /**
@@ -333,7 +335,7 @@ export const ConfirmButton = ({
   msg,
   onConfirm,
   navigateDir,
-  disabled,
+  disabled = false,
 }: ConfirmButtonProps) => {
   return (
     <Fragment>
@@ -637,3 +639,71 @@ export const ButtonDatePicker = ({
     </Fragment>
   );
 };
+
+//#region Data Fetcher
+
+const PageLoading = () => {
+  return (
+    <Box
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        padding: "25vh",
+      }}
+    >
+      <CircularProgress
+        size={68}
+        sx={{
+          color: "grey",
+        }}
+      />
+    </Box>
+  );
+};
+
+type ResourceGetter = () => Promise<any>;
+
+interface DataFetcherProps {
+  children: (params: any) => JSX.Element;
+  getResourceFunctions: ResourceGetter[];
+  dataReloadCounter?: number;
+}
+
+export const DataFetcher: React.FC<DataFetcherProps> = ({
+  children,
+  getResourceFunctions,
+  dataReloadCounter,
+}) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [params, setParams] = useState<any>({});
+
+  const fetchData = async () => {
+    try {
+      const results = await Promise.all(
+        getResourceFunctions.map((func) => func())
+      );
+      const paramsObject = Object.fromEntries(results);
+      setParams(paramsObject);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(true);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [dataReloadCounter]);
+
+  return loading ? (
+    <PageLoading />
+  ) : !error ? (
+    children(params)
+  ) : (
+    <ResourceNotFound />
+  );
+};
+
+//#endregion

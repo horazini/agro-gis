@@ -6,7 +6,6 @@ import {
   MenuItem,
   Paper,
   Select,
-  SelectChangeEvent,
   TextField,
   Typography,
 } from "@mui/material";
@@ -41,7 +40,7 @@ interface user {
 
 const UserFormLoader = ({ userId }: { userId: number }) => {
   const userGetter = async () => {
-    const data = await getUserData(userId);
+    const data: user = await getUserData(userId);
     return ["userInitData", data];
   };
 
@@ -56,21 +55,16 @@ const UserForm = ({
   userInitData,
   isEditingForm = false,
 }: {
-  userInitData: any;
+  userInitData: user;
   isEditingForm?: boolean;
 }) => {
   const { tenantId } = useSelector((state: RootState) => state.auth);
 
   const [userData, setUserData] = useState(userInitData);
 
-  const { id, usertype_id, mail_address, username, names, surname, deleted } =
-    userData;
+  const { id, usertype_id, mail_address, username, names, surname } = userData;
 
-  const handleFormChange = (
-    event:
-      | SelectChangeEvent<string>
-      | React.ChangeEvent<{ name: string; value: unknown }>
-  ) => {
+  const handleFormChange = (event: { target: { name: any; value: any } }) => {
     const { name, value } = event.target;
     setUserData({ ...userData, [name]: value });
   };
@@ -273,7 +267,7 @@ const UserFormMain = () => {
 
   PageTitle(params.id ? "Editar usuario" : "Agregar usuario");
 
-  const userInitData = {
+  const userInitData: user = {
     id: 0,
     usertype_id: 0,
     mail_address: "",

@@ -42,6 +42,7 @@ import {
   DialogComponent,
   PageTitle,
 } from "../../components/customComponents";
+import { timeUnits } from "../../utils/functions";
 
 interface ISpeciesData {
   id: number | null;
@@ -87,13 +88,6 @@ const nullGrowthEventData = {
   timePeriod: " ",
   timePeriodUnit: "",
 };
-
-const timeUnits = [
-  { key: "days", label: "Día/s" },
-  { key: "weeks", label: "Semana/s" },
-  { key: "months", label: "Mes/es" },
-  { key: "years", label: "Año/s" },
-];
 
 const SpeciesFormLoader = ({ speciesId }: { speciesId: number }) => {
   const specieGetter = async () => {

@@ -8,7 +8,12 @@ import {
   Edit as EditIcon,
 } from "@mui/icons-material";
 
-import { disableUser, enableUser, getUserData } from "../../utils/services";
+import {
+  disableUser,
+  enableUser,
+  getUserData,
+  userDataType,
+} from "../../utils/services";
 import {
   ConfirmFetchAndRedirect,
   DataFetcher,
@@ -17,16 +22,6 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { UsertypeIDToString } from "../../utils/functions";
-
-export type user = {
-  id: number;
-  usertype_id: number;
-  mail_address: string;
-  username: string;
-  names: string;
-  surname: string;
-  deleted: boolean;
-};
 
 const UserLoader = () => {
   const params = useParams();
@@ -46,7 +41,7 @@ const UserLoader = () => {
   );
 };
 
-const UserDetails = ({ userData }: any) => {
+const UserDetails = ({ userData }: { userData: userDataType }) => {
   const { userId } = useSelector((state: RootState) => state.auth);
 
   const { id, usertype_id, mail_address, username, names, surname, deleted } =
@@ -54,7 +49,7 @@ const UserDetails = ({ userData }: any) => {
 
   const handleDisableUser: () => Promise<number> = async () => {
     try {
-      return disableUser(id);
+      return disableUser(Number(id));
     } catch (error) {
       console.log(error);
       return 400;
@@ -63,7 +58,7 @@ const UserDetails = ({ userData }: any) => {
 
   const handleEnableUser: () => Promise<number> = async () => {
     try {
-      return enableUser(id);
+      return enableUser(Number(id));
     } catch (error) {
       console.log(error);
       return 400;

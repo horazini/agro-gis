@@ -1,17 +1,5 @@
-import {
-  Typography,
-  Grid,
-  TextField,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from "@mui/material";
+import { Typography, Grid, TextField, Box, Button } from "@mui/material";
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import { OrgData } from "./tenantform";
 import { isValidEmail } from "../../../utils/functions";
@@ -38,25 +26,9 @@ const FirstStep = ({
   onConfirm,
   tenantId,
 }: FirstStepProps) => {
-  const navigate = useNavigate();
-
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setOrgData((prevState) => ({ ...prevState, [name]: value }));
-  };
-
-  const [open, setOpen] = useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleCancel = () => {
-    navigate("/tenants");
   };
 
   const [tenantNameError, setTenantNameError] = useState(false);
@@ -240,26 +212,6 @@ const FirstStep = ({
           </Button>
         )}
       </Box>
-
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"¿Cancelar carga?"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Los datos ingresados no serán guardados.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Quedarme aquí</Button>
-          <Button onClick={handleCancel} autoFocus>
-            Confirmar
-          </Button>
-        </DialogActions>
-      </Dialog>
     </React.Fragment>
   );
 };

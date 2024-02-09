@@ -52,7 +52,7 @@ export type userDataType = {
   username: string;
   names: string;
   surname: string;
-  password_hash: string;
+  password_hash?: string;
   deleted?: boolean;
 };
 
@@ -575,7 +575,7 @@ https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone
   `);
   const locationData = await locationResponse.data;
 
-  const { city, principalSubdivision, countryCode, countryName } = locationData;
+  const { city, principalSubdivision, countryName } = locationData;
   const formatedLocationName =
     city + ", " + principalSubdivision + ". " + countryName;
 

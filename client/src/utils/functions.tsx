@@ -1,4 +1,4 @@
-//  tipos de usuario sin el administrador
+// Custom objects
 
 export const tenantUserTypes = [
   { id: 2, name: "Gerente administrativo" },
@@ -15,6 +15,23 @@ export const usertypeObjects = [
   { id: 4, label: "Especialista en suelos" },
   { id: 5, label: "Botánico " },
   { id: 6, label: "Agricultor" },
+];
+
+export const timeUnits = [
+  { key: "days", label: "Día/s", singularLabel: "Día", pluralLabel: "Días" },
+  {
+    key: "weeks",
+    label: "Semana/s",
+    singularLabel: "Semana",
+    pluralLabel: "Semanas",
+  },
+  {
+    key: "months",
+    label: "Mes/es",
+    singularLabel: "Mes",
+    pluralLabel: "Meses",
+  },
+  { key: "years", label: "Año/s", singularLabel: "Año", pluralLabel: "Años" },
 ];
 
 export function UsertypeIDToString(id: number): string {
@@ -42,17 +59,10 @@ export function isValidEmail(testString: string) {
 export function TimeIntervalToReadableString(interval: {
   [unit: string]: number;
 }): string {
-  const timeUnitObjects = [
-    { key: "days", singularLabel: "Día", pluralLabel: "Días" },
-    { key: "weeks", singularLabel: "Semana", pluralLabel: "Semanas" },
-    { key: "months", singularLabel: "Mes", pluralLabel: "Meses" },
-    { key: "years", singularLabel: "Año", pluralLabel: "Años" },
-  ];
-
   try {
     const intervalUnit = Object.keys(interval)[0] || "days";
     const intervalCuantity = interval[intervalUnit] || 0;
-    const intervalUnitObject = timeUnitObjects.find(
+    const intervalUnitObject = timeUnits.find(
       (unitObj) => unitObj.key === intervalUnit
     );
     let readableIntervalUnit = "";

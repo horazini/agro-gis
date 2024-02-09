@@ -16,10 +16,27 @@ import {
 
 import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
+import {
+  ReactElement,
+  JSXElementConstructor,
+  ReactFragment,
+  ReactPortal,
+} from "react";
 
-function TimeLineModeView(props: any) {
-  const { rows, onTaskClick } = props;
-
+function TimeLineModeView({
+  rows,
+  onTaskClick,
+}: {
+  rows: {
+    due_date: any;
+    done_date: any;
+    color: any;
+    name: string;
+    landplot: number;
+    species_name: string;
+  }[];
+  onTaskClick: any;
+}) {
   const handleTaskClick = (event: any, task: any) => {
     event.preventDefault();
     event.stopPropagation();
@@ -37,7 +54,7 @@ function TimeLineModeView(props: any) {
 
     return (
       <Timeline position="alternate">
-        {rows.map((task: any, index: any) => {
+        {rows.map((task, index: any) => {
           return (
             <TimelineItem
               key={`timeline-${index}`}
@@ -50,10 +67,10 @@ function TimeLineModeView(props: any) {
                 variant="body2"
                 color="text.secondary"
               >
-                {task?.due_date &&
+                {task.due_date &&
                   format(
                     parse(
-                      task?.done_date || task?.due_date,
+                      task.done_date || task.due_date,
                       "yyyy-MM-dd",
                       new Date()
                     ),
@@ -67,7 +84,7 @@ function TimeLineModeView(props: any) {
                 <TimelineConnector />
                 <TimelineDot
                   color="secondary"
-                  sx={{ backgroundColor: task?.color }}
+                  sx={{ backgroundColor: task.color }}
                 >
                   {task.done_date ? <CheckIcon /> : <ScheduleIcon />}
                 </TimelineDot>
@@ -75,7 +92,7 @@ function TimeLineModeView(props: any) {
               </TimelineSeparator>
               <TimelineContent sx={{ py: "12px", px: 2 }}>
                 <Typography variant="body1" component="span">
-                  {task?.name}
+                  {task.name}
                 </Typography>
                 <Typography>
                   Parcela N° {task.landplot} - {task.species_name}

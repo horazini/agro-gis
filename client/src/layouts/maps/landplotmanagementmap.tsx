@@ -497,16 +497,14 @@ const FeatureEditorMap = ({
 
       <LayerGroup>
         {GeoJSONFeatures &&
-          GeoJSONFeatures.map((feature: any) => {
-            if (feature.properties.crop?.finish_date === null) {
-              return (
-                <CustomLayer
-                  key={feature.properties.landplot.id}
-                  feature={feature}
-                />
-              );
-            }
-          })}
+          GeoJSONFeatures.filter(
+            (feature: any) => feature.properties.crop?.finish_date === null
+          ).map((feature: any) => (
+            <CustomLayer
+              key={feature.properties.landplot.id}
+              feature={feature}
+            />
+          ))}
       </LayerGroup>
     </MapContainer>
   );

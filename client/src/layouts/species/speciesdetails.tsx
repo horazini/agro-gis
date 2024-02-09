@@ -38,6 +38,7 @@ import {
 } from "../../components/customComponents";
 
 import { FormattedArea } from "../../components/mapcomponents";
+import { timeUnits } from "../../utils/functions";
 
 interface ISpeciesData {
   id: number;
@@ -92,13 +93,6 @@ const SpeciesDetails = ({
   };
 }): JSX.Element => {
   const { species, stages, speciesDetails } = detailedSpeciesData;
-
-  const timeUnits = [
-    { key: "days", label: "Día/s" },
-    { key: "weeks", label: "Semana/s" },
-    { key: "months", label: "Mes/es" },
-    { key: "years", label: "Año/s" },
-  ];
 
   // Enable/disable functions
 

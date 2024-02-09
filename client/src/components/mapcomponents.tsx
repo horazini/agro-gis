@@ -656,7 +656,7 @@ export const SentinelSnapshoter = ({ landplot }: any) => {
 
             const base64Canvas = canvas.toDataURL("image/png");
 
-            const cropId = landplot.properties?.crop?.id || null;
+            const cropId = landplot.properties.crop?.id || null;
 
             setJSONSnapshotData({
               image: base64Canvas,

@@ -19,6 +19,7 @@ import {
   getUserData,
   hashFunction,
   resetUserPassword,
+  userDataType,
   verifyCredentials,
 } from "../../utils/services";
 import {
@@ -32,7 +33,6 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { UsertypeIDToString } from "../../utils/functions";
-import { user } from "../tenants/userdetails";
 
 const UserLoader = () => {
   PageTitle("Mi perfil");
@@ -51,8 +51,8 @@ const UserLoader = () => {
   );
 };
 
-const Profile = ({ userData }: any) => {
-  const { username, surname, names, mail_address, usertype_id } = userData;
+const Profile = ({ userData }: { userData: userDataType }) => {
+  const { id, username, surname, names, mail_address, usertype_id } = userData;
 
   const nullResetPasswordState = {
     prevPassword: "",
@@ -128,7 +128,7 @@ const Profile = ({ userData }: any) => {
       const newPasswordHash = hashFunction(newPassword);
 
       const res = await resetUserPassword(
-        userData.id,
+        Number(id),
         username,
         prevPassword,
         newPasswordHash

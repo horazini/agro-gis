@@ -46,6 +46,8 @@ const CropDetails = ({ landplotData }: { landplotData: Feature }) => {
     radius: number;
   } = landplotData.properties?.landplot;
 
+  const { id, description, area, radius } = landplot;
+
   return (
     <Box
       style={{
@@ -53,7 +55,7 @@ const CropDetails = ({ landplotData }: { landplotData: Feature }) => {
         alignItems: "center",
       }}
     >
-      <h1>Parcela N.° {landplot.id}</h1>
+      <h1>Parcela N.° {id}</h1>
       <SentinelSnapshoter landplot={landplotData} />
       <Box
         sx={{
@@ -63,16 +65,16 @@ const CropDetails = ({ landplotData }: { landplotData: Feature }) => {
         }}
       >
         <Box paddingTop={2} ml={2} mb={2} mr={2}>
-          <p>Parcela N.° {landplot.id}</p>
-          {landplot.description && <p>Descripción: {landplot.description}</p>}
-          {landplot.area && <p>Área: {FormattedArea(landplot.area)} </p>}
-          {landplot.radius && <p>Radio: {landplot.radius.toFixed(2)} m.</p>}
+          <p>Parcela N.° {id}</p>
+          {description && <p>Descripción: {description}</p>}
+          {area && <p>Área: {FormattedArea(area)} </p>}
+          {radius && <p>Radio: {radius.toFixed(2)} m.</p>}
         </Box>
 
         <Button
           variant={"contained"}
           color="primary"
-          onClick={() => navigate(`/landplots/${landplot.id}/snapshots`)}
+          onClick={() => navigate(`/landplots/${id}/snapshots`)}
           style={{ marginLeft: ".5rem" }}
           startIcon={<PhotoSizeSelectActual />}
         >

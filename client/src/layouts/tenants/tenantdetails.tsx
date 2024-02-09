@@ -219,7 +219,7 @@ const CropsInfo = (cropsInfo: any) => {
   );
 };
 
-const TenantDetails = ({ tenantData }: { tenantData: any }) => {
+const TenantDetails = ({ tenantData }: { tenantData: tenantData }) => {
   return (
     <Fragment>
       {TenantHeader(tenantData.tenant)}
@@ -238,7 +238,7 @@ const TenantDetailsLoader = () => {
   const tenantId = Number(params.id);
 
   const tenantGetter = async () => {
-    const data = await getTenantData(tenantId);
+    const data: tenantData = await getTenantData(tenantId);
     return ["tenantData", data];
   };
 

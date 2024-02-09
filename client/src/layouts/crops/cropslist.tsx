@@ -178,17 +178,17 @@ const CropsList = ({
 
   let filteredCrops = crops;
   if (filterOptions.status === "done") {
-    filteredCrops = filteredCrops?.filter((crop) => crop?.finish_date);
+    filteredCrops = filteredCrops.filter((crop) => crop?.finish_date);
   } else if (filterOptions.status === "todo") {
-    filteredCrops = filteredCrops?.filter((crop) => !crop?.finish_date);
+    filteredCrops = filteredCrops.filter((crop) => !crop?.finish_date);
   }
   if (filterOptions.landplotId !== 0) {
-    filteredCrops = filteredCrops?.filter(
+    filteredCrops = filteredCrops.filter(
       (crop) => crop?.landplot_id === filterOptions.landplotId
     );
   }
   if (filterOptions.speciesId !== 0) {
-    filteredCrops = filteredCrops?.filter(
+    filteredCrops = filteredCrops.filter(
       (crop) => crop?.species_id === filterOptions.speciesId
     );
   }

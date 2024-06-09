@@ -2,6 +2,26 @@
 
 AgroSense is a multi-tenant web app for agricultural management, which allows crop tracking through near real-time satellite imagery monitoring and crop calendar based tasks lists.
 
+## Screenshots
+
+![](./docs/image3-dashboard.png)
+
+![](./docs/image6-landplots.png)
+
+![](./docs/image10-crop_form.png)
+
+![](./docs/image11-crop_details.png)
+
+![](./docs/image12-calendarpng)
+
+![](./docs/image13-landplot_management.png)
+
+![](./docs/image14-crop_snapshots.png)
+
+![](./docs/image16-mobile_web_and_pwa.png)
+
+![](./docs/image0-arch.png)
+
 ## Technologies used
 
 - PostgreSQL

@@ -12,7 +12,7 @@ AgroSense is a multi-tenant web app for agricultural management, which allows cr
 
 ![](./docs/image11-crop_details.png)
 
-![](./docs/image12-calendarpng)
+![](./docs/image12-calendar.png)
 
 ![](./docs/image13-landplot_management.png)
 
